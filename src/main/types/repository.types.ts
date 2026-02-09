@@ -5,7 +5,22 @@ export type ProjectType =
   | 'go'
   | 'java'
   | 'swift'
+  | 'monorepo'
   | 'unknown'
+
+export interface WorkspacePackage {
+  name: string
+  path: string
+  relativePath: string
+  scripts: Record<string, string>
+  version?: string
+}
+
+export interface WorkspaceInfo {
+  packages: WorkspacePackage[]
+  hasTurbo: boolean
+  packageManager: 'pnpm' | 'npm' | 'yarn'
+}
 
 export interface Repository {
   id: string
@@ -16,4 +31,5 @@ export interface Repository {
   lastModified: number
   gitBranch?: string
   gitDirty?: boolean
+  workspace?: WorkspaceInfo
 }

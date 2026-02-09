@@ -1,10 +1,12 @@
-import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen } from 'lucide-react'
+import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Shield } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import type { Repository } from '@/types'
 import { useRepositories } from '@/hooks/useRepositories'
+import { useHealth } from '@/hooks/useHealth'
 import { RepositoryCard } from '@/components/repository/RepositoryCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 
 interface TreeNode {
   name: string
@@ -77,6 +79,7 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
 
 export function RepositoriesView() {
   const { repositories, allRepositories, loading, error, scan, filterText, setFilter } = useRepositories()
+  const { checkAllHealth } = useHealth()
 
   const tree = useMemo(() => buildTree(repositories), [repositories])
 
@@ -86,10 +89,32 @@ export function RepositoriesView() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Repositories</h2>
-        <Button variant="outline" size="sm" onClick={scan} disabled={loading}>
-          <RefreshCw className={loading ? 'animate-spin' : ''} />
-          {loading ? 'Scanning...' : 'Rescan'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const nodeRepoIds = allRepositories
+                      .filter((r) => r.projectType === 'node' || r.projectType === 'monorepo')
+                      .map((r) => r.id)
+                    if (nodeRepoIds.length > 0) checkAllHealth(nodeRepoIds)
+                  }}
+                >
+                  <Shield className="h-4 w-4" />
+                  Check All
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Check dependency health for all Node.js projects</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Button variant="outline" size="sm" onClick={scan} disabled={loading}>
+            <RefreshCw className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Scanning...' : 'Rescan'}
+          </Button>
+        </div>
       </div>
 
       <div className="relative">

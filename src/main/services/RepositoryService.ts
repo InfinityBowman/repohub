@@ -1,15 +1,20 @@
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
-import { execSync } from 'child_process'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import { EventEmitter } from 'events'
 import { watch } from 'chokidar'
 import { ProjectDetector } from './ProjectDetector'
+import { WorkspaceDetector } from './WorkspaceDetector'
 import { ConfigService } from './ConfigService'
 import type { Repository } from '../types/repository.types'
 
+const execAsync = promisify(exec)
+
 export class RepositoryService extends EventEmitter {
   private detector = new ProjectDetector()
+  private workspaceDetector = new WorkspaceDetector()
   private configService: ConfigService
   private watcher: ReturnType<typeof watch> | null = null
   private repositories: Repository[] = []
@@ -30,6 +35,15 @@ export class RepositoryService extends EventEmitter {
 
     const repos: Repository[] = []
     this.scanDirectory(scanDir, scanDir, config.ignorePatterns, repos, 0)
+
+    // Fetch git info for all repos in parallel (non-blocking)
+    await Promise.all(
+      repos.map(async (repo) => {
+        const git = await this.getGitInfo(repo.path)
+        repo.gitBranch = git.gitBranch
+        repo.gitDirty = git.gitDirty
+      }),
+    )
 
     repos.sort((a, b) => b.lastModified - a.lastModified)
     this.repositories = repos
@@ -65,16 +79,20 @@ export class RepositoryService extends EventEmitter {
 
       if (detection.projectType !== 'unknown') {
         const stat = fs.statSync(fullPath)
-        const git = this.getGitInfo(fullPath)
-        repos.push({
+        const repo: Repository = {
           id: crypto.createHash('md5').update(fullPath).digest('hex').slice(0, 12),
           name: relativePath,
           path: fullPath,
           projectType: detection.projectType,
           defaultCommand: detection.defaultCommand,
           lastModified: stat.mtimeMs,
-          ...git,
-        })
+        }
+
+        if (detection.projectType === 'monorepo') {
+          repo.workspace = this.workspaceDetector.detectWorkspace(fullPath)
+        }
+
+        repos.push(repo)
       } else {
         // Not a recognized project — recurse to find nested projects
         this.scanDirectory(fullPath, scanRoot, ignorePatterns, repos, depth + 1)
@@ -82,12 +100,14 @@ export class RepositoryService extends EventEmitter {
     }
   }
 
-  refreshGitInfo(): Repository[] {
-    for (const repo of this.repositories) {
-      const git = this.getGitInfo(repo.path)
-      repo.gitBranch = git.gitBranch
-      repo.gitDirty = git.gitDirty
-    }
+  async refreshGitInfo(): Promise<Repository[]> {
+    await Promise.all(
+      this.repositories.map(async (repo) => {
+        const git = await this.getGitInfo(repo.path)
+        repo.gitBranch = git.gitBranch
+        repo.gitDirty = git.gitDirty
+      }),
+    )
     return this.repositories
   }
 
@@ -130,24 +150,23 @@ export class RepositoryService extends EventEmitter {
     }
   }
 
-  private getGitInfo(dirPath: string): { gitBranch?: string; gitDirty?: boolean } {
+  private async getGitInfo(dirPath: string): Promise<{ gitBranch?: string; gitDirty?: boolean }> {
     try {
       if (!fs.existsSync(path.join(dirPath, '.git'))) return {}
-      const branch = execSync('git rev-parse --abbrev-ref HEAD', {
-        cwd: dirPath,
-        timeout: 3000,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      })
-        .toString()
-        .trim()
-      const status = execSync('git status --porcelain', {
-        cwd: dirPath,
-        timeout: 3000,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      })
-        .toString()
-        .trim()
-      return { gitBranch: branch, gitDirty: status.length > 0 }
+      const [branchResult, statusResult] = await Promise.all([
+        execAsync('git rev-parse --abbrev-ref HEAD', {
+          cwd: dirPath,
+          timeout: 3000,
+        }),
+        execAsync('git status --porcelain', {
+          cwd: dirPath,
+          timeout: 3000,
+        }),
+      ])
+      return {
+        gitBranch: branchResult.stdout.trim(),
+        gitDirty: statusResult.stdout.trim().length > 0,
+      }
     } catch {
       return {}
     }

@@ -1,11 +1,30 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { createMainWindow } from './window'
+
+// macOS packaged apps inherit a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin).
+// Augment with common tool directories so gh, git, pnpm, npm, node etc. are found.
+// Uses only static paths to avoid blocking the main thread at startup.
+const extraPaths = [
+  '/opt/homebrew/bin',
+  '/opt/homebrew/sbin',
+  '/usr/local/bin',
+  '/usr/local/sbin',
+]
+const currentPath = process.env.PATH || ''
+const currentParts = new Set(currentPath.split(':'))
+const newParts = extraPaths.filter((p) => !currentParts.has(p))
+if (newParts.length > 0) {
+  process.env.PATH = [...newParts, currentPath].join(':')
+}
+
 import { registerAllHandlers } from './ipc'
 import { ConfigService } from './services/ConfigService'
 import { RepositoryService } from './services/RepositoryService'
 import { ProcessService } from './services/ProcessService'
 import { PortService } from './services/PortService'
 import { LogService } from './services/LogService'
+import { DependencyHealthService } from './services/DependencyHealthService'
+import { GitHubService } from './services/GitHubService'
 
 // Initialize services
 const configService = new ConfigService()
@@ -16,6 +35,8 @@ const portService = new PortService(
   configService.get().portScanInterval,
 )
 const logService = new LogService()
+const healthService = new DependencyHealthService(repositoryService)
+const githubService = new GitHubService(repositoryService)
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -24,15 +45,19 @@ app.whenReady().then(() => {
     processService,
     portService,
     configService,
+    healthService,
+    githubService,
   })
 
   // Create window
   const mainWindow = createMainWindow()
 
-  // Refresh git info when window regains focus
+  // Refresh git info and GitHub PRs when window regains focus
   mainWindow.on('focus', () => {
-    const repos = repositoryService.refreshGitInfo()
-    mainWindow.webContents.send('repo:changed', repos)
+    repositoryService.refreshGitInfo().then((repos) => {
+      mainWindow.webContents.send('repo:changed', repos)
+    })
+    githubService.refreshIfNeeded()
   })
 
   // Persist process output to log files

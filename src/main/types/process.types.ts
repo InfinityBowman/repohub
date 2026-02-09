@@ -6,12 +6,14 @@ export interface ProcessInfo {
   status: 'running' | 'stopped'
   startTime: number
   exitCode?: number
+  packageName?: string
 }
 
 export interface ProcessOutputData {
   repoId: string
   data: string
   timestamp: number
+  packageName?: string
 }
 
 export interface ProcessResult {

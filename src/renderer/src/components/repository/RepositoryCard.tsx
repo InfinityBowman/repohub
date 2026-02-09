@@ -22,11 +22,18 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { ProjectBadge } from './ProjectBadge'
+import { HealthBadge } from './HealthBadge'
+import { WorkspacePackageList } from './WorkspacePackageList'
+import { PRBadge } from '../github/PRBadge'
+import { CreatePRButton } from '../github/CreatePRButton'
 import { TerminalOutput } from '../process/TerminalOutput'
+import { useGitHub } from '@/hooks/useGitHub'
 
 export function RepositoryCard({ repo }: { repo: Repository }) {
   const { processes, start, stop, restart, isRunning, terminalData } = useProcesses()
   const { config, setCommandOverride, removeCommandOverride } = useConfig()
+  const { getPRForRepo, status: githubStatus } = useGitHub()
+  const pr = getPRForRepo(repo.id)
   const [expanded, setExpanded] = useState(false)
   const [editingCmd, setEditingCmd] = useState(false)
   const [cmdDraft, setCmdDraft] = useState('')
@@ -106,6 +113,21 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 {displayName}
               </h3>
               <ProjectBadge type={repo.projectType} />
+              {(repo.projectType === 'node' || repo.projectType === 'monorepo') && (
+                <HealthBadge repoId={repo.id} />
+              )}
+              {repo.projectType === 'monorepo' && repo.workspace && (
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="border-purple-800/50 bg-purple-900/20 text-purple-400">
+                        {repo.workspace.packages.length} pkgs
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>{repo.workspace.packages.length} workspace packages</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {repo.gitBranch && (
                 <Badge variant="outline" className="gap-1 border-blue-800/50 bg-blue-900/20 text-blue-400">
                   <GitBranch className="h-3 w-3" />
@@ -115,6 +137,7 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                   )}
                 </Badge>
               )}
+              {pr && <PRBadge pr={pr} />}
               {running && (
                 <Badge variant="outline" className="border-green-800/50 bg-green-900/30 text-green-400">
                   <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-400" />
@@ -144,6 +167,9 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
               </TooltipTrigger>
               <TooltipContent>Open in Ghostty</TooltipContent>
             </Tooltip>
+            {!pr && repo.gitBranch && repo.gitBranch !== 'main' && repo.gitBranch !== 'master' && githubStatus?.available && githubStatus?.authenticated && (
+              <CreatePRButton repoId={repo.id} />
+            )}
             {running ? (
               <>
                 <Tooltip>
@@ -181,64 +207,75 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 </TooltipContent>
               </Tooltip>
             )}
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={(e) => {
-                e.stopPropagation()
-                setExpanded(!expanded)
-              }}
-            >
-              {expanded ? <ChevronUp /> : <ChevronDown />}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setExpanded(!expanded)
+                  }}
+                >
+                  {expanded ? <ChevronUp /> : <ChevronDown />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{expanded ? 'Hide details' : 'Show details'}</TooltipContent>
+            </Tooltip>
           </TooltipProvider>
         </div>
       </div>
 
       {expanded && (
         <div className="border-t px-4 pb-4 pt-3">
-          <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
-            {processInfo && processInfo.status === 'running' && (
-              <>
-                <span>PID: {processInfo.pid}</span>
-                <span>Cmd: {processInfo.command}</span>
-              </>
-            )}
-            {(!processInfo || processInfo.status !== 'running') && (
-              editingCmd ? (
-                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-muted-foreground">Cmd:</span>
-                  <Input
-                    value={cmdDraft}
-                    onChange={(e) => setCmdDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveCmd(e as any)
-                      if (e.key === 'Escape') setEditingCmd(false)
-                    }}
-                    className="h-6 w-56 text-xs"
-                    autoFocus
-                  />
-                  <Button variant="ghost" size="icon-xs" onClick={saveCmd}>
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="icon-xs" onClick={cancelEditCmd}>
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <span>
-                    Cmd: {effectiveCommand || 'none'}
-                    {commandOverride && <span className="ml-1 text-blue-400">(custom)</span>}
-                  </span>
-                  <Button variant="ghost" size="icon-xs" onClick={startEditCmd}>
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                </>
-              )
-            )}
-          </div>
-          <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
+          {repo.projectType === 'monorepo' && repo.workspace ? (
+            <WorkspacePackageList repo={repo} />
+          ) : (
+            <>
+              <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
+                {processInfo && processInfo.status === 'running' && (
+                  <>
+                    <span>PID: {processInfo.pid}</span>
+                    <span>Cmd: {processInfo.command}</span>
+                  </>
+                )}
+                {(!processInfo || processInfo.status !== 'running') && (
+                  editingCmd ? (
+                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-muted-foreground">Cmd:</span>
+                      <Input
+                        value={cmdDraft}
+                        onChange={(e) => setCmdDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveCmd(e as any)
+                          if (e.key === 'Escape') setEditingCmd(false)
+                        }}
+                        className="h-6 w-56 text-xs"
+                        autoFocus
+                      />
+                      <Button variant="ghost" size="icon-xs" onClick={saveCmd}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon-xs" onClick={cancelEditCmd}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <span>
+                        Cmd: {effectiveCommand || 'none'}
+                        {commandOverride && <span className="ml-1 text-blue-400">(custom)</span>}
+                      </span>
+                      <Button variant="ghost" size="icon-xs" onClick={startEditCmd}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )
+                )}
+              </div>
+              <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
+            </>
+          )}
         </div>
       )}
     </Card>

@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { FolderGit2, Network, Settings } from 'lucide-react'
+import { FolderGit2, Network, Settings, GitPullRequest } from 'lucide-react'
 
 const navItems = [
   { to: '/', icon: FolderGit2, label: 'Repositories' },
+  { to: '/github', icon: GitPullRequest, label: 'Pull Requests' },
   { to: '/ports', icon: Network, label: 'Ports' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]

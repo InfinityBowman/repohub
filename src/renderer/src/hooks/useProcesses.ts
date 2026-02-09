@@ -66,6 +66,34 @@ export function useProcesses() {
     [],
   )
 
+  const startPackage = useCallback(
+    async (repoId: string, packageName: string, scriptName: string) => {
+      return window.electron.processes.startPackage(repoId, packageName, scriptName)
+    },
+    [],
+  )
+
+  const stopPackage = useCallback(
+    async (repoId: string, packageName: string) => {
+      return window.electron.processes.stopPackage(repoId, packageName)
+    },
+    [],
+  )
+
+  const restartPackage = useCallback(
+    async (repoId: string, packageName: string, scriptName: string) => {
+      return window.electron.processes.restartPackage(repoId, packageName, scriptName)
+    },
+    [],
+  )
+
+  const resizePackage = useCallback(
+    async (repoId: string, packageName: string, cols: number, rows: number) => {
+      return window.electron.processes.resizePackage(repoId, packageName, cols, rows)
+    },
+    [],
+  )
+
   return {
     processes: store.processes,
     terminalData: store.terminalData,
@@ -73,8 +101,14 @@ export function useProcesses() {
     stop,
     restart,
     resize,
+    startPackage,
+    stopPackage,
+    restartPackage,
+    resizePackage,
     clearOutput: store.clearOutput,
     isRunning: (repoId: string) =>
       store.processes[repoId]?.status === 'running',
+    isPackageRunning: (repoId: string, packageName: string) =>
+      store.processes[`${repoId}:${packageName}`]?.status === 'running',
   }
 }

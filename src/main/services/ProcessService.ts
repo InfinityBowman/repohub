@@ -3,6 +3,7 @@ import * as pty from 'node-pty'
 import { RepositoryService } from './RepositoryService'
 import { ConfigService } from './ConfigService'
 import type { ProcessInfo, ProcessOutputData, ProcessResult } from '../types/process.types'
+import type { Repository } from '../types/repository.types'
 
 interface ManagedProcess {
   repoId: string
@@ -183,6 +184,142 @@ export class ProcessService extends EventEmitter {
     if (managed) {
       managed.ptyProcess.resize(cols, rows)
     }
+  }
+
+  private packageKey(repoId: string, packageName: string): string {
+    return `${repoId}:${packageName}`
+  }
+
+  async startPackage(
+    repoId: string,
+    packageName: string,
+    scriptName: string,
+  ): Promise<ProcessResult> {
+    const key = this.packageKey(repoId, packageName)
+
+    if (this.processes.has(key)) {
+      await this.stop(key)
+    }
+
+    const repo = this.repositoryService.getById(repoId)
+    if (!repo) {
+      return { success: false, error: `Repository ${repoId} not found` }
+    }
+
+    const command = this.buildPackageCommand(repo, packageName, scriptName)
+
+    try {
+      const shell = process.env.SHELL || '/bin/zsh'
+      const ptyProcess = pty.spawn(shell, ['-c', command], {
+        name: 'xterm-256color',
+        cols: 120,
+        rows: 30,
+        cwd: repo.path,
+        env: process.env as Record<string, string>,
+      })
+
+      const managed: ManagedProcess = {
+        repoId: key,
+        repoName: `${repo.name}/${packageName}`,
+        pid: ptyProcess.pid,
+        command,
+        ptyProcess,
+        startTime: Date.now(),
+      }
+
+      let buffer = ''
+      let bufferTimer: NodeJS.Timeout | null = null
+
+      ptyProcess.onData((data: string) => {
+        buffer += data
+
+        if (bufferTimer) clearTimeout(bufferTimer)
+
+        bufferTimer = setTimeout(() => {
+          const output: ProcessOutputData = {
+            repoId: key,
+            data: buffer,
+            timestamp: Date.now(),
+            packageName,
+          }
+          this.emit('output', output)
+          buffer = ''
+        }, 50)
+      })
+
+      ptyProcess.onExit(({ exitCode }) => {
+        if (bufferTimer) {
+          clearTimeout(bufferTimer)
+          if (buffer) {
+            this.emit('output', { repoId: key, data: buffer, timestamp: Date.now(), packageName })
+            buffer = ''
+          }
+        }
+        this.processes.delete(key)
+        const info: ProcessInfo = {
+          repoId: key,
+          repoName: managed.repoName,
+          pid: managed.pid,
+          command,
+          status: 'stopped',
+          startTime: managed.startTime,
+          exitCode,
+          packageName,
+        }
+        this.emit('status-changed', info)
+      })
+
+      this.processes.set(key, managed)
+
+      const info: ProcessInfo = {
+        repoId: key,
+        repoName: managed.repoName,
+        pid: ptyProcess.pid,
+        command,
+        status: 'running',
+        startTime: managed.startTime,
+        packageName,
+      }
+      this.emit('status-changed', info)
+
+      return { success: true, pid: ptyProcess.pid, command }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  }
+
+  async stopPackage(repoId: string, packageName: string): Promise<void> {
+    return this.stop(this.packageKey(repoId, packageName))
+  }
+
+  async restartPackage(
+    repoId: string,
+    packageName: string,
+    scriptName: string,
+  ): Promise<ProcessResult> {
+    await this.stopPackage(repoId, packageName)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return this.startPackage(repoId, packageName, scriptName)
+  }
+
+  resizePackage(
+    repoId: string,
+    packageName: string,
+    cols: number,
+    rows: number,
+  ): void {
+    this.resize(this.packageKey(repoId, packageName), cols, rows)
+  }
+
+  private buildPackageCommand(
+    repo: Repository,
+    packageName: string,
+    scriptName: string,
+  ): string {
+    if (repo.workspace?.hasTurbo) {
+      return `turbo run ${scriptName} --filter=${packageName}`
+    }
+    return `pnpm --filter ${packageName} ${scriptName}`
   }
 
   stopAll(): void {

@@ -16,6 +16,14 @@ const electronAPI = {
     getAll: () => ipcRenderer.invoke('process:get-all'),
     resize: (repoId: string, cols: number, rows: number) =>
       ipcRenderer.invoke('process:resize', repoId, cols, rows),
+    startPackage: (repoId: string, packageName: string, scriptName: string) =>
+      ipcRenderer.invoke('process:start-package', repoId, packageName, scriptName),
+    stopPackage: (repoId: string, packageName: string) =>
+      ipcRenderer.invoke('process:stop-package', repoId, packageName),
+    restartPackage: (repoId: string, packageName: string, scriptName: string) =>
+      ipcRenderer.invoke('process:restart-package', repoId, packageName, scriptName),
+    resizePackage: (repoId: string, packageName: string, cols: number, rows: number) =>
+      ipcRenderer.invoke('process:resize-package', repoId, packageName, cols, rows),
   },
 
   ports: {
@@ -49,6 +57,23 @@ const electronAPI = {
       ipcRenderer.invoke('config:remove-command-override', repoId),
   },
 
+  health: {
+    check: (repoId: string) => ipcRenderer.invoke('health:check', repoId),
+    checkAll: (repoIds: string[]) =>
+      ipcRenderer.invoke('health:check-all', repoIds),
+    get: (repoId: string) => ipcRenderer.invoke('health:get', repoId),
+    clear: (repoId: string) => ipcRenderer.invoke('health:clear', repoId),
+  },
+
+  github: {
+    checkAvailability: () => ipcRenderer.invoke('github:check-availability'),
+    getPRForBranch: (repoId: string) =>
+      ipcRenderer.invoke('github:get-pr-for-branch', repoId),
+    getAllUserPRs: () => ipcRenderer.invoke('github:get-all-user-prs'),
+    refresh: () => ipcRenderer.invoke('github:refresh'),
+    createPR: (repoId: string) => ipcRenderer.invoke('github:create-pr', repoId),
+  },
+
   on: {
     repositoriesChanged: (callback: (repos: any[]) => void) => {
       const handler = (_: any, data: any) => callback(data)
@@ -70,6 +95,16 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data)
       ipcRenderer.on('port:changed', handler)
       return () => ipcRenderer.removeListener('port:changed', handler)
+    },
+    healthChanged: (callback: (health: any) => void) => {
+      const handler = (_: any, data: any) => callback(data)
+      ipcRenderer.on('health:changed', handler)
+      return () => ipcRenderer.removeListener('health:changed', handler)
+    },
+    githubChanged: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data)
+      ipcRenderer.on('github:changed', handler)
+      return () => ipcRenderer.removeListener('github:changed', handler)
     },
   },
 }

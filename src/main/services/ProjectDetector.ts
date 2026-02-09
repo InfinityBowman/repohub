@@ -9,6 +9,14 @@ interface DetectionResult {
 
 export class ProjectDetector {
   detect(dirPath: string): DetectionResult {
+    // Check for pnpm workspace monorepo before standard Node detection
+    if (this.fileExists(dirPath, 'pnpm-workspace.yaml') && this.fileExists(dirPath, 'package.json')) {
+      return {
+        projectType: 'monorepo',
+        defaultCommand: this.detectMonorepoCommand(dirPath),
+      }
+    }
+
     if (this.fileExists(dirPath, 'package.json')) {
       return {
         projectType: 'node',
@@ -45,6 +53,17 @@ export class ProjectDetector {
     }
 
     return { projectType: 'unknown', defaultCommand: null }
+  }
+
+  private detectMonorepoCommand(dirPath: string): string {
+    const hasTurbo = this.fileExists(dirPath, 'turbo.json')
+    if (hasTurbo) {
+      const pkg = this.readPackageJson(dirPath)
+      if (pkg?.scripts?.dev) return 'turbo dev'
+      if (pkg?.scripts?.build) return 'turbo build'
+      return 'turbo dev'
+    }
+    return 'pnpm dev'
   }
 
   private detectNodeCommand(dirPath: string): string {

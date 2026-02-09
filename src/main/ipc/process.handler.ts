@@ -31,6 +31,35 @@ export function registerProcessHandlers(
     },
   )
 
+  ipcMain.handle(
+    'process:start-package',
+    async (_event, repoId: string, packageName: string, scriptName: string) => {
+      return processService.startPackage(repoId, packageName, scriptName)
+    },
+  )
+
+  ipcMain.handle(
+    'process:stop-package',
+    async (_event, repoId: string, packageName: string) => {
+      await processService.stopPackage(repoId, packageName)
+      return { success: true }
+    },
+  )
+
+  ipcMain.handle(
+    'process:restart-package',
+    async (_event, repoId: string, packageName: string, scriptName: string) => {
+      return processService.restartPackage(repoId, packageName, scriptName)
+    },
+  )
+
+  ipcMain.handle(
+    'process:resize-package',
+    async (_event, repoId: string, packageName: string, cols: number, rows: number) => {
+      processService.resizePackage(repoId, packageName, cols, rows)
+    },
+  )
+
   // Forward process events to renderer
   processService.on('output', (data) => {
     const windows = BrowserWindow.getAllWindows()
