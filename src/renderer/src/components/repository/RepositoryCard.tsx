@@ -7,6 +7,7 @@ import {
   Folder,
   SquareTerminal,
   GitBranch,
+  Github,
   Pencil,
   Check,
   X,
@@ -67,6 +68,11 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
   const handleOpenTerminal = (e: React.MouseEvent) => {
     e.stopPropagation()
     window.electron.shell.openInTerminal(repo.path)
+  }
+
+  const handleOpenGitHub = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (repo.githubUrl) window.electron.shell.openUrl(repo.githubUrl)
   }
 
   const startEditCmd = (e: React.MouseEvent) => {
@@ -167,6 +173,16 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
               </TooltipTrigger>
               <TooltipContent>Open in Ghostty</TooltipContent>
             </Tooltip>
+            {repo.githubUrl && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon-xs" onClick={handleOpenGitHub}>
+                    <Github />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Open on GitHub</TooltipContent>
+              </Tooltip>
+            )}
             {!pr && repo.gitBranch && repo.gitBranch !== 'main' && repo.gitBranch !== 'master' && githubStatus?.available && githubStatus?.authenticated && (
               <CreatePRButton repoId={repo.id} />
             )}

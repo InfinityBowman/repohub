@@ -4,7 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RepoHub is a native macOS desktop app (Electron) that serves as a project management dashboard. It scans a local repos directory, auto-detects project types, provides inline terminals for running projects, monitors open ports, and tracks Git status.
+RepoHub is a native macOS desktop app (Electron) that serves as a project management dashboard. It scans a local repos directory, auto-detects project types, provides inline terminals for running projects, monitors open ports, tracks Git status, checks dependency health, and integrates with GitHub PRs.
+
+## IMPORTANT
+
+- You may add any shadcn components you need, prefer to use shadcn over creating custom components or workarounds where shadcn versions exist
+
+## Documentation
+
+Detailed docs live in `docs/`:
+
+- `docs/features.md` — All features: dashboard, monorepo, dependency health, GitHub integration, port monitoring
+- `docs/configuration.md` — Config options, settings UI, file location, command overrides
+- `docs/architecture.md` — Three-process model, IPC flow, async design, PATH fix, security
+- `docs/development.md` — Commands, prerequisites, project structure, how to add components/IPC channels
 
 ## Commands
 
@@ -36,20 +49,32 @@ React hooks → `window.electron.*` (preload bridge) → IPC handlers (`src/main
 
 ### Main Process Services (`src/main/services/`)
 
-- **RepositoryService** — Recursive filesystem scan, project type detection, git info extraction (via `execSync`), file watching (chokidar)
+- **RepositoryService** — Async filesystem scan, project type detection, git info extraction, file watching (chokidar)
 - **ProcessService** — PTY process lifecycle via node-pty, output buffering (50ms debounce), emits events
 - **PortService** — Polls `lsof` every 5 seconds, links ports to managed processes
 - **ConfigService** — Persists to electron-store (`~/Library/Application Support/repohub/config.json`)
 - **LogService** — Terminal output to disk per repo (100KB max per file)
-- **ProjectDetector** — Heuristic detection: Node.js, Python, Rust, Go, Java, Swift
+- **DependencyHealthService** — Runs npm/pnpm audit + outdated, caches results
+- **GitHubService** — Async gh CLI integration for PR status, CI checks, PR creation
+- **ProjectDetector** — Heuristic detection: Node.js, Python, Rust, Go, Java, Swift, Monorepo
+- **WorkspaceDetector** — pnpm workspace parsing for monorepo packages
+
+### Important: All Shell Commands Are Async
+
+All `git`, `gh`, `npm`/`pnpm`, and `lsof` calls use async `exec` (promisified `child_process.exec`), never `execSync`. This prevents blocking Electron's main thread. Git info and GitHub PR fetches run in parallel via `Promise.all`.
+
+### PATH Augmentation
+
+macOS packaged apps get a minimal PATH. `src/main/index.ts` prepends `/opt/homebrew/bin`, `/opt/homebrew/sbin`, `/usr/local/bin`, `/usr/local/sbin` at startup so external tools are found.
 
 ### Renderer Architecture (`src/renderer/src/`)
 
 - **State**: Zustand stores in `store/` (repositoryStore, processStore, portStore)
-- **IPC wrappers**: Custom hooks in `hooks/` (useRepositories, useProcesses, usePorts, useConfig)
-- **Routing**: react-router-dom with hash-based routing
+- **IPC wrappers**: Custom hooks in `hooks/` (useRepositories, useProcesses, usePorts, useConfig, useHealth, useGitHub)
+- **Routing**: react-router-dom with hash-based routing (4 routes: /, /github, /ports, /settings)
 - **UI**: shadcn/ui components in `components/ui/`, Tailwind CSS v4, Lucide icons
 - **Terminal**: xterm.js with fit addon and clickable URL detection
+- **Tooltips**: All interactive badges and buttons have tooltips via shadcn/ui Tooltip
 
 ### Path Alias
 
@@ -57,7 +82,8 @@ React hooks → `window.electron.*` (preload bridge) → IPC handlers (`src/main
 
 ### Key Identifiers
 
-Repository IDs are MD5 hashes (first 12 chars) of the full filesystem path, used as keys for config overrides and log files.
+- **Repository IDs**: MD5 hashes (first 12 chars) of the full filesystem path
+- **Process keys**: Can be composite (`repoId:packageName`) for workspace packages
 
 ## Build System
 
@@ -68,6 +94,13 @@ electron-vite (Vite-based) with three separate build targets in `electron.vite.c
 - **renderer**: Browser target with React and Tailwind plugins
 
 Output goes to `out/main/`, `out/preload/`, `out/renderer/`.
+
+## Key Conventions
+
+- **Package manager**: Always use `pnpm`, never npm/yarn
+- **Radix UI**: Import from `"radix-ui"` (unified package), not `@radix-ui/react-*`
+- **shadcn/ui components**: Located in `src/renderer/src/components/ui/`
+- **StrictMode handling**: Use module-level listener count pattern (see `useProcesses.ts`) to prevent double-mount issues
 
 ## Security Model
 

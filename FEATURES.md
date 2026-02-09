@@ -171,5 +171,10 @@ Visual git bisect — mark commits as good/bad by clicking on a commit list, and
 ### **Stale Branch Cleanup**
 Show branches that haven't been touched in 30+ days across all repos. One-click to delete merged branches locally and remotely. Keep your git clean without thinking about it.
 
+1. open in github, 2. branch cleanup, 3. package.json hover preview, 4. command palette
+
+common command palette case:
+type name of repo - get options to open in code, ghostty, start, check deps, view branches, etc.
+
 ### **Project Templates**
 "New Project" button that scaffolds from your own repos. Pick `idle-game` as a template, give it a new name — RepoHub clones the structure, resets git history, updates package.json name, and adds it to the tree.

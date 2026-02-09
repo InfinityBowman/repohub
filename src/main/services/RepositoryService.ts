@@ -42,6 +42,7 @@ export class RepositoryService extends EventEmitter {
         const git = await this.getGitInfo(repo.path)
         repo.gitBranch = git.gitBranch
         repo.gitDirty = git.gitDirty
+        repo.githubUrl = git.githubUrl
       }),
     )
 
@@ -106,6 +107,7 @@ export class RepositoryService extends EventEmitter {
         const git = await this.getGitInfo(repo.path)
         repo.gitBranch = git.gitBranch
         repo.gitDirty = git.gitDirty
+        repo.githubUrl = git.githubUrl
       }),
     )
     return this.repositories
@@ -150,10 +152,10 @@ export class RepositoryService extends EventEmitter {
     }
   }
 
-  private async getGitInfo(dirPath: string): Promise<{ gitBranch?: string; gitDirty?: boolean }> {
+  private async getGitInfo(dirPath: string): Promise<{ gitBranch?: string; gitDirty?: boolean; githubUrl?: string }> {
     try {
       if (!fs.existsSync(path.join(dirPath, '.git'))) return {}
-      const [branchResult, statusResult] = await Promise.all([
+      const [branchResult, statusResult, remoteResult] = await Promise.all([
         execAsync('git rev-parse --abbrev-ref HEAD', {
           cwd: dirPath,
           timeout: 3000,
@@ -162,14 +164,31 @@ export class RepositoryService extends EventEmitter {
           cwd: dirPath,
           timeout: 3000,
         }),
+        execAsync('git config --get remote.origin.url', {
+          cwd: dirPath,
+          timeout: 3000,
+        }).catch(() => null),
       ])
       return {
         gitBranch: branchResult.stdout.trim(),
         gitDirty: statusResult.stdout.trim().length > 0,
+        githubUrl: remoteResult ? this.parseGitHubUrl(remoteResult.stdout.trim()) : undefined,
       }
     } catch {
       return {}
     }
+  }
+
+  private parseGitHubUrl(remoteUrl: string): string | undefined {
+    // SSH: git@github.com:user/repo.git
+    const sshMatch = remoteUrl.match(/^git@github\.com:(.+?)(?:\.git)?$/)
+    if (sshMatch) return `https://github.com/${sshMatch[1]}`
+
+    // HTTPS: https://github.com/user/repo.git
+    const httpsMatch = remoteUrl.match(/^https?:\/\/github\.com\/(.+?)(?:\.git)?$/)
+    if (httpsMatch) return `https://github.com/${httpsMatch[1]}`
+
+    return undefined
   }
 
   private isIgnored(

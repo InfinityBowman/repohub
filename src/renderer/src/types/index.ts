@@ -31,6 +31,7 @@ export interface Repository {
   lastModified: number
   gitBranch?: string
   gitDirty?: boolean
+  githubUrl?: string
   workspace?: WorkspaceInfo
 }
 
