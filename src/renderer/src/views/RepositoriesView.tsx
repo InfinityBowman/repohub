@@ -1,21 +1,24 @@
-import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Shield } from 'lucide-react'
+import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Shield, SquareTerminal } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import type { Repository } from '@/types'
 import { useRepositories } from '@/hooks/useRepositories'
 import { useHealth } from '@/hooks/useHealth'
+import { useConfig } from '@/hooks/useConfig'
 import { RepositoryCard } from '@/components/repository/RepositoryCard'
+import { VSCodeIcon } from '@/components/icons/VSCodeIcon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 
 interface TreeNode {
   name: string
+  path: string
   folders: Record<string, TreeNode>
   repos: Repository[]
 }
 
-function buildTree(repos: Repository[]): TreeNode {
-  const root: TreeNode = { name: '', folders: {}, repos: [] }
+function buildTree(repos: Repository[], scanDir: string): TreeNode {
+  const root: TreeNode = { name: '', path: scanDir, folders: {}, repos: [] }
 
   for (const repo of repos) {
     const segments = repo.name.split('/')
@@ -23,11 +26,13 @@ function buildTree(repos: Repository[]): TreeNode {
       root.repos.push(repo)
     } else {
       let node = root
+      let currentPath = scanDir
       // Navigate/create folder nodes for all segments except the last
       for (let i = 0; i < segments.length - 1; i++) {
         const seg = segments[i]
+        currentPath = `${currentPath}/${seg}`
         if (!node.folders[seg]) {
-          node.folders[seg] = { name: seg, folders: {}, repos: [] }
+          node.folders[seg] = { name: seg, path: currentPath, folders: {}, repos: [] }
         }
         node = node.folders[seg]
       }
@@ -40,6 +45,7 @@ function buildTree(repos: Repository[]): TreeNode {
 
 function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
   const [open, setOpen] = useState(true)
+  const [hovered, setHovered] = useState(false)
 
   const folderKeys = Object.keys(node.folders).sort()
   const hasChildren = folderKeys.length > 0 || node.repos.length > 0
@@ -48,19 +54,61 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
 
   return (
     <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
-        style={{ paddingLeft: `${depth * 20 + 8}px` }}
+      <div
+        className="flex items-center justify-between rounded-md pr-2 transition-colors hover:bg-secondary/50"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
-        {open ? (
-          <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex flex-1 items-center gap-1.5 px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          style={{ paddingLeft: `${depth * 20 + 8}px` }}
+        >
+          {open ? (
+            <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+          )}
+          <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+          <span className="font-medium">{node.name}</span>
+        </button>
+        {hovered && (
+          <TooltipProvider delayDuration={300}>
+            <div className="flex items-center gap-0.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      window.electron.shell.openInVSCode(node.path)
+                    }}
+                  >
+                    <VSCodeIcon className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Open in VS Code</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      window.electron.shell.openInTerminal(node.path)
+                    }}
+                  >
+                    <SquareTerminal className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Open in Ghostty</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         )}
-        <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
-        <span className="font-medium">{node.name}</span>
-      </button>
+      </div>
       {open && (
         <div>
           {folderKeys.map((key) => (
@@ -80,8 +128,10 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
 export function RepositoriesView() {
   const { repositories, allRepositories, loading, error, scan, filterText, setFilter } = useRepositories()
   const { checkAllHealth } = useHealth()
+  const { config } = useConfig()
 
-  const tree = useMemo(() => buildTree(repositories), [repositories])
+  const scanDir = config?.scanDirectory || ''
+  const tree = useMemo(() => buildTree(repositories, scanDir), [repositories, scanDir])
 
   const folderKeys = Object.keys(tree.folders).sort()
 

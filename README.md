@@ -4,77 +4,43 @@
   <img src="build/icon.png" width="128" height="128" alt="RepoHub icon">
 </p>
 
-A desktop app for managing all your local projects from one place. Scans your repos directory, auto-detects project types, and lets you run, monitor, and navigate projects without leaving the app.
+A native macOS desktop app for managing local development projects. Scans your repos directory, auto-detects project types, and lets you run, monitor, and navigate everything from one place.
 
 ## Features
 
-- **Auto-discovery** — Recursively scans `~/Documents/Repos` (configurable) and detects project types: Node.js, Python, Rust, Go, Java, Swift
-- **Tree view** — Nested projects display in a collapsible folder tree, sorted by last modified
-- **Inline terminal** — Run projects with auto-detected commands (`pnpm dev`, `cargo run`, etc.) and see output in an embedded xterm.js terminal
-- **Custom run commands** — Override the detected command per repo, saved to config
-- **Git status** — Shows current branch and dirty/clean state on each repo card; refreshes automatically when the app regains focus
-- **Port monitoring** — Polls `lsof` every 5 seconds to show which processes own which localhost ports
-- **Clickable URLs** — `localhost:PORT` and full URLs in terminal output are clickable and open in your browser
-- **Open in editor/terminal** — One-click buttons to open any repo in VS Code or Ghostty
-- **Log persistence** — Terminal output is saved to disk per repo and survives app restarts
-- **Search/filter** — Filter repos by name, path, project type, or git branch with a live result count
-- **Configurable** — Ignore patterns, scan directory, port scan interval, and per-repo command overrides
+- **Auto-discovery** -- recursively scans a configurable directory and detects Node.js, Python, Rust, Go, Java, Swift, and monorepo projects
+- **Inline terminal** -- run projects with auto-detected (or custom) commands and view output in an embedded terminal
+- **Monorepo support** -- detects pnpm workspaces and Turborepo, with per-package terminals
+- **Dependency health** -- run `npm audit` / `pnpm audit` and outdated checks with color-coded badges
+- **GitHub integration** -- PR status badges, CI checks, and a unified PR dashboard (requires `gh` CLI)
+- **Git status** -- shows current branch and dirty state; refreshes on focus
+- **Port monitoring** -- tracks which localhost ports are in use and which projects own them
+- **Open anywhere** -- VS Code and terminal buttons on every folder and repo in the tree
+- **Search & filter** -- live filtering by name with result count
+- **Persistent config** -- custom run commands, ignore patterns, and settings saved across sessions
 
 ## Tech Stack
 
-Electron 40 &bull; React 19 &bull; TypeScript &bull; Vite (electron-vite 5) &bull; Tailwind CSS v4 &bull; shadcn/ui &bull; Zustand &bull; node-pty &bull; xterm.js
+Electron 40 &bull; React 19 &bull; TypeScript &bull; Vite (electron-vite) &bull; Tailwind CSS v4 &bull; shadcn/ui &bull; Zustand &bull; node-pty &bull; xterm.js
 
 ## Getting Started
 
 ```bash
-# Install dependencies
-npm install
-
-# Run in development
-npm run dev
-
-# Build the macOS app
-npm run dist
+pnpm install        # Install dependencies
+pnpm dev            # Development mode with hot reload
+pnpm install-app    # Build and install to /Applications
 ```
 
-The built app will be at `release/mac-arm64/RepoHub.app`. Copy it to `/Applications` to keep it in your dock.
+### Prerequisites
 
-## Project Structure
+- **Node.js** v20+
+- **pnpm**
+- **GitHub CLI** (`gh`) -- optional, for the Pull Requests tab
+  ```bash
+  brew install gh && gh auth login
+  ```
 
-```
-src/
-  main/               # Electron main process
-    services/
-      RepositoryService  # Recursive project scanning + git info
-      ProcessService     # Process lifecycle via node-pty
-      PortService        # localhost port monitoring
-      ConfigService      # Persisted config via electron-store
-      LogService         # Terminal output persistence
-    ipc/               # IPC handlers bridging main <-> renderer
-    types/             # Shared TypeScript types
-  preload/             # Secure context bridge (contextIsolation)
-  renderer/            # React frontend
-    components/
-      repository/      # RepositoryCard, ProjectBadge
-      process/         # TerminalOutput (xterm.js)
-      layout/          # AppLayout, Sidebar
-      ui/              # shadcn/ui primitives
-    views/             # RepositoriesView, PortsView, SettingsView
-    hooks/             # useRepositories, useProcesses, useConfig, usePorts
-    store/             # Zustand stores
-```
-
-## Configuration
-
-Stored at `~/Library/Application Support/repohub/config.json`:
-
-| Setting               | Default                              | Description                                     |
-| --------------------- | ------------------------------------ | ----------------------------------------------- |
-| `scanDirectory`       | `~/Documents/Repos`                  | Root directory to scan for projects             |
-| `ignorePatterns`      | `node_modules`, `.git`, `ThirdParty` | Glob patterns to skip during scanning           |
-| `portScanInterval`    | `5000`                               | Port monitoring poll interval in ms             |
-| `commandOverrides`    | `{}`                                 | Per-repo custom run commands (keyed by repo ID) |
-| `autoStartMonitoring` | `true`                               | Start port monitoring on app launch             |
+See [docs/](docs/) for detailed feature documentation and architecture notes.
 
 ## License
 

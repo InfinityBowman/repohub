@@ -1,0 +1,54 @@
+# Configuration
+
+All settings are persisted to `~/Library/Application Support/repohub/config.json` via electron-store.
+
+## Settings UI
+
+Accessible via the Settings tab in the sidebar.
+
+## Options
+
+| Setting | Default | Description |
+|---|---|---|
+| `scanDirectory` | `~/Documents/Repos` | Root directory to recursively scan for projects |
+| `ignorePatterns` | `**/node_modules`, `**/.git`, `**/ThirdParty/**` | Glob patterns for directories to skip during scan |
+| `portScanInterval` | `5000` (5 seconds) | How often to poll for open localhost ports, in milliseconds |
+| `autoStartMonitoring` | `true` | Whether to start port monitoring automatically on app launch |
+| `commandOverrides` | `{}` | Per-repo custom run commands, keyed by repository ID |
+
+## Scan Directory
+
+RepoHub recursively scans this directory up to 5 levels deep, looking for project marker files (`package.json`, `Cargo.toml`, etc.). When a project is found, recursion stops for that branch (nested projects within a project are not scanned).
+
+Change this in Settings and click Save. A rescan runs automatically when the directory changes.
+
+## Ignore Patterns
+
+Glob patterns that match directory names or relative paths. Common patterns:
+
+- `**/node_modules` -- skip all node_modules directories
+- `**/.git` -- skip .git directories
+- `**/ThirdParty/**` -- skip anything under ThirdParty folders
+
+Add or remove patterns in Settings. Changes take effect on the next scan.
+
+## Command Overrides
+
+Each repository has an auto-detected default command (e.g., `pnpm dev`). You can override this per-repo:
+
+1. Expand a repository card
+2. Click the pencil icon next to the command
+3. Type your custom command
+4. Press Enter or click the checkmark
+
+To reset to the default, clear the field and save. Overrides are stored by repository ID (MD5 hash of the full path).
+
+## Config File Location
+
+The raw config file is at:
+
+```
+~/Library/Application Support/repohub/config.json
+```
+
+You can edit this directly, but changes won't take effect until the app is restarted.
