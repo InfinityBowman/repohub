@@ -123,10 +123,10 @@ export function RepositoryDetailView() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
+    <div className="-mx-6 -mb-6 flex h-[calc(100%+1.5rem)] flex-col overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-between px-6 py-4">
+      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="flex items-center justify-between px-6 pb-3">
           <div className="flex items-center gap-3 overflow-hidden">
             <Button variant="ghost" size="icon-xs" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4" />
@@ -170,10 +170,10 @@ export function RepositoryDetailView() {
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={() => window.electron.shell.openInVSCode(repo.path)}
                   >
-                    <VSCodeIcon className="h-4 w-4" />
+                    <VSCodeIcon className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Open in VS Code</TooltipContent>
@@ -182,10 +182,10 @@ export function RepositoryDetailView() {
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={() => window.electron.shell.openInTerminal(repo.path)}
                   >
-                    <GhosttyIcon className="h-4 w-4" />
+                    <GhosttyIcon className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Open in Ghostty</TooltipContent>
@@ -195,7 +195,7 @@ export function RepositoryDetailView() {
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="icon-xs"
+                      size="icon-sm"
                       onClick={() => window.electron.shell.openUrl(repo.githubUrl!)}
                     >
                       <Github />
@@ -211,7 +211,7 @@ export function RepositoryDetailView() {
                 <>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon-xs" onClick={handleRestart}>
+                      <Button variant="ghost" size="icon-sm" onClick={handleRestart}>
                         <RotateCcw />
                       </Button>
                     </TooltipTrigger>
@@ -221,7 +221,7 @@ export function RepositoryDetailView() {
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="icon-xs"
+                        size="icon-sm"
                         onClick={handleStop}
                         className="hover:bg-destructive/20 hover:text-destructive-foreground"
                       >
@@ -236,7 +236,7 @@ export function RepositoryDetailView() {
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="icon-xs"
+                      size="icon-sm"
                       onClick={handleStart}
                       disabled={!effectiveCommand}
                       className="hover:bg-green-900/30 hover:text-green-400"
