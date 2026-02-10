@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Plus, X, FileCode, FolderOpen, Search } from 'lucide-react'
+import { Save, Plus, X, FileCode, FolderOpen, Search, Palette, Moon, Check } from 'lucide-react'
 import { useConfig } from '@/hooks/useConfig'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -80,6 +80,72 @@ export function SettingsView() {
           {saved ? 'Saved!' : 'Save'}
         </Button>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Theme
+          </CardTitle>
+          <CardDescription>
+            Choose your preferred color scheme. Both themes are dark mode.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => update({ theme: 'default' })}
+              className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+                config.theme !== 'palenight'
+                  ? 'border-primary bg-accent'
+                  : 'border-border hover:border-muted-foreground/50'
+              }`}
+            >
+              {config.theme !== 'palenight' && (
+                <div className="absolute top-2 right-2">
+                  <Check className="h-4 w-4 text-primary" />
+                </div>
+              )}
+              <Moon className="h-6 w-6" />
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-sm font-medium">Default Dark</span>
+                <span className="text-xs text-muted-foreground">Neutral grays</span>
+              </div>
+              <div className="flex gap-1">
+                <span className="h-3 w-3 rounded-full" style={{ background: '#1a1a1a' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: '#3a3a3a' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: '#fafafa' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: '#6366f1' }} />
+              </div>
+            </button>
+            <button
+              onClick={() => update({ theme: 'palenight' })}
+              className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
+                config.theme === 'palenight'
+                  ? 'border-primary bg-accent'
+                  : 'border-border hover:border-muted-foreground/50'
+              }`}
+            >
+              {config.theme === 'palenight' && (
+                <div className="absolute top-2 right-2">
+                  <Check className="h-4 w-4 text-primary" />
+                </div>
+              )}
+              <Palette className="h-6 w-6" />
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-sm font-medium">Palenight</span>
+                <span className="text-xs text-muted-foreground">Material colors</span>
+              </div>
+              <div className="flex gap-1">
+                <span className="h-3 w-3 rounded-full" style={{ background: '#1e2030' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: '#292D3E' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: '#C792EA' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: '#82AAFF' }} />
+              </div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

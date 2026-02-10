@@ -14,7 +14,7 @@ export function CreatePRButton({ repoId }: { repoId: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-xs" onClick={handleClick}>
+        <Button variant="ghost" size="icon-sm" onClick={handleClick}>
           <GitPullRequestCreate className="h-4 w-4" />
         </Button>
       </TooltipTrigger>

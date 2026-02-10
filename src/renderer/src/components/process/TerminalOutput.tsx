@@ -4,6 +4,8 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { useProcesses } from '@/hooks/useProcesses'
 import { useProcessStore } from '@/store/processStore'
+import { useConfig } from '@/hooks/useConfig'
+import { getTerminalTheme } from '@/lib/terminalThemes'
 
 interface TerminalOutputProps {
   repoId: string
@@ -16,17 +18,13 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
   const fitAddonRef = useRef<FitAddon | null>(null)
   const lastDataLengthRef = useRef(0)
   const { resize } = useProcesses()
+  const { config } = useConfig()
 
   useEffect(() => {
     if (!containerRef.current) return
 
     const terminal = new Terminal({
-      theme: {
-        background: '#0a0a0a',
-        foreground: '#e5e5e5',
-        cursor: '#e5e5e5',
-        selectionBackground: '#3a3a3a',
-      },
+      theme: getTerminalTheme(config?.theme),
       fontSize: 12,
       fontFamily: 'Menlo, Monaco, Courier New, monospace',
       cursorBlink: false,
@@ -132,6 +130,13 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
       lastDataLengthRef.current = data.length
     }
   }, [data])
+
+  // Update terminal theme when config changes
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.options.theme = getTerminalTheme(config?.theme)
+    }
+  }, [config?.theme])
 
   return (
     <div

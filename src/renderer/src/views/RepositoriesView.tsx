@@ -1,4 +1,4 @@
-import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Plus, Shield, SquareTerminal } from 'lucide-react'
+import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Plus, Shield } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import type { Repository } from '@/types'
 import { useRepositories } from '@/hooks/useRepositories'
@@ -6,6 +6,7 @@ import { useHealth } from '@/hooks/useHealth'
 import { useConfig } from '@/hooks/useConfig'
 import { RepositoryCard } from '@/components/repository/RepositoryCard'
 import { VSCodeIcon } from '@/components/icons/VSCodeIcon'
+import { GhosttyIcon } from '@/components/icons/GhosttyIcon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
@@ -101,7 +102,7 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
                       window.electron.shell.openInTerminal(node.path)
                     }}
                   >
-                    <SquareTerminal className="h-3.5 w-3.5" />
+                    <GhosttyIcon className="h-3.5 w-3.5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Open in Ghostty</TooltipContent>
@@ -140,7 +141,7 @@ export function RepositoriesView() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Repositories</h2>
+        <h2 className="text-xl font-semibold text-foreground">Repositories</h2>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setScaffoldOpen(true)}>
             <Plus className="h-4 w-4" />

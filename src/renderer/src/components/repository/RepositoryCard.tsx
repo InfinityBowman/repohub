@@ -3,12 +3,12 @@ import {
   Square,
   RotateCcw,
   Folder,
-  SquareTerminal,
   GitBranch,
   Github,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { VSCodeIcon } from '../icons/VSCodeIcon'
+import { GhosttyIcon } from '../icons/GhosttyIcon'
 import type { Repository } from '@/types'
 import { useProcesses } from '@/hooks/useProcesses'
 import { useConfig } from '@/hooks/useConfig'
@@ -125,16 +125,16 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-xs" onClick={handleOpenVSCode}>
-                  <VSCodeIcon className="h-4 w-4" />
+                <Button variant="ghost" size="icon-sm" onClick={handleOpenVSCode}>
+                  <VSCodeIcon className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Open in VS Code</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-xs" onClick={handleOpenTerminal}>
-                  <SquareTerminal />
+                <Button variant="ghost" size="icon-sm" onClick={handleOpenTerminal}>
+                  <GhosttyIcon className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Open in Ghostty</TooltipContent>
@@ -142,7 +142,7 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
             {repo.githubUrl && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-xs" onClick={handleOpenGitHub}>
+                  <Button variant="ghost" size="icon-sm" onClick={handleOpenGitHub}>
                     <Github />
                   </Button>
                 </TooltipTrigger>
@@ -156,7 +156,7 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon-xs" onClick={handleRestart}>
+                    <Button variant="ghost" size="icon-sm" onClick={handleRestart}>
                       <RotateCcw />
                     </Button>
                   </TooltipTrigger>
@@ -164,7 +164,7 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon-xs" onClick={handleStop} className="hover:bg-destructive/20 hover:text-destructive-foreground">
+                    <Button variant="ghost" size="icon-sm" onClick={handleStop} className="hover:bg-destructive/20 hover:text-destructive-foreground">
                       <Square />
                     </Button>
                   </TooltipTrigger>
@@ -176,7 +176,7 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={handleStart}
                     disabled={!effectiveCommand}
                     className="hover:bg-green-900/30 hover:text-green-400"

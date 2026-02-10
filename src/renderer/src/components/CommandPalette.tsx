@@ -25,7 +25,6 @@ import {
   Globe,
   HeartPulse,
   LayoutDashboard,
-  Monitor,
   Package,
   Play,
   Plus,
@@ -33,19 +32,11 @@ import {
   Search,
   Settings,
   Square,
-  Terminal,
 } from 'lucide-react'
-
-const PROJECT_TYPE_LABELS: Record<string, string> = {
-  node: 'Node.js',
-  python: 'Python',
-  rust: 'Rust',
-  go: 'Go',
-  java: 'Java',
-  swift: 'Swift',
-  monorepo: 'Monorepo',
-  unknown: '',
-}
+import { VSCodeIcon } from '@/components/icons/VSCodeIcon'
+import { GhosttyIcon } from '@/components/icons/GhosttyIcon'
+import { LanguageIcon } from '@/components/icons/LanguageIcon'
+import type { ProjectType } from '@/types'
 
 function getDefaultScript(pkg: WorkspacePackage): string | null {
   if (pkg.scripts.dev) return 'dev'
@@ -159,10 +150,8 @@ export function CommandPalette() {
             <ArrowLeft className="size-4" />
           </button>
           <span className="text-sm font-medium">{selectedRepo.name}</span>
-          {PROJECT_TYPE_LABELS[selectedRepo.projectType] && (
-            <span className="text-muted-foreground text-xs">
-              {PROJECT_TYPE_LABELS[selectedRepo.projectType]}
-            </span>
+          {selectedRepo.projectType !== 'unknown' && (
+            <LanguageIcon type={selectedRepo.projectType} className="h-4 w-4" />
           )}
         </div>
       )}
@@ -188,10 +177,8 @@ export function CommandPalette() {
                 >
                   <Code className="mr-2" />
                   <span className="flex-1">{repo.name}</span>
-                  {PROJECT_TYPE_LABELS[repo.projectType] && (
-                    <span className="text-muted-foreground text-xs">
-                      {PROJECT_TYPE_LABELS[repo.projectType]}
-                    </span>
+                  {repo.projectType !== 'unknown' && (
+                    <LanguageIcon type={repo.projectType} className="h-4 w-4" />
                   )}
                   {(isRunning(repo.id) || hasRunningPkgs(repo)) && (
                     <span className="ml-1 h-2 w-2 rounded-full bg-green-500" />
@@ -270,7 +257,7 @@ export function CommandPalette() {
                   closeAndRun(() => window.electron.shell.openInVSCode(selectedRepo.path))
                 }
               >
-                <Monitor className="mr-2" />
+                <VSCodeIcon className="mr-2 h-4 w-4" />
                 Open in VS Code
               </CommandItem>
               <CommandItem
@@ -278,7 +265,7 @@ export function CommandPalette() {
                   closeAndRun(() => window.electron.shell.openInTerminal(selectedRepo.path))
                 }
               >
-                <Terminal className="mr-2" />
+                <GhosttyIcon className="mr-2 h-4 w-4" />
                 Open in Ghostty
               </CommandItem>
               {selectedRepo.githubUrl && (

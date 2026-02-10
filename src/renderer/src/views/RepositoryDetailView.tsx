@@ -5,7 +5,6 @@ import {
   Play,
   Square,
   RotateCcw,
-  SquareTerminal,
   GitBranch,
   Github,
   Pencil,
@@ -16,6 +15,7 @@ import {
   FileJson,
 } from 'lucide-react'
 import { VSCodeIcon } from '@/components/icons/VSCodeIcon'
+import { GhosttyIcon } from '@/components/icons/GhosttyIcon'
 import { useRepositoryStore } from '@/store/repositoryStore'
 import { useProcesses } from '@/hooks/useProcesses'
 import { useConfig } from '@/hooks/useConfig'
@@ -185,7 +185,7 @@ export function RepositoryDetailView() {
                     size="icon-xs"
                     onClick={() => window.electron.shell.openInTerminal(repo.path)}
                   >
-                    <SquareTerminal />
+                    <GhosttyIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Open in Ghostty</TooltipContent>

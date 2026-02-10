@@ -158,6 +158,7 @@ export interface AppConfig {
   codeSearchEnabled: boolean
   codeSearchExcludePatterns: string[]
   codeSearchMaxFileSize: number
+  theme: 'default' | 'palenight'
 }
 
 export interface CodeChunk {

@@ -32,6 +32,7 @@ export class ConfigService {
       codeSearchEnabled: this.store.get('codeSearchEnabled') ?? DEFAULT_CONFIG.codeSearchEnabled,
       codeSearchExcludePatterns: this.store.get('codeSearchExcludePatterns') ?? DEFAULT_CONFIG.codeSearchExcludePatterns,
       codeSearchMaxFileSize: this.store.get('codeSearchMaxFileSize') ?? DEFAULT_CONFIG.codeSearchMaxFileSize,
+      theme: this.store.get('theme') ?? DEFAULT_CONFIG.theme,
     }
   }
 

@@ -14,6 +14,7 @@ export interface AppConfig {
   codeSearchEnabled: boolean
   codeSearchExcludePatterns: string[]
   codeSearchMaxFileSize: number
+  theme: 'default' | 'palenight'
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -79,4 +80,5 @@ export const DEFAULT_CONFIG: AppConfig = {
     '**/*.generated.*',
   ],
   codeSearchMaxFileSize: 1_048_576,
+  theme: 'palenight',
 }

@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
+import { useConfig } from '@/hooks/useConfig'
+import { getTerminalTheme } from '@/lib/terminalThemes'
 
 interface ScaffoldTerminalProps {
   onDone: (data: { exitCode: number; projectName: string }) => void
@@ -13,6 +15,7 @@ export function ScaffoldTerminal({ onDone, disabled }: ScaffoldTerminalProps) {
   const terminalRef = useRef<Terminal | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
   const disabledRef = useRef(disabled)
+  const { config } = useConfig()
 
   // Keep ref in sync so the onData handler sees the latest value
   disabledRef.current = disabled
@@ -21,12 +24,7 @@ export function ScaffoldTerminal({ onDone, disabled }: ScaffoldTerminalProps) {
     if (!containerRef.current) return
 
     const terminal = new Terminal({
-      theme: {
-        background: '#0a0a0a',
-        foreground: '#e5e5e5',
-        cursor: '#e5e5e5',
-        selectionBackground: '#3a3a3a',
-      },
+      theme: getTerminalTheme(config?.theme),
       fontSize: 12,
       fontFamily: 'Menlo, Monaco, Courier New, monospace',
       cursorBlink: true,
@@ -101,6 +99,13 @@ export function ScaffoldTerminal({ onDone, disabled }: ScaffoldTerminalProps) {
       terminalRef.current.options.disableStdin = !!disabled
     }
   }, [disabled])
+
+  // Update terminal theme when config changes
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.options.theme = getTerminalTheme(config?.theme)
+    }
+  }, [config?.theme])
 
   return (
     <div
