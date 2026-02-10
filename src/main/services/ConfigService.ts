@@ -25,6 +25,10 @@ export class ConfigService {
       portScanInterval: this.store.get('portScanInterval'),
       commandOverrides: this.store.get('commandOverrides'),
       autoStartMonitoring: this.store.get('autoStartMonitoring'),
+      projectTemplatesDir: this.store.get('projectTemplatesDir'),
+      scaffoldRecipes: this.store.get('scaffoldRecipes'),
+      hiddenDefaultRecipes: this.store.get('hiddenDefaultRecipes'),
+      setupTemplateDir: this.store.get('setupTemplateDir'),
     }
   }
 

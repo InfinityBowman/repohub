@@ -1,3 +1,5 @@
+import type { ScaffoldRecipe } from './scaffold.types'
+
 export interface AppConfig {
   version: number
   scanDirectory: string
@@ -5,6 +7,10 @@ export interface AppConfig {
   portScanInterval: number
   commandOverrides: Record<string, string>
   autoStartMonitoring: boolean
+  projectTemplatesDir: string
+  scaffoldRecipes: ScaffoldRecipe[]
+  hiddenDefaultRecipes: string[]
+  setupTemplateDir: string
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -14,4 +20,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   portScanInterval: 5000,
   commandOverrides: {},
   autoStartMonitoring: true,
+  projectTemplatesDir: '',
+  scaffoldRecipes: [],
+  hiddenDefaultRecipes: [],
+  setupTemplateDir: '',
 }

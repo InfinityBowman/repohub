@@ -60,6 +60,7 @@ React hooks → `window.electron.*` (preload bridge) → IPC handlers (`src/main
 - **DependencyHealthService** — Runs npm/pnpm audit + outdated, caches results
 - **GitHubService** — Async gh CLI integration for PR status, CI checks, PR creation
 - **GitBranchService** — Branch listing (`git branch -vv` + `--merged`) and safe deletion (`git branch -d`)
+- **ScaffoldService** — Recipe-based project scaffolding via PTY, template file copying, recipe CRUD
 - **ProjectDetector** — Heuristic detection: Node.js, Python, Rust, Go, Java, Swift, Monorepo
 - **WorkspaceDetector** — pnpm workspace parsing for monorepo packages
 

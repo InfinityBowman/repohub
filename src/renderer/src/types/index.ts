@@ -113,6 +113,21 @@ export interface GitHubStatus {
   error?: string
 }
 
+export interface ScaffoldTemplate {
+  name: string
+  path: string
+}
+
+export interface ScaffoldRecipe {
+  id: string
+  name: string
+  description: string
+  command: string
+  category: string
+  applySetupFiles: boolean
+  url?: string
+}
+
 export interface ProcessResult {
   success: boolean
   pid?: number
@@ -136,6 +151,10 @@ export interface AppConfig {
   portScanInterval: number
   commandOverrides: Record<string, string>
   autoStartMonitoring: boolean
+  projectTemplatesDir: string
+  scaffoldRecipes: ScaffoldRecipe[]
+  hiddenDefaultRecipes: string[]
+  setupTemplateDir: string
 }
 
 declare global {
@@ -196,6 +215,17 @@ declare global {
         refresh: () => Promise<void>
         createPR: (repoId: string) => Promise<{ success: boolean; error?: string }>
       }
+      scaffold: {
+        getTemplates: () => Promise<ScaffoldTemplate[]>
+        createFromTemplate: (templateName: string, projectName: string) => Promise<{ success: boolean; error?: string }>
+        getRecipes: () => Promise<ScaffoldRecipe[]>
+        addRecipe: (recipe: ScaffoldRecipe) => Promise<void>
+        removeRecipe: (id: string) => Promise<void>
+        run: (recipeId: string, projectName: string) => Promise<{ success: boolean; error?: string }>
+        write: (data: string) => Promise<void>
+        resize: (cols: number, rows: number) => Promise<void>
+        cancel: () => Promise<void>
+      }
       on: {
         repositoriesChanged: (callback: (repos: Repository[]) => void) => () => void
         processOutput: (callback: (data: ProcessOutputData) => void) => () => void
@@ -203,6 +233,8 @@ declare global {
         portsChanged: (callback: (ports: PortInfo[]) => void) => () => void
         healthChanged: (callback: (health: DependencyHealth) => void) => () => void
         githubChanged: (callback: (data: { prsByRepo: Record<string, PRInfo | null>; allUserPRs: PRInfo[] }) => void) => () => void
+        scaffoldOutput: (callback: (data: { data: string; timestamp: number }) => void) => () => void
+        scaffoldDone: (callback: (data: { exitCode: number; projectName: string }) => void) => () => void
       }
     }
   }

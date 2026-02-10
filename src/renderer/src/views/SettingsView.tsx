@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Plus, X, FolderOpen } from 'lucide-react'
+import { Save, Plus, X, FileCode, FolderOpen } from 'lucide-react'
 import { useConfig } from '@/hooks/useConfig'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,8 @@ import { Separator } from '@/components/ui/separator'
 export function SettingsView() {
   const { config, update } = useConfig()
   const [scanDir, setScanDir] = useState('')
+  const [projectTemplatesDir, setProjectTemplatesDir] = useState('')
+  const [setupTemplateDir, setSetupTemplateDir] = useState('')
   const [patterns, setPatterns] = useState<string[]>([])
   const [newPattern, setNewPattern] = useState('')
   const [saved, setSaved] = useState(false)
@@ -16,6 +18,8 @@ export function SettingsView() {
   useEffect(() => {
     if (config) {
       setScanDir(config.scanDirectory)
+      setProjectTemplatesDir(config.projectTemplatesDir || '')
+      setSetupTemplateDir(config.setupTemplateDir || '')
       setPatterns([...config.ignorePatterns])
     }
   }, [config])
@@ -23,6 +27,8 @@ export function SettingsView() {
   const handleSave = async () => {
     await update({
       scanDirectory: scanDir,
+      projectTemplatesDir,
+      setupTemplateDir,
       ignorePatterns: patterns,
     })
     setSaved(true)
@@ -113,6 +119,44 @@ export function SettingsView() {
               <Plus />
               Add
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Templates Directory</CardTitle>
+          <CardDescription>
+            A directory where each subdirectory is a project template. Used by "New Project" to create projects by copying a template.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <Input
+              value={projectTemplatesDir}
+              onChange={(e) => setProjectTemplatesDir(e.target.value)}
+              placeholder="~/Templates/projects"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Setup Template Directory</CardTitle>
+          <CardDescription>
+            Path to a directory containing template files (eslint, prettier, CLAUDE.md, etc.) to copy into new projects after scaffolding.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <FileCode className="h-4 w-4 text-muted-foreground" />
+            <Input
+              value={setupTemplateDir}
+              onChange={(e) => setSetupTemplateDir(e.target.value)}
+              placeholder="~/dotfiles/project-templates"
+            />
           </div>
         </CardContent>
       </Card>

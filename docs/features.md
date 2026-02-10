@@ -174,6 +174,39 @@ The "Clean Branches" action is available in the command palette (Cmd+K) when a r
 
 ---
 
+## Quick Scaffold — Project Creation
+
+Create new projects from the dashboard using the "New Project" button or Cmd+K command palette.
+
+### Templates (Primary)
+
+The primary flow uses a **Project Templates Directory** configured in Settings. Each subdirectory in that directory is a template. When you create a project from a template, the entire template directory is copied into the scan directory with your chosen project name — no CLI tools required.
+
+1. Click "New Project" or use Cmd+K → "New Project"
+2. Pick a template from the grid
+3. Enter a project name (validated: no spaces/special chars)
+4. Files are copied instantly
+5. Click "Open Project" to rescan and navigate to the new repo's detail view
+
+### Custom Recipes (Secondary)
+
+For power users, the dialog also offers "Custom Recipes" — shell commands that run in a PTY with an interactive xterm.js terminal. Recipes define scaffold commands with a `{name}` placeholder for the project name.
+
+Click "Custom Recipes" in the dialog to view, add, edit, or remove recipes. Recipes are persisted in the app config.
+
+Recipes with `applySetupFiles` enabled will copy files from the "Setup Template Directory" (configured in Settings) into the new project after the scaffold command completes successfully. This is where your eslint config, prettier config, CLAUDE.md, etc. live.
+
+### Setup Template Files
+
+Configure a "Setup Template Directory" in Settings (e.g., `~/dotfiles/project-templates`). When a recipe has "Apply setup files" enabled, all files from this directory are recursively copied into the new project after scaffolding completes successfully.
+
+### Configuration
+
+- **Project Templates Directory** — path to a directory where each subdirectory is a template (Settings)
+- **Setup Template Directory** — path to config files to copy after recipe scaffolding (Settings)
+
+---
+
 ## Port Monitoring
 
 The Ports tab shows all TCP ports currently listening on localhost.

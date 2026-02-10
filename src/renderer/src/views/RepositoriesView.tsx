@@ -1,4 +1,4 @@
-import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Shield, SquareTerminal } from 'lucide-react'
+import { RefreshCw, Search, ChevronRight, ChevronDown, FolderOpen, Plus, Shield, SquareTerminal } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import type { Repository } from '@/types'
 import { useRepositories } from '@/hooks/useRepositories'
@@ -9,6 +9,7 @@ import { VSCodeIcon } from '@/components/icons/VSCodeIcon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
+import { ScaffoldDialog } from '@/components/scaffold/ScaffoldDialog'
 
 interface TreeNode {
   name: string
@@ -129,6 +130,7 @@ export function RepositoriesView() {
   const { repositories, allRepositories, loading, error, scan, filterText, setFilter } = useRepositories()
   const { checkAllHealth } = useHealth()
   const { config } = useConfig()
+  const [scaffoldOpen, setScaffoldOpen] = useState(false)
 
   const scanDir = config?.scanDirectory || ''
   const tree = useMemo(() => buildTree(repositories, scanDir), [repositories, scanDir])
@@ -140,6 +142,10 @@ export function RepositoriesView() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Repositories</h2>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setScaffoldOpen(true)}>
+            <Plus className="h-4 w-4" />
+            New Project
+          </Button>
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -207,6 +213,8 @@ export function RepositoriesView() {
           </div>
         )}
       </div>
+
+      <ScaffoldDialog open={scaffoldOpen} onOpenChange={setScaffoldOpen} />
     </div>
   )
 }

@@ -15,6 +15,10 @@ Accessible via the Settings tab in the sidebar.
 | `portScanInterval` | `5000` (5 seconds) | How often to poll for open localhost ports, in milliseconds |
 | `autoStartMonitoring` | `true` | Whether to start port monitoring automatically on app launch |
 | `commandOverrides` | `{}` | Per-repo custom run commands, keyed by repository ID |
+| `projectTemplatesDir` | `''` | Path to directory where each subdirectory is a project template for "New Project" |
+| `scaffoldRecipes` | `[]` | User-added custom scaffold recipes |
+| `hiddenDefaultRecipes` | `[]` | IDs of default scaffold recipes the user has removed |
+| `setupTemplateDir` | `''` | Path to directory containing config files (eslint, prettier, etc.) to copy into new projects after recipe scaffolding |
 
 ## Scan Directory
 

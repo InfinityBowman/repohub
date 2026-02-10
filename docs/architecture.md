@@ -16,6 +16,7 @@ Main Process (Node.js)            Preload (context bridge)           Renderer (C
   │   ├── DependencyHealthService ← npm/pnpm audit + outdated         ├── hooks/
   │   ├── GitHubService           ← gh CLI integration                └── store/ (Zustand)
   │   ├── GitBranchService        ← branch listing + cleanup
+  │   ├── ScaffoldService        ← recipe management + PTY scaffold + template copy
   │   ├── ProjectDetector         ← project type heuristics
   │   └── WorkspaceDetector       ← pnpm workspace parsing
   ├── ipc/                        ← IPC handler registration

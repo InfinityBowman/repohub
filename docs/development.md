@@ -49,6 +49,7 @@ src/
         repository/     # RepositoryCard, HealthBadge, WorkspacePackageList, BranchCleanup, etc.
         github/         # PRBadge, CreatePRButton
         process/        # TerminalOutput (xterm.js)
+        scaffold/       # ScaffoldDialog, ScaffoldTerminal (project creation)
         layout/         # AppLayout, Sidebar
         icons/          # Custom SVG icons (VSCodeIcon)
         ui/             # shadcn/ui primitives (tooltip, dialog, badge, etc.)

@@ -82,6 +82,21 @@ const electronAPI = {
     createPR: (repoId: string) => ipcRenderer.invoke('github:create-pr', repoId),
   },
 
+  scaffold: {
+    getTemplates: () => ipcRenderer.invoke('scaffold:get-templates'),
+    createFromTemplate: (templateName: string, projectName: string) =>
+      ipcRenderer.invoke('scaffold:create-from-template', templateName, projectName),
+    getRecipes: () => ipcRenderer.invoke('scaffold:get-recipes'),
+    addRecipe: (recipe: any) => ipcRenderer.invoke('scaffold:add-recipe', recipe),
+    removeRecipe: (id: string) => ipcRenderer.invoke('scaffold:remove-recipe', id),
+    run: (recipeId: string, projectName: string) =>
+      ipcRenderer.invoke('scaffold:run', recipeId, projectName),
+    write: (data: string) => ipcRenderer.invoke('scaffold:write', data),
+    resize: (cols: number, rows: number) =>
+      ipcRenderer.invoke('scaffold:resize', cols, rows),
+    cancel: () => ipcRenderer.invoke('scaffold:cancel'),
+  },
+
   on: {
     repositoriesChanged: (callback: (repos: any[]) => void) => {
       const handler = (_: any, data: any) => callback(data)
@@ -113,6 +128,16 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data)
       ipcRenderer.on('github:changed', handler)
       return () => ipcRenderer.removeListener('github:changed', handler)
+    },
+    scaffoldOutput: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data)
+      ipcRenderer.on('scaffold:output', handler)
+      return () => ipcRenderer.removeListener('scaffold:output', handler)
+    },
+    scaffoldDone: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data)
+      ipcRenderer.on('scaffold:done', handler)
+      return () => ipcRenderer.removeListener('scaffold:done', handler)
     },
   },
 }

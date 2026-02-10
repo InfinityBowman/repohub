@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ScaffoldDialog } from '@/components/scaffold/ScaffoldDialog'
 import {
   CommandDialog,
   CommandEmpty,
@@ -27,6 +28,7 @@ import {
   Monitor,
   Package,
   Play,
+  Plus,
   RefreshCw,
   Settings,
   Square,
@@ -55,6 +57,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
   const [search, setSearch] = useState('')
+  const [scaffoldOpen, setScaffoldOpen] = useState(false)
   const navigate = useNavigate()
 
   const repositories = useRepositoryStore((s) => s.repositories)
@@ -138,6 +141,7 @@ export function CommandPalette() {
   }
 
   return (
+    <>
     <CommandDialog
       open={open}
       onOpenChange={handleOpenChange}
@@ -198,6 +202,10 @@ export function CommandPalette() {
             <CommandSeparator />
 
             <CommandGroup heading="Commands">
+              <CommandItem onSelect={() => closeAndRun(() => setScaffoldOpen(true))}>
+                <Plus className="mr-2" />
+                New Project
+              </CommandItem>
               <CommandItem onSelect={() => closeAndRun(() => navigate('/'))}>
                 <LayoutDashboard className="mr-2" />
                 Dashboard
@@ -455,5 +463,8 @@ export function CommandPalette() {
         </span>
       </div>
     </CommandDialog>
+
+    <ScaffoldDialog open={scaffoldOpen} onOpenChange={setScaffoldOpen} />
+    </>
   )
 }
