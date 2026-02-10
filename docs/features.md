@@ -4,12 +4,9 @@
 
 The home screen scans a configurable root directory (defaults to `~/Documents/Repos`) and displays all detected projects in a grouped tree view.
 
-### Tree View
+### Repository List
 
-Repositories are organized into collapsible folder groups based on their directory structure. Both folders and repositories show action buttons on hover:
-
-- **Folders** -- VS Code and terminal buttons appear on hover, opening that directory
-- **Repository cards** -- full set of controls (run/stop/restart, VS Code, terminal, expand/collapse)
+Repository cards show the project name, type badge, health badge, git branch, PR status, and quick-action buttons (VS Code, Ghostty, GitHub, Start/Stop/Restart). Clicking a card navigates to its detail view.
 
 Repositories are sorted by last modified time. Use the search bar to filter by name.
 
@@ -29,17 +26,30 @@ Projects are auto-detected by checking for marker files:
 
 Package manager is detected from lock files: `pnpm-lock.yaml` -> pnpm, `yarn.lock` -> yarn, `bun.lockb`/`bun.lock` -> bun, otherwise npm.
 
+### Repository Detail View
+
+Clicking a repository card navigates to a full-page detail view (`/repo/:id`) with these sections:
+
+- **Header** -- repo name, badges (project type, health, packages, git branch, PR status, running state), and action buttons (VS Code, Ghostty, GitHub, Create PR, Start/Stop/Restart). Sticky at the top with a back button.
+- **Process** -- command editor (click pencil to override the detected command) and xterm.js terminal output. Shows a helpful empty state when no process is running.
+- **Packages** (monorepo only) -- workspace package list with per-package start/stop/restart and embedded terminals.
+- **package.json preview** -- collapsible section showing the raw file contents in a scrollable code block. Uses a generic `repo:read-file` IPC channel with path traversal protection.
+- **Branch Cleanup** -- collapsible section listing all local branches with merged/current badges, individual delete buttons, and a "Delete All Merged" bulk action. See [Branch Cleanup](#branch-cleanup) below.
+
+Press `Escape` to navigate back to the dashboard.
+
 ### Custom Run Commands
 
-Click the pencil icon in an expanded repository card to override the auto-detected command (e.g., change `pnpm dev` to `pnpm dev --port 4000`). Overrides persist across sessions in the app config.
+Click the pencil icon in the detail view's process section to override the auto-detected command (e.g., change `pnpm dev` to `pnpm dev --port 4000`). Overrides persist across sessions in the app config.
 
-### Inline Terminal
+### Terminal
 
-Each repository card expands to show an xterm.js terminal. Terminal output supports:
+The detail view includes an xterm.js terminal. Terminal output supports:
 
 - Clickable URLs (opens in browser)
 - Terminal output is saved to disk per repo and survives app restarts
 - Output is capped at 100KB per repo log file
+- Empty state with guidance when no process has been started
 
 ### Git Status
 
@@ -141,6 +151,29 @@ If the PR tab shows "GitHub CLI (gh) is not installed":
 
 ---
 
+## Branch Cleanup
+
+The branch cleanup panel lives in the repository detail view as a collapsible section. It helps keep local branches tidy by identifying and deleting merged branches.
+
+### How It Works
+
+- Lists all local branches using `git branch -vv` with tracking info and last commit dates
+- Detects merged branches using `git branch --merged main` (falls back to `master`)
+- Shows each branch with its name, current/merged badges, upstream tracking info, and last commit date
+
+### Deleting Branches
+
+- **Individual delete** -- click the trash icon next to any merged branch
+- **Delete All Merged** -- bulk-delete all merged branches at once
+- **Safety guards** -- never deletes the current branch, `main`, `master`, or `develop`
+- Uses `git branch -d` (safe delete) which refuses to delete unmerged branches
+
+### Command Palette
+
+The "Clean Branches" action is available in the command palette (Cmd+K) when a repo is selected, navigating directly to the detail view.
+
+---
+
 ## Port Monitoring
 
 The Ports tab shows all TCP ports currently listening on localhost.
@@ -152,4 +185,4 @@ For each port:
 - **Open** button to launch `http://localhost:<port>` in the browser
 - **Kill** button to terminate the process (sends SIGTERM, then SIGKILL after 3s if still alive)
 
-Port scanning runs on a configurable interval (default: every 5 seconds). It uses `lsof -iTCP -sTCP:LISTEN` under the hood.
+Port scanning runs on a configurable interval (default: every 5 seconds). It uses `lsof -iTCP -sTCP:LISTEN` under the hood. The port list also refreshes automatically when navigating to the Ports tab.

@@ -9,12 +9,15 @@ RepoHub is a native macOS desktop app (Electron) that serves as a project manage
 ## IMPORTANT
 
 - You may add any shadcn components you need, prefer to use shadcn over creating custom components or workarounds where shadcn versions exist
+- UPDATE docs after making changes to keep a strong knowledgebase. This helps both developers and ai agents.
+- UPDATE this file when you encounter difficulties or codebase peculiarities so that your future self can avoid them.
+- UPDATE this file when changes occur that render anything in here to be outdated.
 
 ## Documentation
 
 Detailed docs live in `docs/`:
 
-- `docs/features.md` — All features: dashboard, monorepo, dependency health, GitHub integration, port monitoring
+- `docs/features.md` — All features: dashboard, repo detail view, monorepo, dependency health, GitHub integration, branch cleanup, port monitoring
 - `docs/configuration.md` — Config options, settings UI, file location, command overrides
 - `docs/architecture.md` — Three-process model, IPC flow, async design, PATH fix, security
 - `docs/development.md` — Commands, prerequisites, project structure, how to add components/IPC channels
@@ -56,6 +59,7 @@ React hooks → `window.electron.*` (preload bridge) → IPC handlers (`src/main
 - **LogService** — Terminal output to disk per repo (100KB max per file)
 - **DependencyHealthService** — Runs npm/pnpm audit + outdated, caches results
 - **GitHubService** — Async gh CLI integration for PR status, CI checks, PR creation
+- **GitBranchService** — Branch listing (`git branch -vv` + `--merged`) and safe deletion (`git branch -d`)
 - **ProjectDetector** — Heuristic detection: Node.js, Python, Rust, Go, Java, Swift, Monorepo
 - **WorkspaceDetector** — pnpm workspace parsing for monorepo packages
 
@@ -70,8 +74,8 @@ macOS packaged apps get a minimal PATH. `src/main/index.ts` prepends `/opt/homeb
 ### Renderer Architecture (`src/renderer/src/`)
 
 - **State**: Zustand stores in `store/` (repositoryStore, processStore, portStore)
-- **IPC wrappers**: Custom hooks in `hooks/` (useRepositories, useProcesses, usePorts, useConfig, useHealth, useGitHub)
-- **Routing**: react-router-dom with hash-based routing (4 routes: /, /github, /ports, /settings)
+- **IPC wrappers**: Custom hooks in `hooks/` (useRepositories, useProcesses, usePorts, useConfig, useHealth, useGitHub); git branch ops via `window.electron.git.*` directly
+- **Routing**: react-router-dom with hash-based routing (5 routes: /, /repo/:id, /github, /ports, /settings)
 - **UI**: shadcn/ui components in `components/ui/`, Tailwind CSS v4, Lucide icons
 - **Terminal**: xterm.js with fit addon and clickable URL detection
 - **Tooltips**: All interactive badges and buttons have tooltips via shadcn/ui Tooltip

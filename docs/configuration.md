@@ -36,8 +36,8 @@ Add or remove patterns in Settings. Changes take effect on the next scan.
 
 Each repository has an auto-detected default command (e.g., `pnpm dev`). You can override this per-repo:
 
-1. Expand a repository card
-2. Click the pencil icon next to the command
+1. Click a repository card to open the detail view
+2. In the Process section, click the pencil icon next to the command
 3. Type your custom command
 4. Press Enter or click the checkmark
 

@@ -8,13 +8,14 @@ Main Process (Node.js)            Preload (context bridge)           Renderer (C
   ├── index.ts (entry)                                                 ├── App.tsx (routes)
   ├── window.ts                                                        ├── views/
   ├── services/                                                        │   ├── RepositoriesView
-  │   ├── RepositoryService       ← filesystem scan, git info         │   ├── GitHubView
-  │   ├── ProcessService          ← PTY via node-pty                  │   ├── PortsView
-  │   ├── PortService             ← lsof polling                     │   └── SettingsView
-  │   ├── ConfigService           ← electron-store persistence        ├── components/
-  │   ├── LogService              ← terminal output to disk           ├── hooks/
-  │   ├── DependencyHealthService ← npm/pnpm audit + outdated         └── store/ (Zustand)
-  │   ├── GitHubService           ← gh CLI integration
+  │   ├── RepositoryService       ← filesystem scan, git info         │   ├── RepositoryDetailView
+  │   ├── ProcessService          ← PTY via node-pty                  │   ├── GitHubView
+  │   ├── PortService             ← lsof polling                     │   ├── PortsView
+  │   ├── ConfigService           ← electron-store persistence        │   └── SettingsView
+  │   ├── LogService              ← terminal output to disk           ├── components/
+  │   ├── DependencyHealthService ← npm/pnpm audit + outdated         ├── hooks/
+  │   ├── GitHubService           ← gh CLI integration                └── store/ (Zustand)
+  │   ├── GitBranchService        ← branch listing + cleanup
   │   ├── ProjectDetector         ← project type heuristics
   │   └── WorkspaceDetector       ← pnpm workspace parsing
   ├── ipc/                        ← IPC handler registration

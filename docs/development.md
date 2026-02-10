@@ -38,10 +38,15 @@ src/
     index.ts            # Exposes window.electron.* API
   renderer/             # React frontend (Chromium)
     src/
-      App.tsx           # Hash router with 4 routes
+      App.tsx           # Hash router with 5 routes (/, /repo/:id, /github, /ports, /settings)
       views/            # Page-level components
+        RepositoriesView     # Dashboard with repo cards
+        RepositoryDetailView # Full detail page for a single repo
+        GitHubView           # PR dashboard
+        PortsView            # Port monitor (auto-refreshes on mount)
+        SettingsView         # App settings
       components/       # UI components
-        repository/     # RepositoryCard, HealthBadge, WorkspacePackageList, etc.
+        repository/     # RepositoryCard, HealthBadge, WorkspacePackageList, BranchCleanup, etc.
         github/         # PRBadge, CreatePRButton
         process/        # TerminalOutput (xterm.js)
         layout/         # AppLayout, Sidebar
