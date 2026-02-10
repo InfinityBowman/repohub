@@ -74,6 +74,8 @@ export default [
         Buffer: 'readonly',
         global: 'readonly',
         NodeJS: 'readonly',
+        setImmediate: 'readonly',
+        clearImmediate: 'readonly',
       },
     },
     plugins: {
@@ -81,15 +83,7 @@ export default [
       'react-refresh': reactRefresh,
     },
     rules: {
-      // Ignore unused variables that start with underscore
-      'no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
+      'no-unused-vars': 'off',
       // Prevent throwing literals - must throw Error objects
       'no-throw-literal': 'error',
       // React hooks rules

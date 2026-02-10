@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Play, Square, RotateCcw, Folder, GitBranch, Github } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VSCodeIcon } from '../icons/VSCodeIcon';

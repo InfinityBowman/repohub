@@ -1,3 +1,4 @@
+import type React from 'react';
 import { RefreshCw } from 'lucide-react';
 import type { DependencyHealth } from '@/types';
 import { useHealth } from '@/hooks/useHealth';

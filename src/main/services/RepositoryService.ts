@@ -133,7 +133,7 @@ export class RepositoryService extends EventEmitter {
     this.watcher = watch(scanDir, {
       depth: 1,
       ignoreInitial: true,
-      ignored: /(^|[\/\\])\../,
+      ignored: /(^|[/\\])\../,
     });
 
     this.watcher.on('addDir', () => {

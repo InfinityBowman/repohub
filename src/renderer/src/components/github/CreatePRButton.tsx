@@ -1,3 +1,4 @@
+import type React from 'react';
 import { GitPullRequestCreate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

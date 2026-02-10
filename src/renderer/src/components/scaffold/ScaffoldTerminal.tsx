@@ -18,7 +18,9 @@ export function ScaffoldTerminal({ onDone, disabled }: ScaffoldTerminalProps) {
   const { config } = useConfig();
 
   // Keep ref in sync so the onData handler sees the latest value
-  disabledRef.current = disabled;
+  useEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
 
   useEffect(() => {
     if (!containerRef.current) return;
