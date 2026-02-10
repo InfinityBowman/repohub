@@ -23,6 +23,14 @@ export function registerProcessHandlers(processService: ProcessService): void {
     processService.resize(repoId, cols, rows);
   });
 
+  ipcMain.handle('process:write', async (_event, repoId: string, data: string) => {
+    processService.write(repoId, data);
+  });
+
+  ipcMain.handle('process:open-shell', async (_event, repoId: string) => {
+    return processService.openShell(repoId);
+  });
+
   ipcMain.handle(
     'process:start-package',
     async (_event, repoId: string, packageName: string, scriptName: string) => {

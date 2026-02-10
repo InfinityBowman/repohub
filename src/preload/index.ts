@@ -31,6 +31,10 @@ const electronAPI = {
       ipcRenderer.invoke('process:restart-package', repoId, packageName, scriptName),
     resizePackage: (repoId: string, packageName: string, cols: number, rows: number) =>
       ipcRenderer.invoke('process:resize-package', repoId, packageName, cols, rows),
+    write: (repoId: string, data: string) =>
+      ipcRenderer.invoke('process:write', repoId, data),
+    openShell: (repoId: string) =>
+      ipcRenderer.invoke('process:open-shell', repoId),
   },
 
   ports: {

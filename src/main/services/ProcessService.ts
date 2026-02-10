@@ -174,6 +174,102 @@ export class ProcessService extends EventEmitter {
     return this.processes.has(repoId);
   }
 
+  write(repoId: string, data: string): void {
+    const managed = this.processes.get(repoId);
+    if (managed) {
+      managed.ptyProcess.write(data);
+    }
+  }
+
+  async openShell(repoId: string): Promise<ProcessResult> {
+    // Stop existing process for this repo
+    if (this.processes.has(repoId)) {
+      await this.stop(repoId);
+    }
+
+    const repo = this.repositoryService.getById(repoId);
+    if (!repo) {
+      return { success: false, error: `Repository ${repoId} not found` };
+    }
+
+    try {
+      const shell = process.env.SHELL || '/bin/zsh';
+      const ptyProcess = pty.spawn(shell, [], {
+        name: 'xterm-256color',
+        cols: 120,
+        rows: 30,
+        cwd: repo.path,
+        env: process.env as Record<string, string>,
+      });
+
+      const command = shell;
+      const managed: ManagedProcess = {
+        repoId,
+        repoName: repo.name,
+        pid: ptyProcess.pid,
+        command,
+        ptyProcess,
+        startTime: Date.now(),
+      };
+
+      let buffer = '';
+      let bufferTimer: NodeJS.Timeout | null = null;
+
+      ptyProcess.onData((data: string) => {
+        buffer += data;
+
+        if (bufferTimer) clearTimeout(bufferTimer);
+
+        bufferTimer = setTimeout(() => {
+          const output: ProcessOutputData = {
+            repoId,
+            data: buffer,
+            timestamp: Date.now(),
+          };
+          this.emit('output', output);
+          buffer = '';
+        }, 50);
+      });
+
+      ptyProcess.onExit(({ exitCode }) => {
+        if (bufferTimer) {
+          clearTimeout(bufferTimer);
+          if (buffer) {
+            this.emit('output', { repoId, data: buffer, timestamp: Date.now() });
+            buffer = '';
+          }
+        }
+        this.processes.delete(repoId);
+        const info: ProcessInfo = {
+          repoId,
+          repoName: repo.name,
+          pid: managed.pid,
+          command,
+          status: 'stopped',
+          startTime: managed.startTime,
+          exitCode,
+        };
+        this.emit('status-changed', info);
+      });
+
+      this.processes.set(repoId, managed);
+
+      const info: ProcessInfo = {
+        repoId,
+        repoName: repo.name,
+        pid: ptyProcess.pid,
+        command,
+        status: 'running',
+        startTime: managed.startTime,
+      };
+      this.emit('status-changed', info);
+
+      return { success: true, pid: ptyProcess.pid, command };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
   resize(repoId: string, cols: number, rows: number): void {
     const managed = this.processes.get(repoId);
     if (managed) {

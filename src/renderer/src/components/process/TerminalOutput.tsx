@@ -10,14 +10,15 @@ import { getTerminalTheme } from '@/lib/terminalThemes';
 interface TerminalOutputProps {
   repoId: string;
   data: string;
+  interactive?: boolean;
 }
 
-export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
+export function TerminalOutput({ repoId, data, interactive = false }: TerminalOutputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const lastDataLengthRef = useRef(0);
-  const { resize } = useProcesses();
+  const { resize, write } = useProcesses();
   const { config } = useConfig();
 
   useEffect(() => {
@@ -27,8 +28,8 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
       theme: getTerminalTheme(config?.theme),
       fontSize: 12,
       fontFamily: 'Menlo, Monaco, Courier New, monospace',
-      cursorBlink: false,
-      disableStdin: true,
+      cursorBlink: interactive,
+      disableStdin: !interactive,
       scrollback: 5000,
       convertEol: true,
     });
@@ -76,6 +77,13 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
       },
     });
 
+    // Send keystrokes to the PTY when interactive
+    if (interactive) {
+      terminal.onData((data) => {
+        write(repoId, data);
+      });
+    }
+
     // Fit terminal to container
     try {
       fitAddon.fit();
@@ -119,7 +127,7 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
       fitAddonRef.current = null;
       lastDataLengthRef.current = 0;
     };
-  }, [repoId]);
+  }, [repoId, interactive]);
 
   // Write new data incrementally
   useEffect(() => {
@@ -138,10 +146,13 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
     }
   }, [config?.theme]);
 
+  const bg = getTerminalTheme(config?.theme).background;
+
   return (
     <div
       ref={containerRef}
-      className='border-border h-64 w-full overflow-hidden rounded-md border bg-[#0a0a0a] p-2'
+      className='border-border h-64 w-full overflow-hidden rounded-md border p-2'
+      style={{ backgroundColor: bg }}
     />
   );
 }

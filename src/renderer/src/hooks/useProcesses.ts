@@ -63,6 +63,14 @@ export function useProcesses() {
     return window.electron.processes.resize(repoId, cols, rows);
   }, []);
 
+  const write = useCallback(async (repoId: string, data: string) => {
+    return window.electron.processes.write(repoId, data);
+  }, []);
+
+  const openShell = useCallback(async (repoId: string) => {
+    return window.electron.processes.openShell(repoId);
+  }, []);
+
   const startPackage = useCallback(
     async (repoId: string, packageName: string, scriptName: string) => {
       return window.electron.processes.startPackage(repoId, packageName, scriptName);
@@ -95,6 +103,8 @@ export function useProcesses() {
     stop,
     restart,
     resize,
+    write,
+    openShell,
     startPackage,
     stopPackage,
     restartPackage,
