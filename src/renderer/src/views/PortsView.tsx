@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { RefreshCw, Skull, ExternalLink } from 'lucide-react'
 import { usePorts } from '@/hooks/usePorts'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,6 +8,11 @@ import { Separator } from '@/components/ui/separator'
 
 export function PortsView() {
   const { ports, monitoring, killByPort, refresh } = usePorts()
+
+  // Refresh on mount (navigating to tab)
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   return (
     <div className="flex flex-col gap-4">

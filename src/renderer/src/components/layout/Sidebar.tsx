@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { FolderGit2, Network, Settings, GitPullRequest } from 'lucide-react'
 
 const navItems = [
@@ -9,6 +9,9 @@ const navItems = [
 ]
 
 export function Sidebar() {
+  const location = useLocation()
+  const isRepoDetail = location.pathname.startsWith('/repo/')
+
   return (
     <aside className="flex h-full w-56 flex-col border-r border-border bg-sidebar-background pt-12">
       <div className="px-4 pb-4">
@@ -19,13 +22,14 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                isActive
+            className={({ isActive }) => {
+              const active = isActive || (to === '/' && isRepoDetail)
+              return `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
               }`
-            }
+            }}
           >
             <Icon className="h-4 w-4" />
             {label}

@@ -54,17 +54,27 @@ export function RepositoryDetailView() {
   const processInfo = repo ? processes[repo.id] : undefined
   const commandOverride = repo ? config?.commandOverrides?.[repo.id] : undefined
   const effectiveCommand = repo ? commandOverride || repo.defaultCommand : null
+  const hasTerminalContent = !!(terminalData[id || ''])
+
+  // Escape key navigates back
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !editingCmd) {
+        navigate('/')
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [navigate, editingCmd])
 
   // Load package.json on mount
   useEffect(() => {
     if (!id) return
     window.electron.repositories.readFile(id, 'package.json').then((result) => {
-      if (typeof result === 'string' && !result.startsWith('{') && (result as any).error) {
+      if (typeof result === 'object' && result !== null && (result as any).error) {
         setPackageJsonError(true)
-      } else if (typeof result === 'object' && (result as any).error) {
-        setPackageJsonError(true)
-      } else {
-        setPackageJson(result as string)
+      } else if (typeof result === 'string') {
+        setPackageJson(result)
       }
     })
   }, [id])
@@ -287,7 +297,17 @@ export function RepositoryDetailView() {
               </>
             )}
           </div>
-          <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
+          {running || hasTerminalContent ? (
+            <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
+          ) : (
+            <div className="flex h-32 items-center justify-center rounded-md border border-border bg-[#0a0a0a]">
+              <p className="text-sm text-muted-foreground">
+                {effectiveCommand
+                  ? 'No process running. Click play to start.'
+                  : 'No run command detected for this project.'}
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Workspace Packages (monorepo only) */}
