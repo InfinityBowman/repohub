@@ -4,6 +4,7 @@ import { RepositoriesView } from '@/views/RepositoriesView'
 import { PortsView } from '@/views/PortsView'
 import { SettingsView } from '@/views/SettingsView'
 import { GitHubView } from '@/views/GitHubView'
+import { CommandPalette } from '@/components/CommandPalette'
 import { useProcessListeners } from '@/hooks/useProcesses'
 import { useHealthListeners } from '@/hooks/useHealth'
 import { useGitHubListeners } from '@/hooks/useGitHub'
@@ -15,6 +16,7 @@ export default function App() {
 
   return (
     <HashRouter>
+      <CommandPalette />
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<RepositoriesView />} />

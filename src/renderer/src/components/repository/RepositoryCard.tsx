@@ -244,53 +244,52 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
 
       {expanded && (
         <div className="border-t px-4 pb-4 pt-3">
-          {repo.projectType === 'monorepo' && repo.workspace ? (
-            <WorkspacePackageList repo={repo} />
-          ) : (
-            <>
-              <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
-                {processInfo && processInfo.status === 'running' && (
-                  <>
-                    <span>PID: {processInfo.pid}</span>
-                    <span>Cmd: {processInfo.command}</span>
-                  </>
-                )}
-                {(!processInfo || processInfo.status !== 'running') && (
-                  editingCmd ? (
-                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                      <span className="text-muted-foreground">Cmd:</span>
-                      <Input
-                        value={cmdDraft}
-                        onChange={(e) => setCmdDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveCmd(e as any)
-                          if (e.key === 'Escape') setEditingCmd(false)
-                        }}
-                        className="h-6 w-56 text-xs"
-                        autoFocus
-                      />
-                      <Button variant="ghost" size="icon-xs" onClick={saveCmd}>
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon-xs" onClick={cancelEditCmd}>
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <span>
-                        Cmd: {effectiveCommand || 'none'}
-                        {commandOverride && <span className="ml-1 text-blue-400">(custom)</span>}
-                      </span>
-                      <Button variant="ghost" size="icon-xs" onClick={startEditCmd}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    </>
-                  )
-                )}
-              </div>
-              <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
-            </>
+          <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
+            {processInfo && processInfo.status === 'running' && (
+              <>
+                <span>PID: {processInfo.pid}</span>
+                <span>Cmd: {processInfo.command}</span>
+              </>
+            )}
+            {(!processInfo || processInfo.status !== 'running') && (
+              editingCmd ? (
+                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-muted-foreground">Cmd:</span>
+                  <Input
+                    value={cmdDraft}
+                    onChange={(e) => setCmdDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveCmd(e as any)
+                      if (e.key === 'Escape') setEditingCmd(false)
+                    }}
+                    className="h-6 w-56 text-xs"
+                    autoFocus
+                  />
+                  <Button variant="ghost" size="icon-xs" onClick={saveCmd}>
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="icon-xs" onClick={cancelEditCmd}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <span>
+                    Cmd: {effectiveCommand || 'none'}
+                    {commandOverride && <span className="ml-1 text-blue-400">(custom)</span>}
+                  </span>
+                  <Button variant="ghost" size="icon-xs" onClick={startEditCmd}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </>
+              )
+            )}
+          </div>
+          <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
+          {repo.projectType === 'monorepo' && repo.workspace && (
+            <div className="mt-3">
+              <WorkspacePackageList repo={repo} />
+            </div>
           )}
         </div>
       )}
