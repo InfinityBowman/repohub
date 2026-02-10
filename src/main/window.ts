@@ -1,5 +1,5 @@
-import { BrowserWindow } from 'electron'
-import { join } from 'path'
+import { BrowserWindow } from 'electron';
+import { join } from 'path';
 
 export function createMainWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -15,13 +15,13 @@ export function createMainWindow(): BrowserWindow {
       nodeIntegration: false,
       sandbox: false,
     },
-  })
+  });
 
   if (process.env.NODE_ENV === 'development' && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
-  return mainWindow
+  return mainWindow;
 }

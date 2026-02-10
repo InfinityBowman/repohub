@@ -1,33 +1,31 @@
-import { ipcMain, BrowserWindow } from 'electron'
-import type { GitHubService } from '../services/GitHubService'
+import { ipcMain, BrowserWindow } from 'electron';
+import type { GitHubService } from '../services/GitHubService';
 
-export function registerGitHubHandlers(
-  githubService: GitHubService,
-): void {
+export function registerGitHubHandlers(githubService: GitHubService): void {
   ipcMain.handle('github:check-availability', async () => {
-    return githubService.checkAvailability()
-  })
+    return githubService.checkAvailability();
+  });
 
   ipcMain.handle('github:get-pr-for-branch', async (_event, repoId: string) => {
-    return githubService.getPRForBranch(repoId)
-  })
+    return githubService.getPRForBranch(repoId);
+  });
 
   ipcMain.handle('github:get-all-user-prs', async () => {
-    return githubService.fetchAllUserPRs()
-  })
+    return githubService.fetchAllUserPRs();
+  });
 
   ipcMain.handle('github:refresh', async () => {
-    await githubService.refresh()
-  })
+    await githubService.refresh();
+  });
 
   ipcMain.handle('github:create-pr', async (_event, repoId: string) => {
-    return githubService.createPR(repoId)
-  })
+    return githubService.createPR(repoId);
+  });
 
-  githubService.on('github:changed', (data) => {
-    const windows = BrowserWindow.getAllWindows()
+  githubService.on('github:changed', data => {
+    const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {
-      win.webContents.send('github:changed', data)
+      win.webContents.send('github:changed', data);
     }
-  })
+  });
 }

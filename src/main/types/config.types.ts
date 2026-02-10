@@ -1,20 +1,20 @@
-import type { ScaffoldRecipe } from './scaffold.types'
+import type { ScaffoldRecipe } from './scaffold.types';
 
 export interface AppConfig {
-  version: number
-  scanDirectory: string
-  ignorePatterns: string[]
-  portScanInterval: number
-  commandOverrides: Record<string, string>
-  autoStartMonitoring: boolean
-  projectTemplatesDir: string
-  scaffoldRecipes: ScaffoldRecipe[]
-  hiddenDefaultRecipes: string[]
-  setupTemplateDir: string
-  codeSearchEnabled: boolean
-  codeSearchExcludePatterns: string[]
-  codeSearchMaxFileSize: number
-  theme: 'default' | 'palenight'
+  version: number;
+  scanDirectory: string;
+  ignorePatterns: string[];
+  portScanInterval: number;
+  commandOverrides: Record<string, string>;
+  autoStartMonitoring: boolean;
+  projectTemplatesDir: string;
+  scaffoldRecipes: ScaffoldRecipe[];
+  hiddenDefaultRecipes: string[];
+  setupTemplateDir: string;
+  codeSearchEnabled: boolean;
+  codeSearchExcludePatterns: string[];
+  codeSearchMaxFileSize: number;
+  theme: 'default' | 'palenight';
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -81,4 +81,4 @@ export const DEFAULT_CONFIG: AppConfig = {
   ],
   codeSearchMaxFileSize: 1_048_576,
   theme: 'palenight',
-}
+};

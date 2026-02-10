@@ -14,15 +14,15 @@ Repositories are sorted by last modified time. Use the search bar to filter by n
 
 Projects are auto-detected by checking for marker files:
 
-| Project Type | Detection | Default Command |
-|---|---|---|
-| Monorepo | `pnpm-workspace.yaml` + `package.json` | `turbo dev` (if turbo.json) or `pnpm dev` |
-| Node.js | `package.json` | `pnpm dev` / `yarn dev` / `npm run dev` / `bun dev` |
-| Rust | `Cargo.toml` | `cargo run` |
-| Python | `pyproject.toml` / `requirements.txt` / `setup.py` | `python main.py` |
-| Go | `go.mod` | `go run .` |
-| Swift | `Package.swift` | `swift run` |
-| Java | `pom.xml` / `build.gradle` / `build.gradle.kts` | none |
+| Project Type | Detection                                          | Default Command                                     |
+| ------------ | -------------------------------------------------- | --------------------------------------------------- |
+| Monorepo     | `pnpm-workspace.yaml` + `package.json`             | `turbo dev` (if turbo.json) or `pnpm dev`           |
+| Node.js      | `package.json`                                     | `pnpm dev` / `yarn dev` / `npm run dev` / `bun dev` |
+| Rust         | `Cargo.toml`                                       | `cargo run`                                         |
+| Python       | `pyproject.toml` / `requirements.txt` / `setup.py` | `python main.py`                                    |
+| Go           | `go.mod`                                           | `go run .`                                          |
+| Swift        | `Package.swift`                                    | `swift run`                                         |
+| Java         | `pom.xml` / `build.gradle` / `build.gradle.kts`    | none                                                |
 
 Package manager is detected from lock files: `pnpm-lock.yaml` -> pnpm, `yarn.lock` -> yarn, `bun.lockb`/`bun.lock` -> bun, otherwise npm.
 
@@ -75,13 +75,13 @@ For Node.js and monorepo projects, a shield badge on each card indicates depende
 
 ### Badge Colors
 
-| Badge | Meaning |
-|---|---|
-| Gray shield | Not yet checked -- click to run a check |
-| Spinning | Check in progress |
-| Green shield | Healthy -- no vulnerabilities, dependencies up to date |
-| Yellow shield | Warnings -- some high-severity vulns or 5+ outdated packages |
-| Red shield | Critical -- critical vulnerabilities or 5+ high-severity ones |
+| Badge         | Meaning                                                       |
+| ------------- | ------------------------------------------------------------- |
+| Gray shield   | Not yet checked -- click to run a check                       |
+| Spinning      | Check in progress                                             |
+| Green shield  | Healthy -- no vulnerabilities, dependencies up to date        |
+| Yellow shield | Warnings -- some high-severity vulns or 5+ outdated packages  |
+| Red shield    | Critical -- critical vulnerabilities or 5+ high-severity ones |
 
 ### Detail Popover
 
@@ -99,6 +99,7 @@ The **"Check All"** button in the toolbar runs health checks across all Node.js/
 ### How It Works
 
 Under the hood, RepoHub runs:
+
 - `npm audit --json` or `pnpm audit --json` for vulnerabilities
 - `npm outdated --json` or `pnpm outdated --format json` for outdated packages
 
@@ -119,6 +120,7 @@ Requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and au
 ### PR Badges on Repository Cards
 
 When a repo's current branch has an associated pull request, a PR badge appears showing:
+
 - PR number
 - CI status dot (green = passing, red = failing, yellow = pending, gray = unknown)
 - PR state coloring (green = open, gray = draft, purple = merged, red = closed)
@@ -145,6 +147,7 @@ A unified dashboard at `/github` showing all your open and draft PRs across scan
 ### Troubleshooting
 
 If the PR tab shows "GitHub CLI (gh) is not installed":
+
 1. Install: `brew install gh`
 2. Authenticate: `gh auth login`
 3. Restart RepoHub
@@ -255,6 +258,7 @@ JavaScript, TypeScript, TSX, Python, Rust, Go, Java, Swift. Unsupported file typ
 The Ports tab shows all TCP ports currently listening on localhost.
 
 For each port:
+
 - Port number, process name, and PID
 - **"Managed"** badge if the process was started by RepoHub
 - Link to the originating project (if managed)

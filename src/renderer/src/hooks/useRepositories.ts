@@ -1,38 +1,39 @@
-import { useEffect, useCallback } from 'react'
-import { useRepositoryStore } from '@/store/repositoryStore'
+import { useEffect, useCallback } from 'react';
+import { useRepositoryStore } from '@/store/repositoryStore';
 
 export function useRepositories() {
-  const store = useRepositoryStore()
+  const store = useRepositoryStore();
 
   const scan = useCallback(async () => {
-    store.setLoading(true)
+    store.setLoading(true);
     try {
-      const repos = await window.electron.repositories.scan()
-      store.setRepositories(repos)
+      const repos = await window.electron.repositories.scan();
+      store.setRepositories(repos);
     } catch (err: any) {
-      store.setError(err.message)
+      store.setError(err.message);
     } finally {
-      store.setLoading(false)
+      store.setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    scan()
+    scan();
 
-    const unsubscribe = window.electron.on.repositoriesChanged((repos) => {
-      store.setRepositories(repos)
-    })
+    const unsubscribe = window.electron.on.repositoriesChanged(repos => {
+      store.setRepositories(repos);
+    });
 
-    return unsubscribe
-  }, [])
+    return unsubscribe;
+  }, []);
 
-  const filterLower = store.filterText.toLowerCase()
-  const filtered = store.repositories.filter((repo) =>
-    repo.name.toLowerCase().includes(filterLower) ||
-    repo.projectType.toLowerCase().includes(filterLower) ||
-    repo.path.toLowerCase().includes(filterLower) ||
-    (repo.gitBranch && repo.gitBranch.toLowerCase().includes(filterLower)),
-  )
+  const filterLower = store.filterText.toLowerCase();
+  const filtered = store.repositories.filter(
+    repo =>
+      repo.name.toLowerCase().includes(filterLower) ||
+      repo.projectType.toLowerCase().includes(filterLower) ||
+      repo.path.toLowerCase().includes(filterLower) ||
+      (repo.gitBranch && repo.gitBranch.toLowerCase().includes(filterLower)),
+  );
 
   return {
     repositories: filtered,
@@ -44,5 +45,5 @@ export function useRepositories() {
     scan,
     selectRepository: store.selectRepository,
     setFilter: store.setFilter,
-  }
+  };
 }

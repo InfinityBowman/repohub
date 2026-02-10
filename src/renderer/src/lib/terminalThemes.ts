@@ -1,4 +1,4 @@
-import type { ITheme } from '@xterm/xterm'
+import type { ITheme } from '@xterm/xterm';
 
 export const palenightTerminalTheme: ITheme = {
   background: '#1e2030',
@@ -22,7 +22,7 @@ export const palenightTerminalTheme: ITheme = {
   brightMagenta: '#C792EA',
   brightCyan: '#89DDFF',
   brightWhite: '#ffffff',
-}
+};
 
 export const defaultTerminalTheme: ITheme = {
   background: '#1a1a1a',
@@ -46,8 +46,8 @@ export const defaultTerminalTheme: ITheme = {
   brightMagenta: '#d670d6',
   brightCyan: '#29b8db',
   brightWhite: '#ffffff',
-}
+};
 
 export function getTerminalTheme(theme: string | undefined): ITheme {
-  return theme === 'palenight' ? palenightTerminalTheme : defaultTerminalTheme
+  return theme === 'palenight' ? palenightTerminalTheme : defaultTerminalTheme;
 }

@@ -1,48 +1,40 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
-import { createMainWindow } from './window'
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { createMainWindow } from './window';
 
 // macOS packaged apps inherit a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin).
 // Augment with common tool directories so gh, git, pnpm, npm, node etc. are found.
 // Uses only static paths to avoid blocking the main thread at startup.
-const extraPaths = [
-  '/opt/homebrew/bin',
-  '/opt/homebrew/sbin',
-  '/usr/local/bin',
-  '/usr/local/sbin',
-]
-const currentPath = process.env.PATH || ''
-const currentParts = new Set(currentPath.split(':'))
-const newParts = extraPaths.filter((p) => !currentParts.has(p))
+const extraPaths = ['/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin', '/usr/local/sbin'];
+const currentPath = process.env.PATH || '';
+const currentParts = new Set(currentPath.split(':'));
+const newParts = extraPaths.filter(p => !currentParts.has(p));
 if (newParts.length > 0) {
-  process.env.PATH = [...newParts, currentPath].join(':')
+  process.env.PATH = [...newParts, currentPath].join(':');
 }
 
-import { registerAllHandlers } from './ipc'
-import { ConfigService } from './services/ConfigService'
-import { RepositoryService } from './services/RepositoryService'
-import { ProcessService } from './services/ProcessService'
-import { PortService } from './services/PortService'
-import { LogService } from './services/LogService'
-import { DependencyHealthService } from './services/DependencyHealthService'
-import { GitHubService } from './services/GitHubService'
-import { GitBranchService } from './services/GitBranchService'
-import { ScaffoldService } from './services/ScaffoldService'
-import { CodeSearchService } from './services/CodeSearchService'
+import { registerAllHandlers } from './ipc';
+import { ConfigService } from './services/ConfigService';
+import { RepositoryService } from './services/RepositoryService';
+import { ProcessService } from './services/ProcessService';
+import { PortService } from './services/PortService';
+import { LogService } from './services/LogService';
+import { DependencyHealthService } from './services/DependencyHealthService';
+import { GitHubService } from './services/GitHubService';
+import { GitBranchService } from './services/GitBranchService';
+import { ScaffoldService } from './services/ScaffoldService';
+import { CodeSearchService } from './services/CodeSearchService';
 
 // Initialize services
-const configService = new ConfigService()
-const repositoryService = new RepositoryService(configService)
-const processService = new ProcessService(repositoryService, configService)
-const portService = new PortService(
-  processService,
-  configService.get().portScanInterval,
-)
-const logService = new LogService()
-const healthService = new DependencyHealthService(repositoryService)
-const githubService = new GitHubService(repositoryService)
-const gitBranchService = new GitBranchService()
-const scaffoldService = new ScaffoldService(configService)
-const codeSearchService = new CodeSearchService(configService, repositoryService)
+const configService = new ConfigService();
+const repositoryService = new RepositoryService(configService);
+const processService = new ProcessService(repositoryService, configService);
+const portService = new PortService(processService, configService.get().portScanInterval);
+const logService = new LogService();
+const healthService = new DependencyHealthService(repositoryService);
+const githubService = new GitHubService(repositoryService);
+const gitBranchService = new GitBranchService();
+const scaffoldService = new ScaffoldService(configService);
+const codeSearchService = new CodeSearchService(configService, repositoryService);
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -56,62 +48,62 @@ app.whenReady().then(() => {
     gitBranchService,
     scaffoldService,
     codeSearchService,
-  })
+  });
 
   // Create window
-  const mainWindow = createMainWindow()
+  const mainWindow = createMainWindow();
 
   // Refresh git info and GitHub PRs when window regains focus
   mainWindow.on('focus', () => {
-    repositoryService.refreshGitInfo().then((repos) => {
-      mainWindow.webContents.send('repo:changed', repos)
-    })
-    githubService.refreshIfNeeded()
-  })
+    repositoryService.refreshGitInfo().then(repos => {
+      mainWindow.webContents.send('repo:changed', repos);
+    });
+    githubService.refreshIfNeeded();
+  });
 
   // Persist process output to log files
   processService.on('output', (data: { repoId: string; data: string }) => {
-    logService.append(data.repoId, data.data)
-  })
+    logService.append(data.repoId, data.data);
+  });
 
   // IPC handlers for log persistence
   ipcMain.handle('logs:get', async (_event, repoId: string) => {
-    return logService.get(repoId)
-  })
+    return logService.get(repoId);
+  });
 
   ipcMain.handle('logs:clear', async (_event, repoId: string) => {
-    logService.clear(repoId)
-    return { success: true }
-  })
+    logService.clear(repoId);
+    return { success: true };
+  });
 
   // Initial scan
-  repositoryService.scan()
-  repositoryService.startWatching()
+  repositoryService.scan();
+  repositoryService.startWatching();
 
   // Start port monitoring if configured
   if (configService.get().autoStartMonitoring) {
-    portService.startMonitoring()
+    portService.startMonitoring();
   }
 
   // Initialize code search (watching starts automatically after first indexing completes)
-  codeSearchService.initialize()
+  codeSearchService.initialize();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow()
+      createMainWindow();
     }
-  })
-})
+  });
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
 
 app.on('before-quit', () => {
-  processService.stopAll()
-  portService.stopMonitoring()
-  repositoryService.stopWatching()
-  codeSearchService.shutdown()
-})
+  processService.stopAll();
+  portService.stopMonitoring();
+  repositoryService.stopWatching();
+  codeSearchService.shutdown();
+});

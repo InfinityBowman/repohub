@@ -8,20 +8,20 @@ Accessible via the Settings tab in the sidebar.
 
 ## Options
 
-| Setting | Default | Description |
-|---|---|---|
-| `scanDirectory` | `~/Documents/Repos` | Root directory to recursively scan for projects |
-| `ignorePatterns` | `**/node_modules`, `**/.git`, `**/ThirdParty/**` | Glob patterns for directories to skip during scan |
-| `portScanInterval` | `5000` (5 seconds) | How often to poll for open localhost ports, in milliseconds |
-| `autoStartMonitoring` | `true` | Whether to start port monitoring automatically on app launch |
-| `commandOverrides` | `{}` | Per-repo custom run commands, keyed by repository ID |
-| `projectTemplatesDir` | `''` | Path to directory where each subdirectory is a project template for "New Project" |
-| `scaffoldRecipes` | `[]` | User-added custom scaffold recipes |
-| `hiddenDefaultRecipes` | `[]` | IDs of default scaffold recipes the user has removed |
-| `setupTemplateDir` | `''` | Path to directory containing config files (eslint, prettier, etc.) to copy into new projects after recipe scaffolding |
-| `codeSearchEnabled` | `true` | Whether to enable code search file watching and indexing |
-| `codeSearchExcludePatterns` | `**/node_modules/**`, `**/.git/**`, `**/dist/**`, `**/build/**`, `**/*.min.js` | Glob patterns to exclude from code search indexing |
-| `codeSearchMaxFileSize` | `1048576` (1MB) | Maximum file size in bytes for code search indexing |
+| Setting                     | Default                                                                        | Description                                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `scanDirectory`             | `~/Documents/Repos`                                                            | Root directory to recursively scan for projects                                                                       |
+| `ignorePatterns`            | `**/node_modules`, `**/.git`, `**/ThirdParty/**`                               | Glob patterns for directories to skip during scan                                                                     |
+| `portScanInterval`          | `5000` (5 seconds)                                                             | How often to poll for open localhost ports, in milliseconds                                                           |
+| `autoStartMonitoring`       | `true`                                                                         | Whether to start port monitoring automatically on app launch                                                          |
+| `commandOverrides`          | `{}`                                                                           | Per-repo custom run commands, keyed by repository ID                                                                  |
+| `projectTemplatesDir`       | `''`                                                                           | Path to directory where each subdirectory is a project template for "New Project"                                     |
+| `scaffoldRecipes`           | `[]`                                                                           | User-added custom scaffold recipes                                                                                    |
+| `hiddenDefaultRecipes`      | `[]`                                                                           | IDs of default scaffold recipes the user has removed                                                                  |
+| `setupTemplateDir`          | `''`                                                                           | Path to directory containing config files (eslint, prettier, etc.) to copy into new projects after recipe scaffolding |
+| `codeSearchEnabled`         | `true`                                                                         | Whether to enable code search file watching and indexing                                                              |
+| `codeSearchExcludePatterns` | `**/node_modules/**`, `**/.git/**`, `**/dist/**`, `**/build/**`, `**/*.min.js` | Glob patterns to exclude from code search indexing                                                                    |
+| `codeSearchMaxFileSize`     | `1048576` (1MB)                                                                | Maximum file size in bytes for code search indexing                                                                   |
 
 ## Scan Directory
 

@@ -83,11 +83,11 @@ For monorepo workspace packages, process keys use the format `repoId:packageName
 
 electron-vite (Vite-based) with three separate build targets configured in `electron.vite.config.ts`:
 
-| Target | Environment | Output | Notes |
-|---|---|---|---|
-| main | Node.js | `out/main/` | Externalizes deps except electron-store |
-| preload | Node.js | `out/preload/` | Externalizes all deps |
-| renderer | Browser | `out/renderer/` | React + Tailwind plugins |
+| Target   | Environment | Output          | Notes                                   |
+| -------- | ----------- | --------------- | --------------------------------------- |
+| main     | Node.js     | `out/main/`     | Externalizes deps except electron-store |
+| preload  | Node.js     | `out/preload/`  | Externalizes all deps                   |
+| renderer | Browser     | `out/renderer/` | React + Tailwind plugins                |
 
 ### Path Alias
 
@@ -95,8 +95,8 @@ electron-vite (Vite-based) with three separate build targets configured in `elec
 
 ## Security Model
 
-| Setting | Value | Reason |
-|---|---|---|
-| `contextIsolation` | `true` | Renderer cannot access Node APIs directly |
-| `nodeIntegration` | `false` | All IPC goes through the preload bridge |
-| `sandbox` | `false` | Disabled because node-pty requires it; acceptable since no untrusted content is loaded |
+| Setting            | Value   | Reason                                                                                 |
+| ------------------ | ------- | -------------------------------------------------------------------------------------- |
+| `contextIsolation` | `true`  | Renderer cannot access Node APIs directly                                              |
+| `nodeIntegration`  | `false` | All IPC goes through the preload bridge                                                |
+| `sandbox`          | `false` | Disabled because node-pty requires it; acceptable since no untrusted content is loaded |

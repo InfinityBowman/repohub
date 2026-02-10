@@ -1,27 +1,27 @@
-import { useEffect, useRef } from 'react'
-import { Terminal } from '@xterm/xterm'
-import { FitAddon } from '@xterm/addon-fit'
-import { WebLinksAddon } from '@xterm/addon-web-links'
-import { useProcesses } from '@/hooks/useProcesses'
-import { useProcessStore } from '@/store/processStore'
-import { useConfig } from '@/hooks/useConfig'
-import { getTerminalTheme } from '@/lib/terminalThemes'
+import { useEffect, useRef } from 'react';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import { useProcesses } from '@/hooks/useProcesses';
+import { useProcessStore } from '@/store/processStore';
+import { useConfig } from '@/hooks/useConfig';
+import { getTerminalTheme } from '@/lib/terminalThemes';
 
 interface TerminalOutputProps {
-  repoId: string
-  data: string
+  repoId: string;
+  data: string;
 }
 
 export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const terminalRef = useRef<Terminal | null>(null)
-  const fitAddonRef = useRef<FitAddon | null>(null)
-  const lastDataLengthRef = useRef(0)
-  const { resize } = useProcesses()
-  const { config } = useConfig()
+  const containerRef = useRef<HTMLDivElement>(null);
+  const terminalRef = useRef<Terminal | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
+  const lastDataLengthRef = useRef(0);
+  const { resize } = useProcesses();
+  const { config } = useConfig();
 
   useEffect(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current) return;
 
     const terminal = new Terminal({
       theme: getTerminalTheme(config?.theme),
@@ -31,35 +31,35 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
       disableStdin: true,
       scrollback: 5000,
       convertEol: true,
-    })
+    });
 
-    const fitAddon = new FitAddon()
-    terminal.loadAddon(fitAddon)
+    const fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
 
     // Handle full URLs (http://localhost:3000, etc.)
     const webLinksAddon = new WebLinksAddon((_event, uri) => {
-      window.electron.shell.openUrl(uri)
-    })
-    terminal.loadAddon(webLinksAddon)
+      window.electron.shell.openUrl(uri);
+    });
+    terminal.loadAddon(webLinksAddon);
 
-    terminal.open(containerRef.current)
+    terminal.open(containerRef.current);
 
     // Custom link provider for bare localhost:PORT and 127.0.0.1:PORT
-    const localhostRegex = /(?:localhost|127\.0\.0\.1):(\d{2,5})(\/\S*)?/g
+    const localhostRegex = /(?:localhost|127\.0\.0\.1):(\d{2,5})(\/\S*)?/g;
     terminal.registerLinkProvider({
       provideLinks(lineNumber, callback) {
-        const line = terminal.buffer.active.getLine(lineNumber - 1)
-        if (!line) return callback(undefined)
+        const line = terminal.buffer.active.getLine(lineNumber - 1);
+        if (!line) return callback(undefined);
 
-        const text = line.translateToString()
-        const links: any[] = []
-        let match: RegExpExecArray | null
+        const text = line.translateToString();
+        const links: any[] = [];
+        let match: RegExpExecArray | null;
 
-        localhostRegex.lastIndex = 0
+        localhostRegex.lastIndex = 0;
         while ((match = localhostRegex.exec(text)) !== null) {
-          const startCol = match.index + 1
-          const length = match[0].length
-          const url = `http://${match[0]}`
+          const startCol = match.index + 1;
+          const length = match[0].length;
+          const url = `http://${match[0]}`;
           links.push({
             range: {
               start: { x: startCol, y: lineNumber },
@@ -67,81 +67,81 @@ export function TerminalOutput({ repoId, data }: TerminalOutputProps) {
             },
             text: url,
             activate() {
-              window.electron.shell.openUrl(url)
+              window.electron.shell.openUrl(url);
             },
-          })
+          });
         }
 
-        callback(links.length > 0 ? links : undefined)
+        callback(links.length > 0 ? links : undefined);
       },
-    })
+    });
 
     // Fit terminal to container
     try {
-      fitAddon.fit()
+      fitAddon.fit();
     } catch {
       // Container might not be visible yet
     }
 
-    terminalRef.current = terminal
-    fitAddonRef.current = fitAddon
-    lastDataLengthRef.current = 0
+    terminalRef.current = terminal;
+    fitAddonRef.current = fitAddon;
+    lastDataLengthRef.current = 0;
 
     // Load saved log if no data in memory yet, otherwise write existing data
     if (data) {
-      terminal.write(data)
-      lastDataLengthRef.current = data.length
+      terminal.write(data);
+      lastDataLengthRef.current = data.length;
     } else {
-      window.electron.logs.get(repoId).then((savedLog) => {
+      window.electron.logs.get(repoId).then(savedLog => {
         if (savedLog && terminalRef.current) {
-          terminalRef.current.write(savedLog)
-          lastDataLengthRef.current = savedLog.length
-          useProcessStore.getState().appendOutput(repoId, savedLog)
+          terminalRef.current.write(savedLog);
+          lastDataLengthRef.current = savedLog.length;
+          useProcessStore.getState().appendOutput(repoId, savedLog);
         }
-      })
+      });
     }
 
     // Resize observer
     const observer = new ResizeObserver(() => {
       try {
-        fitAddon.fit()
-        resize(repoId, terminal.cols, terminal.rows)
+        fitAddon.fit();
+        resize(repoId, terminal.cols, terminal.rows);
       } catch {
         // Ignore errors during resize
       }
-    })
-    observer.observe(containerRef.current)
+    });
+    observer.observe(containerRef.current);
 
     return () => {
-      observer.disconnect()
-      terminal.dispose()
-      terminalRef.current = null
-      fitAddonRef.current = null
-      lastDataLengthRef.current = 0
-    }
-  }, [repoId])
+      observer.disconnect();
+      terminal.dispose();
+      terminalRef.current = null;
+      fitAddonRef.current = null;
+      lastDataLengthRef.current = 0;
+    };
+  }, [repoId]);
 
   // Write new data incrementally
   useEffect(() => {
-    if (!terminalRef.current) return
+    if (!terminalRef.current) return;
     if (data.length > lastDataLengthRef.current) {
-      const newData = data.slice(lastDataLengthRef.current)
-      terminalRef.current.write(newData)
-      lastDataLengthRef.current = data.length
+      const newData = data.slice(lastDataLengthRef.current);
+      terminalRef.current.write(newData);
+      lastDataLengthRef.current = data.length;
     }
-  }, [data])
+  }, [data]);
 
   // Update terminal theme when config changes
   useEffect(() => {
     if (terminalRef.current) {
-      terminalRef.current.options.theme = getTerminalTheme(config?.theme)
+      terminalRef.current.options.theme = getTerminalTheme(config?.theme);
     }
-  }, [config?.theme])
+  }, [config?.theme]);
 
   return (
     <div
       ref={containerRef}
-      className="h-64 w-full overflow-hidden rounded-md border border-border bg-[#0a0a0a] p-2"
+      className='border-border h-64 w-full overflow-hidden rounded-md border bg-[#0a0a0a] p-2'
     />
-  )
+  );
 }

@@ -1,54 +1,54 @@
-import fs from 'fs'
-import path from 'path'
-import crypto from 'crypto'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import { EventEmitter } from 'events'
-import { watch } from 'chokidar'
-import { ProjectDetector } from './ProjectDetector'
-import { WorkspaceDetector } from './WorkspaceDetector'
-import { ConfigService } from './ConfigService'
-import type { Repository } from '../types/repository.types'
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { EventEmitter } from 'events';
+import { watch } from 'chokidar';
+import { ProjectDetector } from './ProjectDetector';
+import { WorkspaceDetector } from './WorkspaceDetector';
+import { ConfigService } from './ConfigService';
+import type { Repository } from '../types/repository.types';
 
-const execAsync = promisify(exec)
+const execAsync = promisify(exec);
 
 export class RepositoryService extends EventEmitter {
-  private detector = new ProjectDetector()
-  private workspaceDetector = new WorkspaceDetector()
-  private configService: ConfigService
-  private watcher: ReturnType<typeof watch> | null = null
-  private repositories: Repository[] = []
+  private detector = new ProjectDetector();
+  private workspaceDetector = new WorkspaceDetector();
+  private configService: ConfigService;
+  private watcher: ReturnType<typeof watch> | null = null;
+  private repositories: Repository[] = [];
 
   constructor(configService: ConfigService) {
-    super()
-    this.configService = configService
+    super();
+    this.configService = configService;
   }
 
   async scan(): Promise<Repository[]> {
-    const config = this.configService.get()
-    const scanDir = config.scanDirectory
+    const config = this.configService.get();
+    const scanDir = config.scanDirectory;
 
     if (!fs.existsSync(scanDir)) {
-      this.repositories = []
-      return []
+      this.repositories = [];
+      return [];
     }
 
-    const repos: Repository[] = []
-    this.scanDirectory(scanDir, scanDir, config.ignorePatterns, repos, 0)
+    const repos: Repository[] = [];
+    this.scanDirectory(scanDir, scanDir, config.ignorePatterns, repos, 0);
 
     // Fetch git info for all repos in parallel (non-blocking)
     await Promise.all(
-      repos.map(async (repo) => {
-        const git = await this.getGitInfo(repo.path)
-        repo.gitBranch = git.gitBranch
-        repo.gitDirty = git.gitDirty
-        repo.githubUrl = git.githubUrl
+      repos.map(async repo => {
+        const git = await this.getGitInfo(repo.path);
+        repo.gitBranch = git.gitBranch;
+        repo.gitDirty = git.gitDirty;
+        repo.githubUrl = git.githubUrl;
       }),
-    )
+    );
 
-    repos.sort((a, b) => b.lastModified - a.lastModified)
-    this.repositories = repos
-    return repos
+    repos.sort((a, b) => b.lastModified - a.lastModified);
+    this.repositories = repos;
+    return repos;
   }
 
   private scanDirectory(
@@ -58,28 +58,28 @@ export class RepositoryService extends EventEmitter {
     repos: Repository[],
     depth: number,
   ): void {
-    if (depth > 5) return
+    if (depth > 5) return;
 
-    let entries: fs.Dirent[]
+    let entries: fs.Dirent[];
     try {
-      entries = fs.readdirSync(dir, { withFileTypes: true })
+      entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
-      return
+      return;
     }
 
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue
-      if (entry.name.startsWith('.')) continue
+      if (!entry.isDirectory()) continue;
+      if (entry.name.startsWith('.')) continue;
 
-      const fullPath = path.join(dir, entry.name)
-      const relativePath = path.relative(scanRoot, fullPath)
+      const fullPath = path.join(dir, entry.name);
+      const relativePath = path.relative(scanRoot, fullPath);
 
-      if (this.isIgnored(entry.name, relativePath, ignorePatterns)) continue
+      if (this.isIgnored(entry.name, relativePath, ignorePatterns)) continue;
 
-      const detection = this.detector.detect(fullPath)
+      const detection = this.detector.detect(fullPath);
 
       if (detection.projectType !== 'unknown') {
-        const stat = fs.statSync(fullPath)
+        const stat = fs.statSync(fullPath);
         const repo: Repository = {
           id: crypto.createHash('md5').update(fullPath).digest('hex').slice(0, 12),
           name: relativePath,
@@ -87,46 +87,46 @@ export class RepositoryService extends EventEmitter {
           projectType: detection.projectType,
           defaultCommand: detection.defaultCommand,
           lastModified: stat.mtimeMs,
-        }
+        };
 
         if (detection.projectType === 'monorepo') {
-          repo.workspace = this.workspaceDetector.detectWorkspace(fullPath)
+          repo.workspace = this.workspaceDetector.detectWorkspace(fullPath);
         }
 
-        repos.push(repo)
+        repos.push(repo);
       } else {
         // Not a recognized project — recurse to find nested projects
-        this.scanDirectory(fullPath, scanRoot, ignorePatterns, repos, depth + 1)
+        this.scanDirectory(fullPath, scanRoot, ignorePatterns, repos, depth + 1);
       }
     }
   }
 
   async refreshGitInfo(): Promise<Repository[]> {
     await Promise.all(
-      this.repositories.map(async (repo) => {
-        const git = await this.getGitInfo(repo.path)
-        repo.gitBranch = git.gitBranch
-        repo.gitDirty = git.gitDirty
-        repo.githubUrl = git.githubUrl
+      this.repositories.map(async repo => {
+        const git = await this.getGitInfo(repo.path);
+        repo.gitBranch = git.gitBranch;
+        repo.gitDirty = git.gitDirty;
+        repo.githubUrl = git.githubUrl;
       }),
-    )
-    return this.repositories
+    );
+    return this.repositories;
   }
 
   getById(id: string): Repository | null {
-    return this.repositories.find((r) => r.id === id) || null
+    return this.repositories.find(r => r.id === id) || null;
   }
 
   getAll(): Repository[] {
-    return this.repositories
+    return this.repositories;
   }
 
   startWatching(): void {
-    const config = this.configService.get()
-    const scanDir = config.scanDirectory
+    const config = this.configService.get();
+    const scanDir = config.scanDirectory;
 
     if (this.watcher) {
-      this.watcher.close()
+      this.watcher.close();
     }
 
     // Watch top-level only; the recursive scan handles finding nested projects
@@ -134,27 +134,29 @@ export class RepositoryService extends EventEmitter {
       depth: 1,
       ignoreInitial: true,
       ignored: /(^|[\/\\])\../,
-    })
+    });
 
     this.watcher.on('addDir', () => {
-      this.scan().then((repos) => this.emit('changed', repos))
-    })
+      this.scan().then(repos => this.emit('changed', repos));
+    });
 
     this.watcher.on('unlinkDir', () => {
-      this.scan().then((repos) => this.emit('changed', repos))
-    })
+      this.scan().then(repos => this.emit('changed', repos));
+    });
   }
 
   stopWatching(): void {
     if (this.watcher) {
-      this.watcher.close()
-      this.watcher = null
+      this.watcher.close();
+      this.watcher = null;
     }
   }
 
-  private async getGitInfo(dirPath: string): Promise<{ gitBranch?: string; gitDirty?: boolean; githubUrl?: string }> {
+  private async getGitInfo(
+    dirPath: string,
+  ): Promise<{ gitBranch?: string; gitDirty?: boolean; githubUrl?: string }> {
     try {
-      if (!fs.existsSync(path.join(dirPath, '.git'))) return {}
+      if (!fs.existsSync(path.join(dirPath, '.git'))) return {};
       const [branchResult, statusResult, remoteResult] = await Promise.all([
         execAsync('git rev-parse --abbrev-ref HEAD', {
           cwd: dirPath,
@@ -168,50 +170,46 @@ export class RepositoryService extends EventEmitter {
           cwd: dirPath,
           timeout: 3000,
         }).catch(() => null),
-      ])
+      ]);
       return {
         gitBranch: branchResult.stdout.trim(),
         gitDirty: statusResult.stdout.trim().length > 0,
         githubUrl: remoteResult ? this.parseGitHubUrl(remoteResult.stdout.trim()) : undefined,
-      }
+      };
     } catch {
-      return {}
+      return {};
     }
   }
 
   private parseGitHubUrl(remoteUrl: string): string | undefined {
     // SSH: git@github.com:user/repo.git
-    const sshMatch = remoteUrl.match(/^git@github\.com:(.+?)(?:\.git)?$/)
-    if (sshMatch) return `https://github.com/${sshMatch[1]}`
+    const sshMatch = remoteUrl.match(/^git@github\.com:(.+?)(?:\.git)?$/);
+    if (sshMatch) return `https://github.com/${sshMatch[1]}`;
 
     // HTTPS: https://github.com/user/repo.git
-    const httpsMatch = remoteUrl.match(/^https?:\/\/github\.com\/(.+?)(?:\.git)?$/)
-    if (httpsMatch) return `https://github.com/${httpsMatch[1]}`
+    const httpsMatch = remoteUrl.match(/^https?:\/\/github\.com\/(.+?)(?:\.git)?$/);
+    if (httpsMatch) return `https://github.com/${httpsMatch[1]}`;
 
-    return undefined
+    return undefined;
   }
 
-  private isIgnored(
-    name: string,
-    relativePath: string,
-    patterns: string[],
-  ): boolean {
-    const segments = relativePath.split(path.sep)
+  private isIgnored(name: string, relativePath: string, patterns: string[]): boolean {
+    const segments = relativePath.split(path.sep);
     for (const pattern of patterns) {
       // Simple glob matching for common patterns
       const cleanPattern = pattern
         .replace(/\*\*\//g, '')
         .replace(/\/\*\*/g, '')
-        .replace(/\*/g, '.*')
+        .replace(/\*/g, '.*');
 
-      const regex = new RegExp(`^${cleanPattern}$`)
+      const regex = new RegExp(`^${cleanPattern}$`);
 
       // Check against directory name and each path segment
-      if (regex.test(name)) return true
+      if (regex.test(name)) return true;
       for (const segment of segments) {
-        if (regex.test(segment)) return true
+        if (regex.test(segment)) return true;
       }
     }
-    return false
+    return false;
   }
 }

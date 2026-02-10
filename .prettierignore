@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+out
+release
+*.log
+coverage
+package-lock.json
+.DS_Store
+.env
+pnpm-lock.yaml
+*.tsbuildinfo
+resources
