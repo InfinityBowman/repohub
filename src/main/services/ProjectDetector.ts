@@ -44,6 +44,10 @@ export class ProjectDetector {
       return { projectType: 'swift', defaultCommand: 'swift run' }
     }
 
+    if (this.hasExtension(dirPath, '.xcodeproj') || this.hasExtension(dirPath, '.xcworkspace')) {
+      return { projectType: 'swift', defaultCommand: 'xcodebuild' }
+    }
+
     if (
       this.fileExists(dirPath, 'pom.xml') ||
       this.fileExists(dirPath, 'build.gradle') ||
@@ -96,6 +100,15 @@ export class ProjectDetector {
       return JSON.parse(content)
     } catch {
       return null
+    }
+  }
+
+  private hasExtension(dirPath: string, ext: string): boolean {
+    try {
+      const entries = fs.readdirSync(dirPath)
+      return entries.some((e) => e.endsWith(ext))
+    } catch {
+      return false
     }
   }
 

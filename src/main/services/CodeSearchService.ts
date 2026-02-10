@@ -102,6 +102,9 @@ export class CodeSearchService extends EventEmitter {
 
     try {
       const { pipeline, env } = await import('@huggingface/transformers')
+      // Redirect model cache to a writable directory — in a packaged app the
+      // default cache lands inside app.asar which native ONNX runtime can't read
+      env.cacheDir = join(app.getPath('userData'), 'huggingface-cache')
       // Force ONNX runtime to use Node.js backend
       env.backends.onnx.wasm!.proxy = false
 
