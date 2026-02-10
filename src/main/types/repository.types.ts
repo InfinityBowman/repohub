@@ -22,6 +22,14 @@ export interface WorkspaceInfo {
   packageManager: 'pnpm' | 'npm' | 'yarn'
 }
 
+export interface BranchInfo {
+  name: string
+  isCurrent: boolean
+  isMerged: boolean
+  upstream?: string
+  lastCommit: string
+}
+
 export interface Repository {
   id: string
   name: string

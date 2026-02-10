@@ -25,6 +25,7 @@ import { PortService } from './services/PortService'
 import { LogService } from './services/LogService'
 import { DependencyHealthService } from './services/DependencyHealthService'
 import { GitHubService } from './services/GitHubService'
+import { GitBranchService } from './services/GitBranchService'
 
 // Initialize services
 const configService = new ConfigService()
@@ -37,6 +38,7 @@ const portService = new PortService(
 const logService = new LogService()
 const healthService = new DependencyHealthService(repositoryService)
 const githubService = new GitHubService(repositoryService)
+const gitBranchService = new GitBranchService()
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -47,6 +49,7 @@ app.whenReady().then(() => {
     configService,
     healthService,
     githubService,
+    gitBranchService,
   })
 
   // Create window

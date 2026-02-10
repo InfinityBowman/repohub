@@ -19,6 +19,7 @@ import {
   Code,
   ExternalLink,
   FolderSearch,
+  GitBranch,
   GitPullRequest,
   Globe,
   HeartPulse,
@@ -416,6 +417,22 @@ export function CommandPalette() {
                   </CommandGroup>
                 </>
               )}
+
+            {selectedRepo.gitBranch && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="Git">
+                  <CommandItem
+                    onSelect={() =>
+                      closeAndRun(() => navigate(`/repo/${selectedRepo.id}`))
+                    }
+                  >
+                    <GitBranch className="mr-2" />
+                    Clean Branches
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </>
         )}
       </CommandList>

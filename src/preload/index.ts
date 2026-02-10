@@ -5,6 +5,14 @@ const electronAPI = {
     scan: () => ipcRenderer.invoke('repo:scan'),
     rescan: () => ipcRenderer.invoke('repo:rescan'),
     getById: (id: string) => ipcRenderer.invoke('repo:get-by-id', id),
+    readFile: (repoId: string, relativePath: string) =>
+      ipcRenderer.invoke('repo:read-file', repoId, relativePath),
+  },
+
+  git: {
+    listBranches: (repoId: string) => ipcRenderer.invoke('git:list-branches', repoId),
+    deleteBranches: (repoId: string, branches: string[]) =>
+      ipcRenderer.invoke('git:delete-branches', repoId, branches),
   },
 
   processes: {

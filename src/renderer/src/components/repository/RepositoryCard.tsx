@@ -2,52 +2,40 @@ import {
   Play,
   Square,
   RotateCcw,
-  ChevronDown,
-  ChevronUp,
   Folder,
   SquareTerminal,
   GitBranch,
   Github,
-  Pencil,
-  Check,
-  X,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { VSCodeIcon } from '../icons/VSCodeIcon'
-import { useState } from 'react'
 import type { Repository } from '@/types'
 import { useProcesses } from '@/hooks/useProcesses'
 import { useConfig } from '@/hooks/useConfig'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { ProjectBadge } from './ProjectBadge'
 import { HealthBadge } from './HealthBadge'
-import { WorkspacePackageList } from './WorkspacePackageList'
 import { PRBadge } from '../github/PRBadge'
 import { CreatePRButton } from '../github/CreatePRButton'
-import { TerminalOutput } from '../process/TerminalOutput'
 import { useGitHub } from '@/hooks/useGitHub'
 
 export function RepositoryCard({ repo }: { repo: Repository }) {
-  const { processes, start, stop, restart, isRunning, terminalData } = useProcesses()
-  const { config, setCommandOverride, removeCommandOverride } = useConfig()
+  const navigate = useNavigate()
+  const { start, stop, restart, isRunning } = useProcesses()
+  const { config } = useConfig()
   const { getPRForRepo, status: githubStatus } = useGitHub()
   const pr = getPRForRepo(repo.id)
-  const [expanded, setExpanded] = useState(false)
-  const [editingCmd, setEditingCmd] = useState(false)
-  const [cmdDraft, setCmdDraft] = useState('')
 
   const running = isRunning(repo.id)
-  const processInfo = processes[repo.id]
   const commandOverride = config?.commandOverrides?.[repo.id]
   const effectiveCommand = commandOverride || repo.defaultCommand
 
   const handleStart = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const result = await start(repo.id)
-    if (result.success) setExpanded(true)
+    await start(repo.id)
   }
 
   const handleStop = async (e: React.MouseEvent) => {
@@ -75,35 +63,13 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
     if (repo.githubUrl) window.electron.shell.openUrl(repo.githubUrl)
   }
 
-  const startEditCmd = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setCmdDraft(commandOverride || repo.defaultCommand || '')
-    setEditingCmd(true)
-  }
-
-  const saveCmd = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const trimmed = cmdDraft.trim()
-    if (trimmed && trimmed !== repo.defaultCommand) {
-      await setCommandOverride(repo.id, trimmed)
-    } else {
-      await removeCommandOverride(repo.id)
-    }
-    setEditingCmd(false)
-  }
-
-  const cancelEditCmd = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setEditingCmd(false)
-  }
-
   const displayName = repo.name.includes('/') ? repo.name.split('/').pop() : repo.name
 
   return (
     <Card className="gap-0 py-0 transition-colors hover:border-muted-foreground/30">
       <div
         className="flex cursor-pointer items-center justify-between p-4"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => navigate(`/repo/${repo.id}`)}
       >
         <div className="flex items-center gap-3 overflow-hidden">
           <div
@@ -223,76 +189,9 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 </TooltipContent>
               </Tooltip>
             )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setExpanded(!expanded)
-                  }}
-                >
-                  {expanded ? <ChevronUp /> : <ChevronDown />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{expanded ? 'Hide details' : 'Show details'}</TooltipContent>
-            </Tooltip>
           </TooltipProvider>
         </div>
       </div>
-
-      {expanded && (
-        <div className="border-t px-4 pb-4 pt-3">
-          <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
-            {processInfo && processInfo.status === 'running' && (
-              <>
-                <span>PID: {processInfo.pid}</span>
-                <span>Cmd: {processInfo.command}</span>
-              </>
-            )}
-            {(!processInfo || processInfo.status !== 'running') && (
-              editingCmd ? (
-                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-muted-foreground">Cmd:</span>
-                  <Input
-                    value={cmdDraft}
-                    onChange={(e) => setCmdDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveCmd(e as any)
-                      if (e.key === 'Escape') setEditingCmd(false)
-                    }}
-                    className="h-6 w-56 text-xs"
-                    autoFocus
-                  />
-                  <Button variant="ghost" size="icon-xs" onClick={saveCmd}>
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="icon-xs" onClick={cancelEditCmd}>
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <span>
-                    Cmd: {effectiveCommand || 'none'}
-                    {commandOverride && <span className="ml-1 text-blue-400">(custom)</span>}
-                  </span>
-                  <Button variant="ghost" size="icon-xs" onClick={startEditCmd}>
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                </>
-              )
-            )}
-          </div>
-          <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} />
-          {repo.projectType === 'monorepo' && repo.workspace && (
-            <div className="mt-3">
-              <WorkspacePackageList repo={repo} />
-            </div>
-          )}
-        </div>
-      )}
     </Card>
   )
 }

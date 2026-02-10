@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { RepositoriesView } from '@/views/RepositoriesView'
+import { RepositoryDetailView } from '@/views/RepositoryDetailView'
 import { PortsView } from '@/views/PortsView'
 import { SettingsView } from '@/views/SettingsView'
 import { GitHubView } from '@/views/GitHubView'
@@ -20,6 +21,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<RepositoriesView />} />
+          <Route path="/repo/:id" element={<RepositoryDetailView />} />
           <Route path="/github" element={<GitHubView />} />
           <Route path="/ports" element={<PortsView />} />
           <Route path="/settings" element={<SettingsView />} />

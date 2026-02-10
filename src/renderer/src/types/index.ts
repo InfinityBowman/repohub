@@ -22,6 +22,14 @@ export interface WorkspaceInfo {
   packageManager: 'pnpm' | 'npm' | 'yarn'
 }
 
+export interface BranchInfo {
+  name: string
+  isCurrent: boolean
+  isMerged: boolean
+  upstream?: string
+  lastCommit: string
+}
+
 export interface Repository {
   id: string
   name: string
@@ -137,6 +145,11 @@ declare global {
         scan: () => Promise<Repository[]>
         rescan: () => Promise<Repository[]>
         getById: (id: string) => Promise<Repository | null>
+        readFile: (repoId: string, relativePath: string) => Promise<string>
+      }
+      git: {
+        listBranches: (repoId: string) => Promise<BranchInfo[]>
+        deleteBranches: (repoId: string, branches: string[]) => Promise<{ results: { branch: string; success: boolean; error?: string }[] }>
       }
       processes: {
         start: (repoId: string, command?: string) => Promise<ProcessResult>
