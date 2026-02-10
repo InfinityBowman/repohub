@@ -11,6 +11,9 @@ export interface AppConfig {
   scaffoldRecipes: ScaffoldRecipe[]
   hiddenDefaultRecipes: string[]
   setupTemplateDir: string
+  codeSearchEnabled: boolean
+  codeSearchExcludePatterns: string[]
+  codeSearchMaxFileSize: number
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -24,4 +27,56 @@ export const DEFAULT_CONFIG: AppConfig = {
   scaffoldRecipes: [],
   hiddenDefaultRecipes: [],
   setupTemplateDir: '',
+  codeSearchEnabled: true,
+  codeSearchExcludePatterns: [
+    // Version control
+    '**/.git/**',
+    '**/.svn/**',
+    '**/.hg/**',
+    // JS/Node
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/.next/**',
+    '**/.nuxt/**',
+    '**/.turbo/**',
+    '**/.cache/**',
+    '**/coverage/**',
+    '**/*.min.js',
+    '**/*.bundle.js',
+    '**/*.chunk.js',
+    '**/package-lock.json',
+    '**/yarn.lock',
+    '**/pnpm-lock.yaml',
+    // Python
+    '**/__pycache__/**',
+    '**/.venv/**',
+    '**/venv/**',
+    '**/.env/**',
+    '**/env/**',
+    '**/.tox/**',
+    '**/*.egg-info/**',
+    '**/site-packages/**',
+    // Rust
+    '**/target/**',
+    // Go
+    '**/vendor/**',
+    // Java
+    '**/.gradle/**',
+    '**/.mvn/**',
+    // Swift
+    '**/.build/**',
+    '**/.swiftpm/**',
+    // IDE / OS
+    '**/.idea/**',
+    '**/.vscode/**',
+    '**/.DS_Store',
+    // Generated / binary
+    '**/*.map',
+    '**/*.d.ts',
+    '**/generated/**',
+    '**/*.pb.go',
+    '**/*.generated.*',
+  ],
+  codeSearchMaxFileSize: 1_048_576,
 }

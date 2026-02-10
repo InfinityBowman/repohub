@@ -38,11 +38,12 @@ src/
     index.ts            # Exposes window.electron.* API
   renderer/             # React frontend (Chromium)
     src/
-      App.tsx           # Hash router with 5 routes (/, /repo/:id, /github, /ports, /settings)
+      App.tsx           # Hash router with 6 routes (/, /repo/:id, /github, /search, /ports, /settings)
       views/            # Page-level components
         RepositoriesView     # Dashboard with repo cards
         RepositoryDetailView # Full detail page for a single repo
         GitHubView           # PR dashboard
+        CodeSearchView       # Semantic code search
         PortsView            # Port monitor (auto-refreshes on mount)
         SettingsView         # App settings
       components/       # UI components

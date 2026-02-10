@@ -207,6 +207,49 @@ Configure a "Setup Template Directory" in Settings (e.g., `~/dotfiles/project-te
 
 ---
 
+## Semantic Code Search
+
+A fully-local semantic code search engine. Index your codebase and search using natural language — no external API calls required.
+
+### How It Works
+
+1. **Parsing** — Tree-sitter (WASM) parses source files into semantic chunks: functions, classes, methods, interfaces, types, etc.
+2. **Embedding** — Each chunk is embedded using a local ONNX model (`all-MiniLM-L6-v2`, 384-dim, ~80MB, downloaded once).
+3. **Vector store** — Embeddings are stored in a file-backed vector index (vectra) at `~/Library/Application Support/repohub/code-search-index/`.
+4. **Search** — Natural language queries are embedded and matched against stored chunks using cosine similarity.
+
+### Supported Languages
+
+JavaScript, TypeScript, TSX, Python, Rust, Go, Java, Swift. Unsupported file types fall back to blank-line-separated block chunking.
+
+### Usage
+
+1. Navigate to the **Search** tab in the sidebar (or Cmd+K → "Code Search").
+2. Click **Start Indexing** — the embedding model downloads on first use (~80MB), then all files in the scan directory are indexed.
+3. Type a natural language query (e.g., "function that handles authentication") — results appear ranked by similarity.
+4. Click a result's file path to open it in VS Code at the correct line.
+
+### Index Updates
+
+- **File watching** — chokidar monitors indexed directories; changed/added files are automatically re-indexed (1s debounce).
+- **Manual reindex** — click the Reindex button to force a full re-scan.
+- **Incremental** — only changed files (by content hash) are re-processed during reindex.
+
+### Settings
+
+- **Enable code search** — toggle to enable/disable file watching and indexing (default: enabled).
+- **Exclude patterns** — glob patterns to skip during indexing (default: `node_modules`, `.git`, `dist`, `build`, `*.min.js`).
+- **Max file size** — files larger than this are skipped (default: 1MB).
+
+### Performance
+
+- No worker threads — `onnxruntime-node` handles threading internally.
+- Files are processed sequentially with `setImmediate()` yielding between files to keep the event loop responsive.
+- Chunks are embedded in batches of 10.
+- Index is loaded into memory (~15MB for 10K chunks); file-backed for persistence.
+
+---
+
 ## Port Monitoring
 
 The Ports tab shows all TCP ports currently listening on localhost.

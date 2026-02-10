@@ -155,6 +155,53 @@ export interface AppConfig {
   scaffoldRecipes: ScaffoldRecipe[]
   hiddenDefaultRecipes: string[]
   setupTemplateDir: string
+  codeSearchEnabled: boolean
+  codeSearchExcludePatterns: string[]
+  codeSearchMaxFileSize: number
+}
+
+export interface CodeChunk {
+  id: string
+  filePath: string
+  relativePath: string
+  language: string
+  constructType: string
+  constructName: string
+  code: string
+  startLine: number
+  endLine: number
+}
+
+export interface SearchResult {
+  chunk: CodeChunk
+  score: number
+}
+
+export type IndexState = 'idle' | 'downloading-model' | 'indexing' | 'ready' | 'error'
+
+export interface IndexStatus {
+  state: IndexState
+  totalFiles: number
+  indexedFiles: number
+  totalChunks: number
+  currentFile?: string
+  progress: number
+  error?: string
+}
+
+export interface SearchOptions {
+  query: string
+  limit?: number
+  minScore?: number
+  languages?: string[]
+  directories?: string[]
+}
+
+export interface ModelProgress {
+  status: string
+  progress: number
+  loaded: number
+  total: number
 }
 
 declare global {
@@ -226,6 +273,13 @@ declare global {
         resize: (cols: number, rows: number) => Promise<void>
         cancel: () => Promise<void>
       }
+      search: {
+        query: (options: SearchOptions) => Promise<SearchResult[]>
+        startIndexing: (dirs?: string[]) => Promise<{ success: boolean }>
+        getStatus: () => Promise<IndexStatus>
+        ensureModel: () => Promise<{ success: boolean }>
+        reindex: () => Promise<{ success: boolean }>
+      }
       on: {
         repositoriesChanged: (callback: (repos: Repository[]) => void) => () => void
         processOutput: (callback: (data: ProcessOutputData) => void) => () => void
@@ -235,6 +289,8 @@ declare global {
         githubChanged: (callback: (data: { prsByRepo: Record<string, PRInfo | null>; allUserPRs: PRInfo[] }) => void) => () => void
         scaffoldOutput: (callback: (data: { data: string; timestamp: number }) => void) => () => void
         scaffoldDone: (callback: (data: { exitCode: number; projectName: string }) => void) => () => void
+        searchStatusChanged: (callback: (status: IndexStatus) => void) => () => void
+        searchModelProgress: (callback: (progress: ModelProgress) => void) => () => void
       }
     }
   }

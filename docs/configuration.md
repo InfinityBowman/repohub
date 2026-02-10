@@ -19,6 +19,9 @@ Accessible via the Settings tab in the sidebar.
 | `scaffoldRecipes` | `[]` | User-added custom scaffold recipes |
 | `hiddenDefaultRecipes` | `[]` | IDs of default scaffold recipes the user has removed |
 | `setupTemplateDir` | `''` | Path to directory containing config files (eslint, prettier, etc.) to copy into new projects after recipe scaffolding |
+| `codeSearchEnabled` | `true` | Whether to enable code search file watching and indexing |
+| `codeSearchExcludePatterns` | `**/node_modules/**`, `**/.git/**`, `**/dist/**`, `**/build/**`, `**/*.min.js` | Glob patterns to exclude from code search indexing |
+| `codeSearchMaxFileSize` | `1048576` (1MB) | Maximum file size in bytes for code search indexing |
 
 ## Scan Directory
 

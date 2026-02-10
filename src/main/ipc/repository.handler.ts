@@ -29,13 +29,23 @@ export function registerRepositoryHandlers(
 
   ipcMain.handle('shell:open-in-vscode', async (_event, dirPath: string) => {
     try {
-      spawn('open', ['-b', 'com.microsoft.VSCode', dirPath], {
+      // Use VS Code CLI with -g flag to support file:line syntax
+      spawn('code', ['-g', dirPath], {
         detached: true,
         stdio: 'ignore',
       }).unref()
       return { success: true }
     } catch (err: any) {
-      return { success: false, error: err.message }
+      // Fallback to macOS open if code CLI not found
+      try {
+        spawn('open', ['-b', 'com.microsoft.VSCode', dirPath.split(':')[0]], {
+          detached: true,
+          stdio: 'ignore',
+        }).unref()
+        return { success: true }
+      } catch (fallbackErr: any) {
+        return { success: false, error: fallbackErr.message }
+      }
     }
   })
 

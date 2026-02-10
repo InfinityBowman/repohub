@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Plus, X, FileCode, FolderOpen } from 'lucide-react'
+import { Save, Plus, X, FileCode, FolderOpen, Search } from 'lucide-react'
 import { useConfig } from '@/hooks/useConfig'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,10 @@ export function SettingsView() {
   const [setupTemplateDir, setSetupTemplateDir] = useState('')
   const [patterns, setPatterns] = useState<string[]>([])
   const [newPattern, setNewPattern] = useState('')
+  const [codeSearchEnabled, setCodeSearchEnabled] = useState(true)
+  const [codeSearchExcludePatterns, setCodeSearchExcludePatterns] = useState<string[]>([])
+  const [newSearchPattern, setNewSearchPattern] = useState('')
+  const [codeSearchMaxFileSize, setCodeSearchMaxFileSize] = useState(1024)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -21,8 +25,22 @@ export function SettingsView() {
       setProjectTemplatesDir(config.projectTemplatesDir || '')
       setSetupTemplateDir(config.setupTemplateDir || '')
       setPatterns([...config.ignorePatterns])
+      setCodeSearchEnabled(config.codeSearchEnabled ?? true)
+      setCodeSearchExcludePatterns([...(config.codeSearchExcludePatterns || [])])
+      setCodeSearchMaxFileSize(Math.round((config.codeSearchMaxFileSize || 1_048_576) / 1024))
     }
   }, [config])
+
+  const addSearchPattern = () => {
+    if (newSearchPattern.trim() && !codeSearchExcludePatterns.includes(newSearchPattern.trim())) {
+      setCodeSearchExcludePatterns([...codeSearchExcludePatterns, newSearchPattern.trim()])
+      setNewSearchPattern('')
+    }
+  }
+
+  const removeSearchPattern = (index: number) => {
+    setCodeSearchExcludePatterns(codeSearchExcludePatterns.filter((_, i) => i !== index))
+  }
 
   const handleSave = async () => {
     await update({
@@ -30,6 +48,9 @@ export function SettingsView() {
       projectTemplatesDir,
       setupTemplateDir,
       ignorePatterns: patterns,
+      codeSearchEnabled,
+      codeSearchExcludePatterns,
+      codeSearchMaxFileSize: codeSearchMaxFileSize * 1024,
     })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -157,6 +178,84 @@ export function SettingsView() {
               onChange={(e) => setSetupTemplateDir(e.target.value)}
               placeholder="~/dotfiles/project-templates"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-4 w-4" />
+            Code Search
+          </CardTitle>
+          <CardDescription>
+            Configure the semantic code search engine. Indexes your codebase locally for natural language search.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={codeSearchEnabled}
+              onChange={(e) => setCodeSearchEnabled(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            <span className="text-sm">Enable code search indexing</span>
+          </label>
+
+          <Separator />
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Max file size:</span>
+            <Input
+              type="number"
+              value={codeSearchMaxFileSize}
+              onChange={(e) => {
+                const kb = parseInt(e.target.value, 10)
+                if (kb >= 1) setCodeSearchMaxFileSize(kb)
+              }}
+              className="w-24"
+              min={1}
+            />
+            <span className="text-sm text-muted-foreground">KB</span>
+          </div>
+
+          <Separator />
+
+          <div>
+            <span className="text-sm text-muted-foreground mb-2 block">Exclude patterns:</span>
+            <div className="flex flex-col gap-2">
+              {codeSearchExcludePatterns.map((pattern, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-md bg-secondary px-3 py-2"
+                >
+                  <code className="text-sm">{pattern}</code>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => removeSearchPattern(index)}
+                    className="text-muted-foreground hover:text-destructive-foreground"
+                  >
+                    <X />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <Input
+                value={newSearchPattern}
+                onChange={(e) => setNewSearchPattern(e.target.value)}
+                placeholder="e.g. **/vendor/**"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addSearchPattern()
+                }}
+              />
+              <Button variant="outline" size="sm" onClick={addSearchPattern}>
+                <Plus />
+                Add
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

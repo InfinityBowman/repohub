@@ -5,15 +5,18 @@ import { RepositoryDetailView } from '@/views/RepositoryDetailView'
 import { PortsView } from '@/views/PortsView'
 import { SettingsView } from '@/views/SettingsView'
 import { GitHubView } from '@/views/GitHubView'
+import { CodeSearchView } from '@/views/CodeSearchView'
 import { CommandPalette } from '@/components/CommandPalette'
 import { useProcessListeners } from '@/hooks/useProcesses'
 import { useHealthListeners } from '@/hooks/useHealth'
 import { useGitHubListeners } from '@/hooks/useGitHub'
+import { useCodeSearchListeners } from '@/hooks/useCodeSearch'
 
 export default function App() {
   useProcessListeners()
   useHealthListeners()
   useGitHubListeners()
+  useCodeSearchListeners()
 
   return (
     <HashRouter>
@@ -23,6 +26,7 @@ export default function App() {
           <Route path="/" element={<RepositoriesView />} />
           <Route path="/repo/:id" element={<RepositoryDetailView />} />
           <Route path="/github" element={<GitHubView />} />
+          <Route path="/search" element={<CodeSearchView />} />
           <Route path="/ports" element={<PortsView />} />
           <Route path="/settings" element={<SettingsView />} />
         </Route>

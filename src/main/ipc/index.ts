@@ -6,6 +6,7 @@ import { registerHealthHandlers } from './health.handler'
 import { registerGitHubHandlers } from './github.handler'
 import { registerGitHandlers } from './git.handler'
 import { registerScaffoldHandlers } from './scaffold.handler'
+import { registerCodeSearchHandlers } from './codesearch.handler'
 import type { RepositoryService } from '../services/RepositoryService'
 import type { ProcessService } from '../services/ProcessService'
 import type { PortService } from '../services/PortService'
@@ -14,6 +15,7 @@ import type { DependencyHealthService } from '../services/DependencyHealthServic
 import type { GitHubService } from '../services/GitHubService'
 import type { GitBranchService } from '../services/GitBranchService'
 import type { ScaffoldService } from '../services/ScaffoldService'
+import type { CodeSearchService } from '../services/CodeSearchService'
 
 export function registerAllHandlers(services: {
   repositoryService: RepositoryService
@@ -24,6 +26,7 @@ export function registerAllHandlers(services: {
   githubService: GitHubService
   gitBranchService: GitBranchService
   scaffoldService: ScaffoldService
+  codeSearchService: CodeSearchService
 }): void {
   registerRepositoryHandlers(services.repositoryService)
   registerProcessHandlers(services.processService)
@@ -33,4 +36,5 @@ export function registerAllHandlers(services: {
   registerGitHubHandlers(services.githubService)
   registerGitHandlers(services.repositoryService, services.gitBranchService)
   registerScaffoldHandlers(services.scaffoldService)
+  registerCodeSearchHandlers(services.codeSearchService)
 }

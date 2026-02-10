@@ -97,6 +97,14 @@ const electronAPI = {
     cancel: () => ipcRenderer.invoke('scaffold:cancel'),
   },
 
+  search: {
+    query: (options: any) => ipcRenderer.invoke('search:query', options),
+    startIndexing: (dirs?: string[]) => ipcRenderer.invoke('search:start-indexing', dirs),
+    getStatus: () => ipcRenderer.invoke('search:get-status'),
+    ensureModel: () => ipcRenderer.invoke('search:ensure-model'),
+    reindex: () => ipcRenderer.invoke('search:reindex'),
+  },
+
   on: {
     repositoriesChanged: (callback: (repos: any[]) => void) => {
       const handler = (_: any, data: any) => callback(data)
@@ -138,6 +146,16 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data)
       ipcRenderer.on('scaffold:done', handler)
       return () => ipcRenderer.removeListener('scaffold:done', handler)
+    },
+    searchStatusChanged: (callback: (status: any) => void) => {
+      const handler = (_: any, data: any) => callback(data)
+      ipcRenderer.on('search:status-changed', handler)
+      return () => ipcRenderer.removeListener('search:status-changed', handler)
+    },
+    searchModelProgress: (callback: (progress: any) => void) => {
+      const handler = (_: any, data: any) => callback(data)
+      ipcRenderer.on('search:model-progress', handler)
+      return () => ipcRenderer.removeListener('search:model-progress', handler)
     },
   },
 }

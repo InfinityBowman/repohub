@@ -10,13 +10,16 @@ Main Process (Node.js)            Preload (context bridge)           Renderer (C
   ├── services/                                                        │   ├── RepositoriesView
   │   ├── RepositoryService       ← filesystem scan, git info         │   ├── RepositoryDetailView
   │   ├── ProcessService          ← PTY via node-pty                  │   ├── GitHubView
-  │   ├── PortService             ← lsof polling                     │   ├── PortsView
-  │   ├── ConfigService           ← electron-store persistence        │   └── SettingsView
+  │   ├── PortService             ← lsof polling                     │   ├── CodeSearchView
+  │   ├── ConfigService           ← electron-store persistence        │   ├── PortsView
+  │   │                                                                │   └── SettingsView
   │   ├── LogService              ← terminal output to disk           ├── components/
   │   ├── DependencyHealthService ← npm/pnpm audit + outdated         ├── hooks/
   │   ├── GitHubService           ← gh CLI integration                └── store/ (Zustand)
   │   ├── GitBranchService        ← branch listing + cleanup
   │   ├── ScaffoldService        ← recipe management + PTY scaffold + template copy
+  │   ├── CodeSearchService      ← semantic code search (embeddings + vectra)
+  │   ├── CodeParser             ← tree-sitter WASM code parsing
   │   ├── ProjectDetector         ← project type heuristics
   │   └── WorkspaceDetector       ← pnpm workspace parsing
   ├── ipc/                        ← IPC handler registration

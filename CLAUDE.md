@@ -17,7 +17,7 @@ RepoHub is a native macOS desktop app (Electron) that serves as a project manage
 
 Detailed docs live in `docs/`:
 
-- `docs/features.md` — All features: dashboard, repo detail view, monorepo, dependency health, GitHub integration, branch cleanup, port monitoring
+- `docs/features.md` — All features: dashboard, repo detail view, monorepo, dependency health, GitHub integration, branch cleanup, semantic code search, port monitoring
 - `docs/configuration.md` — Config options, settings UI, file location, command overrides
 - `docs/architecture.md` — Three-process model, IPC flow, async design, PATH fix, security
 - `docs/development.md` — Commands, prerequisites, project structure, how to add components/IPC channels
@@ -61,6 +61,8 @@ React hooks → `window.electron.*` (preload bridge) → IPC handlers (`src/main
 - **GitHubService** — Async gh CLI integration for PR status, CI checks, PR creation
 - **GitBranchService** — Branch listing (`git branch -vv` + `--merged`) and safe deletion (`git branch -d`)
 - **ScaffoldService** — Recipe-based project scaffolding via PTY, template file copying, recipe CRUD
+- **CodeSearchService** — Semantic code search: tree-sitter parsing, ONNX embeddings, vectra vector store, file watching
+- **CodeParser** — Tree-sitter WASM-based code parsing into semantic chunks (functions, classes, methods)
 - **ProjectDetector** — Heuristic detection: Node.js, Python, Rust, Go, Java, Swift, Monorepo
 - **WorkspaceDetector** — pnpm workspace parsing for monorepo packages
 
@@ -76,7 +78,7 @@ macOS packaged apps get a minimal PATH. `src/main/index.ts` prepends `/opt/homeb
 
 - **State**: Zustand stores in `store/` (repositoryStore, processStore, portStore)
 - **IPC wrappers**: Custom hooks in `hooks/` (useRepositories, useProcesses, usePorts, useConfig, useHealth, useGitHub); git branch ops via `window.electron.git.*` directly
-- **Routing**: react-router-dom with hash-based routing (5 routes: /, /repo/:id, /github, /ports, /settings)
+- **Routing**: react-router-dom with hash-based routing (6 routes: /, /repo/:id, /github, /search, /ports, /settings)
 - **UI**: shadcn/ui components in `components/ui/`, Tailwind CSS v4, Lucide icons
 - **Terminal**: xterm.js with fit addon and clickable URL detection
 - **Tooltips**: All interactive badges and buttons have tooltips via shadcn/ui Tooltip

@@ -27,6 +27,7 @@ import { DependencyHealthService } from './services/DependencyHealthService'
 import { GitHubService } from './services/GitHubService'
 import { GitBranchService } from './services/GitBranchService'
 import { ScaffoldService } from './services/ScaffoldService'
+import { CodeSearchService } from './services/CodeSearchService'
 
 // Initialize services
 const configService = new ConfigService()
@@ -41,6 +42,7 @@ const healthService = new DependencyHealthService(repositoryService)
 const githubService = new GitHubService(repositoryService)
 const gitBranchService = new GitBranchService()
 const scaffoldService = new ScaffoldService(configService)
+const codeSearchService = new CodeSearchService(configService, repositoryService)
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -53,6 +55,7 @@ app.whenReady().then(() => {
     githubService,
     gitBranchService,
     scaffoldService,
+    codeSearchService,
   })
 
   // Create window
@@ -90,6 +93,9 @@ app.whenReady().then(() => {
     portService.startMonitoring()
   }
 
+  // Initialize code search (watching starts automatically after first indexing completes)
+  codeSearchService.initialize()
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow()
@@ -107,4 +113,5 @@ app.on('before-quit', () => {
   processService.stopAll()
   portService.stopMonitoring()
   repositoryService.stopWatching()
+  codeSearchService.shutdown()
 })

@@ -29,6 +29,9 @@ export class ConfigService {
       scaffoldRecipes: this.store.get('scaffoldRecipes'),
       hiddenDefaultRecipes: this.store.get('hiddenDefaultRecipes'),
       setupTemplateDir: this.store.get('setupTemplateDir'),
+      codeSearchEnabled: this.store.get('codeSearchEnabled') ?? DEFAULT_CONFIG.codeSearchEnabled,
+      codeSearchExcludePatterns: this.store.get('codeSearchExcludePatterns') ?? DEFAULT_CONFIG.codeSearchExcludePatterns,
+      codeSearchMaxFileSize: this.store.get('codeSearchMaxFileSize') ?? DEFAULT_CONFIG.codeSearchMaxFileSize,
     }
   }
 

@@ -30,6 +30,7 @@ import {
   Play,
   Plus,
   RefreshCw,
+  Search,
   Settings,
   Square,
   Terminal,
@@ -213,6 +214,10 @@ export function CommandPalette() {
               <CommandItem onSelect={() => closeAndRun(() => navigate('/github'))}>
                 <GitPullRequest className="mr-2" />
                 GitHub PRs
+              </CommandItem>
+              <CommandItem onSelect={() => closeAndRun(() => navigate('/search'))}>
+                <Search className="mr-2" />
+                Code Search
               </CommandItem>
               <CommandItem onSelect={() => closeAndRun(() => navigate('/ports'))}>
                 <Globe className="mr-2" />
