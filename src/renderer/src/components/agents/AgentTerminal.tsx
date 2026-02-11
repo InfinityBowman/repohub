@@ -401,7 +401,7 @@ export function AgentTerminal({ messages, streamingText }: AgentTerminalProps) {
   const groups = useMemo(() => groupMessages(messages), [messages]);
 
   return (
-    <div className='flex-1 overflow-y-auto'>
+    <div className='min-h-0 flex-1 overflow-y-auto'>
       <div className='space-y-1 px-4 py-3'>
         {groups.map(group => {
           if (group.type === 'tool_pair') {

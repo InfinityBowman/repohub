@@ -10,6 +10,8 @@ import {
   ArrowLeft,
   Loader2,
   RefreshCw,
+  X,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,14 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { useAgents } from '@/hooks/useAgents';
 import { useRepositoryStore } from '@/store/repositoryStore';
+import { useAgentStore } from '@/store/agentStore';
 import { AgentLaunchPanel } from '@/components/agents/AgentLaunchPanel';
 import { AgentTerminal } from '@/components/agents/AgentTerminal';
 import { InfoBar } from '@/components/agents/InfoBar';
 import { MessageInput } from '@/components/agents/MessageInput';
 import type { AgentLaunchConfig, ClaudeSessionSummary } from '@/types';
-
 
 function timeAgo(isoDate: string): string {
   const seconds = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
@@ -48,7 +51,7 @@ function formatDuration(seconds: number): string {
   return `${hours}h ${remainingMinutes}m`;
 }
 
-function SessionHistoryRow({
+function SessionRow({
   session,
   onView,
   onResume,
@@ -64,11 +67,16 @@ function SessionHistoryRow({
       role='button'
       tabIndex={0}
       onClick={onView}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(); } }}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onView();
+        }
+      }}
       className={`group flex w-full cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-        isActive ?
-          'border-primary/40 bg-primary/5'
-        : 'border-border hover:border-border/80 hover:bg-secondary/30'
+        isActive
+          ? 'border-primary/40 bg-primary/5'
+          : 'border-border hover:border-border/80 hover:bg-secondary/30'
       }`}
     >
       <MessageSquare className='mt-0.5 h-4 w-4 shrink-0 text-blue-400' />
@@ -107,29 +115,47 @@ function SessionHistoryRow({
   );
 }
 
-function SessionHistory({
-  onLaunch,
-  setShowLaunchPanel,
-}: {
-  onLaunch: () => void;
-  setShowLaunchPanel: (show: boolean) => void;
-}) {
-  const repositories = useRepositoryStore(s => s.repositories);
+export function AgentCommandCenterView() {
   const {
+    agents,
+    activeAgentId,
+    messages,
+    streaming,
+    showLaunchPanel,
     sessionHistory,
     viewingHistorySessionId,
-    messages,
+    setActiveAgent,
+    setShowLaunchPanel,
+    setViewingHistorySessionId,
+    launch,
+    stop,
+    sendMessage,
     loadSessionHistory,
     viewSession,
     resumeSession,
-    setViewingHistorySessionId,
   } = useAgents();
+
+  const repositories = useRepositoryStore(s => s.repositories);
+  const removeAgent = useAgentStore(s => s.removeAgent);
 
   const [selectedRepoPath, setSelectedRepoPath] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [resuming, setResuming] = useState<string | null>(null);
 
-  // Ensure repos are loaded (store may be empty if user hasn't visited Repositories tab)
+  const agentList = Object.values(agents);
+  const activeAgent = activeAgentId ? agents[activeAgentId] : null;
+  const activeMessages = activeAgentId ? messages[activeAgentId] || [] : [];
+  const activeStreaming = activeAgentId ? streaming[activeAgentId] || '' : '';
+
+  const viewKey = viewingHistorySessionId ? `history:${viewingHistorySessionId}` : null;
+  const viewingMessages = viewKey ? messages[viewKey] || [] : [];
+  const viewingSession = viewingHistorySessionId
+    ? sessionHistory.find(s => s.sessionId === viewingHistorySessionId)
+    : null;
+
+  const selectedRepo = repositories.find(r => r.path === selectedRepoPath);
+
+  // Ensure repos are loaded
   useEffect(() => {
     if (repositories.length === 0) {
       window.electron.repositories.scan().then(repos => {
@@ -138,14 +164,14 @@ function SessionHistory({
     }
   }, [repositories.length]);
 
-  // Auto-select first repo on mount
+  // Auto-select first repo
   useEffect(() => {
     if (repositories.length > 0 && !selectedRepoPath) {
       setSelectedRepoPath(repositories[0].path);
     }
   }, [repositories, selectedRepoPath]);
 
-  // Load session history when repo changes
+  // Load sessions when repo changes
   useEffect(() => {
     if (selectedRepoPath) {
       setLoading(true);
@@ -153,13 +179,33 @@ function SessionHistory({
     }
   }, [selectedRepoPath, loadSessionHistory]);
 
-  const selectedRepo = repositories.find(r => r.path === selectedRepoPath);
+  // --- Handlers ---
+
+  const handleLaunch = useCallback(
+    async (config: AgentLaunchConfig) => {
+      try {
+        await launch(config);
+      } catch (err) {
+        console.error('Failed to launch agent:', err);
+      }
+    },
+    [launch],
+  );
+
+  const handleStop = useCallback(() => {
+    if (activeAgentId) stop(activeAgentId);
+  }, [activeAgentId, stop]);
+
+  const handleSendMessage = useCallback(
+    (content: string) => {
+      if (activeAgentId) sendMessage(activeAgentId, content);
+    },
+    [activeAgentId, sendMessage],
+  );
 
   const handleView = useCallback(
     (sessionId: string) => {
-      if (selectedRepoPath) {
-        viewSession(selectedRepoPath, sessionId);
-      }
+      if (selectedRepoPath) viewSession(selectedRepoPath, sessionId);
     },
     [selectedRepoPath, viewSession],
   );
@@ -186,50 +232,170 @@ function SessionHistory({
     [selectedRepo, resumeSession],
   );
 
-  const viewKey = viewingHistorySessionId ? `history:${viewingHistorySessionId}` : null;
-  const viewingMessages = viewKey ? messages[viewKey] || [] : [];
+  const goToList = useCallback(() => {
+    setActiveAgent(null);
+    setViewingHistorySessionId(null);
+  }, [setActiveAgent, setViewingHistorySessionId]);
 
-  // If viewing a session's messages, show the terminal view
-  if (viewingHistorySessionId && viewingMessages.length > 0) {
-    const session = sessionHistory.find(s => s.sessionId === viewingHistorySessionId);
+  // --- Tabs ---
+
+  const tabs =
+    agentList.length > 0 ? (
+      <div className='flex items-center gap-1'>
+        {agentList.map(a => (
+          <div key={a.id} className='flex items-center'>
+            <button
+              onClick={() => {
+                setActiveAgent(a.id);
+                setViewingHistorySessionId(null);
+              }}
+              className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                a.id === activeAgentId && !viewingHistorySessionId
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {a.config.repoName}
+              {a.state === 'working' && (
+                <span className='ml-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-green-400' />
+              )}
+            </button>
+            {(a.state === 'completed' || a.state === 'error') && (
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  removeAgent(a.id);
+                }}
+                className='text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors'
+              >
+                <X className='h-3 w-3' />
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          onClick={goToList}
+          className={`rounded px-2 py-0.5 text-xs transition-colors ${
+            !activeAgentId && !viewingHistorySessionId
+              ? 'bg-primary/20 text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <History className='mr-1 inline h-3 w-3' />
+          History
+        </button>
+      </div>
+    ) : null;
+
+  // --- Header (always the same) ---
+
+  const header = (
+    <div className='flex shrink-0 items-center justify-between'>
+      <div className='flex items-center gap-3'>
+        <h2 className='text-xl font-semibold'>Agents</h2>
+        {tabs}
+      </div>
+      <Button size='sm' variant='outline' onClick={() => setShowLaunchPanel(true)}>
+        <Plus className='h-4 w-4' />
+        New Agent
+      </Button>
+    </div>
+  );
+
+  // ==========================================================================
+  // State 1: Launch panel (natural scroll)
+  // ==========================================================================
+
+  if (showLaunchPanel) {
     return (
-      <div className='flex h-full flex-col gap-3'>
-        <div className='flex items-center gap-3'>
-          <Button variant='ghost' size='sm' onClick={() => setViewingHistorySessionId(null)}>
+      <div className='flex flex-col gap-4'>
+        {header}
+        <AgentLaunchPanel onLaunch={handleLaunch} onCancel={() => setShowLaunchPanel(false)} />
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // State 2: Active agent terminal (contained — terminal scrolls internally)
+  // ==========================================================================
+
+  if (activeAgent) {
+    return (
+      <div className='flex h-full flex-col gap-3 overflow-hidden'>
+        {header}
+        <InfoBar agent={activeAgent} onStop={handleStop} />
+        <AgentTerminal messages={activeMessages} streamingText={activeStreaming} />
+        <MessageInput agentState={activeAgent.state} onSend={handleSendMessage} />
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // State 3: Viewing history messages (contained, read-only)
+  // ==========================================================================
+
+  if (viewingHistorySessionId && viewingMessages.length > 0) {
+    return (
+      <div className='flex h-full flex-col gap-3 overflow-hidden'>
+        {header}
+        <div className='flex shrink-0 items-center gap-3'>
+          <Button variant='ghost' size='sm' onClick={goToList}>
             <ArrowLeft className='h-4 w-4' />
           </Button>
-          <h3 className='min-w-0 flex-1 truncate text-sm font-medium'>
-            {session?.task || 'Session History'}
-          </h3>
-          {session && (
+          <p className='min-w-0 flex-1 truncate text-sm font-medium'>
+            {viewingSession?.task || 'Session'}
+          </p>
+          <Badge variant='secondary' className='text-muted-foreground gap-1 text-xs'>
+            <Eye className='h-3 w-3' />
+            Read-only
+          </Badge>
+          {viewingSession && (
             <Button
               size='sm'
               variant='outline'
-              disabled={resuming === session.sessionId}
-              onClick={() => handleResume(session)}
+              disabled={resuming === viewingSession.sessionId}
+              onClick={() => handleResume(viewingSession)}
             >
-              {resuming === session.sessionId ?
+              {resuming === viewingSession.sessionId ? (
                 <Loader2 className='h-3.5 w-3.5 animate-spin' />
-              : <Play className='h-3.5 w-3.5' />}
+              ) : (
+                <Play className='h-3.5 w-3.5' />
+              )}
               Resume
             </Button>
           )}
         </div>
-        <div className='via-border/40 h-px bg-gradient-to-r from-transparent to-transparent' />
         <AgentTerminal messages={viewingMessages} streamingText='' />
       </div>
     );
   }
 
+  // ==========================================================================
+  // State 4: Session list (natural page scroll)
+  // ==========================================================================
+
   return (
     <div className='flex flex-col gap-4'>
-      {/* Header with actions */}
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-3'>
-          <History className='text-muted-foreground h-5 w-5' />
-          <h3 className='text-lg font-semibold'>Recent Sessions</h3>
-        </div>
-        <div className='flex gap-2'>
+      {header}
+
+      {/* Repo selector + refresh */}
+      {repositories.length > 0 && (
+        <div className='flex items-center gap-2'>
+          <Select value={selectedRepoPath} onValueChange={setSelectedRepoPath}>
+            <SelectTrigger className='w-full'>
+              <SelectValue placeholder='Select a repository' />
+            </SelectTrigger>
+            <SelectContent>
+              {repositories
+                .slice()
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(repo => (
+                  <SelectItem key={repo.id} value={repo.path}>
+                    {repo.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
           <Button
             size='sm'
             variant='ghost'
@@ -243,41 +409,18 @@ function SessionHistory({
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
-          <Button size='sm' onClick={onLaunch}>
-            <Plus className='h-4 w-4' />
-            New Agent
-          </Button>
         </div>
-      </div>
-
-      {/* Repo selector */}
-      {repositories.length > 0 && (
-        <Select value={selectedRepoPath} onValueChange={setSelectedRepoPath}>
-          <SelectTrigger className='w-full'>
-            <SelectValue placeholder='Select a repository' />
-          </SelectTrigger>
-          <SelectContent>
-            {repositories
-              .slice()
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map(repo => (
-                <SelectItem key={repo.id} value={repo.path}>
-                  {repo.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
       )}
 
       {/* Session list */}
-      {loading ?
-        <div className='flex items-center justify-center py-12'>
+      {loading ? (
+        <div className='flex items-center justify-center py-8'>
           <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
         </div>
-      : sessionHistory.length > 0 ?
+      ) : sessionHistory.length > 0 ? (
         <div className='flex flex-col gap-1.5'>
           {sessionHistory.map(session => (
-            <SessionHistoryRow
+            <SessionRow
               key={session.sessionId}
               session={session}
               isActive={viewingHistorySessionId === session.sessionId}
@@ -286,175 +429,19 @@ function SessionHistory({
             />
           ))}
         </div>
-      : <div className='flex flex-col items-center gap-3 py-12 text-center'>
+      ) : (
+        <div className='flex flex-col items-center gap-3 py-8 text-center'>
           <Bot className='text-muted-foreground h-8 w-8' />
           <div>
             <p className='text-sm font-medium'>No sessions found</p>
             <p className='text-muted-foreground text-xs'>
-              {selectedRepoPath ?
-                'No Claude Code sessions exist for this repository yet.'
-              : 'Select a repository to browse session history.'}
+              {selectedRepoPath
+                ? 'No Claude Code sessions exist for this repository yet.'
+                : 'Select a repository to browse session history.'}
             </p>
           </div>
-          <Button size='sm' onClick={onLaunch}>
-            <Plus className='h-4 w-4' />
-            Launch Agent
-          </Button>
         </div>
-      }
-    </div>
-  );
-}
-
-export function AgentCommandCenterView() {
-  const {
-    agents,
-    activeAgentId,
-    messages,
-    streaming,
-    showLaunchPanel,
-    viewingHistorySessionId,
-    setShowLaunchPanel,
-    setActiveAgent,
-    setViewingHistorySessionId,
-    launch,
-    stop,
-    sendMessage,
-  } = useAgents();
-
-  const agentList = Object.values(agents);
-  const activeAgent = activeAgentId ? agents[activeAgentId] : null;
-  const activeMessages = activeAgentId ? messages[activeAgentId] || [] : [];
-  const activeStreaming = activeAgentId ? streaming[activeAgentId] || '' : '';
-
-  const handleLaunch = useCallback(
-    async (config: AgentLaunchConfig) => {
-      try {
-        await launch(config);
-      } catch (err: any) {
-        console.error('Failed to launch agent:', err);
-      }
-    },
-    [launch],
-  );
-
-  const handleStop = useCallback(() => {
-    if (activeAgentId) stop(activeAgentId);
-  }, [activeAgentId, stop]);
-
-  const handleSendMessage = useCallback(
-    (content: string) => {
-      if (activeAgentId) sendMessage(activeAgentId, content);
-    },
-    [activeAgentId, sendMessage],
-  );
-
-  // Launch panel open
-  if (showLaunchPanel) {
-    return (
-      <div className='flex flex-col gap-4'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <h2 className='text-xl font-semibold'>Agents</h2>
-          </div>
-        </div>
-        <AgentLaunchPanel onLaunch={handleLaunch} onCancel={() => setShowLaunchPanel(false)} />
-      </div>
-    );
-  }
-
-  // No active agents → show session history (which includes empty state + launch button)
-  if (agentList.length === 0) {
-    return (
-      <div className='flex h-full flex-col gap-4'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <h2 className='text-xl font-semibold'>Agents</h2>
-          </div>
-        </div>
-        <SessionHistory
-          onLaunch={() => setShowLaunchPanel(true)}
-          setShowLaunchPanel={setShowLaunchPanel}
-        />
-      </div>
-    );
-  }
-
-  // Active agent view
-  return (
-    <div className='flex h-full flex-col gap-3'>
-      {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-3'>
-          <h2 className='text-xl font-semibold'>Agents</h2>
-          {agentList.length > 0 && (
-            <div className='flex gap-1'>
-              {agentList.map(a => (
-                <button
-                  key={a.id}
-                  onClick={() => {
-                    setActiveAgent(a.id);
-                    setViewingHistorySessionId(null);
-                  }}
-                  className={`rounded px-2 py-0.5 text-xs transition-colors ${
-                    a.id === activeAgentId && !viewingHistorySessionId ?
-                      'bg-primary/20 text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {a.config.repoName}
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  setActiveAgent(null);
-                  setViewingHistorySessionId(null);
-                }}
-                className={`rounded px-2 py-0.5 text-xs transition-colors ${
-                  !activeAgentId && !viewingHistorySessionId ?
-                    'bg-primary/20 text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <History className='inline h-3 w-3' /> History
-              </button>
-            </div>
-          )}
-        </div>
-        <Button size='sm' variant='outline' onClick={() => setShowLaunchPanel(true)}>
-          <Plus className='h-4 w-4' />
-          New Agent
-        </Button>
-      </div>
-
-      {/* Show history view when no agent selected */}
-      {!activeAgent && !viewingHistorySessionId ?
-        <SessionHistory
-          onLaunch={() => setShowLaunchPanel(true)}
-          setShowLaunchPanel={setShowLaunchPanel}
-        />
-      : activeAgent ?
-        <>
-          <InfoBar agent={activeAgent} onStop={handleStop} />
-
-          {/* Gradient divider */}
-          <div className='via-border/40 h-px bg-gradient-to-r from-transparent to-transparent' />
-
-          {/* Terminal with inline permissions */}
-          <AgentTerminal
-            messages={activeMessages}
-            streamingText={activeStreaming}
-          />
-
-          {/* Input */}
-          <MessageInput agentState={activeAgent.state} onSend={handleSendMessage} />
-        </>
-        // Viewing history session with active agents in tabs
-      : <SessionHistory
-          onLaunch={() => setShowLaunchPanel(true)}
-          setShowLaunchPanel={setShowLaunchPanel}
-        />
-      }
+      )}
     </div>
   );
 }
