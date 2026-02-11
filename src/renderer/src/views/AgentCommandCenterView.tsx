@@ -12,6 +12,7 @@ import {
   RefreshCw,
   X,
   Eye,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -141,6 +142,7 @@ export function AgentCommandCenterView() {
   const [selectedRepoPath, setSelectedRepoPath] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [resuming, setResuming] = useState<string | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   const agentList = Object.values(agents);
   const activeAgent = activeAgentId ? agents[activeAgentId] : null;
@@ -214,6 +216,7 @@ export function AgentCommandCenterView() {
     async (session: ClaudeSessionSummary) => {
       if (!selectedRepo) return;
       setResuming(session.sessionId);
+      setResumeError(null);
       try {
         await resumeSession(session.sessionId, {
           repoId: selectedRepo.id,
@@ -223,8 +226,9 @@ export function AgentCommandCenterView() {
           task: session.task,
           autonomous: false,
         });
-      } catch (err) {
-        console.error('Failed to resume session:', err);
+      } catch (err: any) {
+        setResumeError(err?.message || 'Failed to resume session');
+        setTimeout(() => setResumeError(null), 5000);
       } finally {
         setResuming(null);
       }
@@ -293,12 +297,18 @@ export function AgentCommandCenterView() {
     <div className='flex shrink-0 items-center justify-between'>
       <div className='flex items-center gap-3'>
         <h2 className='text-xl font-semibold'>Agents</h2>
-        {tabs}
+        {!showLaunchPanel && tabs}
       </div>
-      <Button size='sm' variant='outline' onClick={() => setShowLaunchPanel(true)}>
-        <Plus className='h-4 w-4' />
-        New Agent
-      </Button>
+      {showLaunchPanel ? (
+        <Button size='sm' variant='ghost' onClick={() => setShowLaunchPanel(false)}>
+          Cancel
+        </Button>
+      ) : (
+        <Button size='sm' variant='outline' onClick={() => setShowLaunchPanel(true)}>
+          <Plus className='h-4 w-4' />
+          New Agent
+        </Button>
+      )}
     </div>
   );
 
@@ -310,7 +320,7 @@ export function AgentCommandCenterView() {
     return (
       <div className='flex flex-col gap-4'>
         {header}
-        <AgentLaunchPanel onLaunch={handleLaunch} onCancel={() => setShowLaunchPanel(false)} />
+        <AgentLaunchPanel onLaunch={handleLaunch} />
       </div>
     );
   }
@@ -321,7 +331,7 @@ export function AgentCommandCenterView() {
 
   if (activeAgent) {
     return (
-      <div className='flex h-full flex-col gap-3 overflow-hidden'>
+      <div className='flex h-full flex-col gap-2 overflow-hidden'>
         {header}
         <InfoBar agent={activeAgent} onStop={handleStop} />
         <AgentTerminal messages={activeMessages} streamingText={activeStreaming} />
@@ -336,7 +346,7 @@ export function AgentCommandCenterView() {
 
   if (viewingHistorySessionId && viewingMessages.length > 0) {
     return (
-      <div className='flex h-full flex-col gap-3 overflow-hidden'>
+      <div className='flex h-full flex-col gap-2 overflow-hidden'>
         {header}
         <div className='flex shrink-0 items-center gap-3'>
           <Button variant='ghost' size='sm' onClick={goToList}>
@@ -365,6 +375,12 @@ export function AgentCommandCenterView() {
             </Button>
           )}
         </div>
+        {resumeError && (
+          <div className='flex shrink-0 items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400'>
+            <AlertCircle className='h-4 w-4 shrink-0' />
+            {resumeError}
+          </div>
+        )}
         <AgentTerminal messages={viewingMessages} streamingText='' />
       </div>
     );
@@ -377,6 +393,14 @@ export function AgentCommandCenterView() {
   return (
     <div className='flex flex-col gap-4'>
       {header}
+
+      {/* Resume error */}
+      {resumeError && (
+        <div className='flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400'>
+          <AlertCircle className='h-4 w-4 shrink-0' />
+          {resumeError}
+        </div>
+      )}
 
       {/* Repo selector + refresh */}
       {repositories.length > 0 && (

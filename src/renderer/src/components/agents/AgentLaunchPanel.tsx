@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Bot, Code, Eye, Search, AlertTriangle, ArrowLeft, Rocket } from 'lucide-react';
+import { Code, Eye, Search, AlertTriangle, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -39,10 +39,9 @@ const ROLES = [
 
 interface AgentLaunchPanelProps {
   onLaunch: (config: AgentLaunchConfig) => Promise<void> | void;
-  onCancel: () => void;
 }
 
-export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) {
+export function AgentLaunchPanel({ onLaunch }: AgentLaunchPanelProps) {
   const repositories = useRepositoryStore(s => s.repositories);
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState('coder');
@@ -78,16 +77,7 @@ export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) 
   };
 
   return (
-    <div className='flex flex-col gap-6'>
-      {/* Header */}
-      <div className='flex items-center gap-3'>
-        <Button variant='ghost' size='sm' onClick={onCancel}>
-          <ArrowLeft className='h-4 w-4' />
-        </Button>
-        <Bot className='h-5 w-5' />
-        <h3 className='text-lg font-semibold'>Launch Agent</h3>
-      </div>
-
+    <div className='flex flex-col gap-5'>
       {/* Repository picker */}
       <div>
         <label className='text-muted-foreground mb-2 block text-sm font-medium'>Repository</label>
@@ -205,9 +195,6 @@ export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) 
         <Button onClick={handleLaunch} disabled={!canLaunch} className='gap-2'>
           <Rocket className='h-4 w-4' />
           {launching ? 'Launching...' : 'Launch Agent'}
-        </Button>
-        <Button variant='ghost' onClick={onCancel}>
-          Cancel
         </Button>
       </div>
     </div>
