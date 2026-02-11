@@ -67,21 +67,21 @@ export function useGitHub() {
   }, []);
 
   const fetchAllUserPRs = useCallback(async () => {
-    store.setLoading(true);
+    useGitHubStore.getState().setLoading(true);
     try {
       const prs = await window.electron.github.getAllUserPRs();
-      store.setAllUserPRs(prs);
+      useGitHubStore.getState().setAllUserPRs(prs);
     } finally {
-      store.setLoading(false);
+      useGitHubStore.getState().setLoading(false);
     }
   }, []);
 
   const refresh = useCallback(async () => {
-    store.setLoading(true);
+    useGitHubStore.getState().setLoading(true);
     try {
       await window.electron.github.refresh();
     } finally {
-      store.setLoading(false);
+      useGitHubStore.getState().setLoading(false);
     }
   }, []);
 

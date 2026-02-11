@@ -186,13 +186,16 @@ export class PackageCloneService {
   }
 
   private sanitizeDirName(name: string): string {
-    return name
-      .replace(/@/g, '')
-      .replace(/\//g, '__')
-      .replace(/\.\./g, '_')
-      .replace(/^\.+/, '')
-      .replace(/[<>:"|?*\x00-\x1F]/g, '_')
-      .slice(0, 255);
+    return (
+      name
+        .replace(/@/g, '')
+        .replace(/\//g, '__')
+        .replace(/\.\./g, '_')
+        .replace(/^\.+/, '')
+        // eslint-disable-next-line no-control-regex
+        .replace(/[<>:"|?*\x00-\x1F]/g, '_')
+        .slice(0, 255)
+    );
   }
 
   private async cleanupOrphanedEntries(): Promise<void> {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -65,20 +65,31 @@ export function ScaffoldDialog({ open, onOpenChange }: ScaffoldDialogProps) {
     setRecipes(r);
   }, []);
 
-  useEffect(() => {
-    if (open) {
-      loadData();
-      setStep('pick');
-      setPickMode('templates');
-      setSelected(null);
-      setProjectName('');
-      setNameError('');
-      setExitCode(null);
-      setFinishedProjectName('');
-      setCopyError('');
-      setEditingRecipe(null);
-    }
-  }, [open, loadData]);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open && !prevOpen) {
+    setPrevOpen(open);
+    loadData();
+  } else if (!open && prevOpen) {
+    setPrevOpen(open);
+  }
+
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (next) {
+        setStep('pick');
+        setPickMode('templates');
+        setSelected(null);
+        setProjectName('');
+        setNameError('');
+        setExitCode(null);
+        setFinishedProjectName('');
+        setCopyError('');
+        setEditingRecipe(null);
+      }
+      onOpenChange(next);
+    },
+    [onOpenChange],
+  );
 
   const validateName = (name: string): string => {
     if (!name.trim()) return 'Project name is required';
@@ -209,7 +220,7 @@ export function ScaffoldDialog({ open, onOpenChange }: ScaffoldDialogProps) {
   const isRunningOrDone = step === 'running' || step === 'done';
 
   return (
-    <Dialog open={open} onOpenChange={step === 'running' ? undefined : onOpenChange}>
+    <Dialog open={open} onOpenChange={step === 'running' ? undefined : handleOpenChange}>
       <DialogContent
         className='overflow-hidden sm:max-w-2xl'
         showCloseButton={step !== 'running'}

@@ -110,6 +110,7 @@ export default [
       '**/build/**',
       '**/coverage/**',
       'resources/**',
+      '_reference/**',
     ],
   },
 ];

@@ -908,12 +908,18 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
   const [loadingReadme, setLoadingReadme] = useState(false);
   const fetchedRef = useRef<string | null>(null);
 
+  // Reset state when repo changes
+  const [prevFullName, setPrevFullName] = useState(repo.fullName);
+  if (prevFullName !== repo.fullName) {
+    setPrevFullName(repo.fullName);
+    setReadme(null);
+    setLoadingReadme(true);
+  }
+
   // Fetch README when repo changes
   useEffect(() => {
     if (fetchedRef.current === repo.fullName) return;
     fetchedRef.current = repo.fullName;
-    setReadme(null);
-    setLoadingReadme(true);
     window.electron.github
       .getTrendingReadme(repo.fullName)
       .then(content => {

@@ -70,10 +70,22 @@ function detectLanguage(filePath: string): string {
 
 // ─── File icon & color helpers ──────────────────────────────────
 
-function getFileIcon(name: string, isDir: boolean, isExpanded?: boolean) {
-  if (isDir) return isExpanded ? FolderOpen : Folder;
+function FileIcon({
+  name,
+  isDir,
+  isExpanded,
+  className,
+}: {
+  name: string;
+  isDir: boolean;
+  isExpanded?: boolean;
+  className?: string;
+}) {
+  if (isDir) {
+    return isExpanded ? <FolderOpen className={className} /> : <Folder className={className} />;
+  }
   const lower = name.toLowerCase();
-  if (lower === '.env' || lower.startsWith('.env.')) return Lock;
+  if (lower === '.env' || lower.startsWith('.env.')) return <Lock className={className} />;
   if (
     lower === '.gitignore' ||
     lower.endsWith('.config.ts') ||
@@ -81,7 +93,7 @@ function getFileIcon(name: string, isDir: boolean, isExpanded?: boolean) {
     lower.endsWith('.config.mjs') ||
     lower.endsWith('.config.cjs')
   )
-    return Settings;
+    return <Settings className={className} />;
   if (
     lower.endsWith('.ts') ||
     lower.endsWith('.tsx') ||
@@ -97,8 +109,8 @@ function getFileIcon(name: string, isDir: boolean, isExpanded?: boolean) {
     lower.endsWith('.cpp') ||
     lower.endsWith('.h')
   )
-    return FileCode2;
-  return FileText;
+    return <FileCode2 className={className} />;
+  return <FileText className={className} />;
 }
 
 function getFileIconColor(name: string, isDir: boolean): string {
@@ -136,21 +148,19 @@ function HighlightedCode({
   cachedHtml: string | null;
   onHighlighted?: (html: string) => void;
 }) {
-  const [html, setHtml] = useState<string | null>(cachedHtml);
+  const [computedHtml, setComputedHtml] = useState<string | null>(null);
   const callbackRef = useRef(onHighlighted);
-  callbackRef.current = onHighlighted;
+  useEffect(() => {
+    callbackRef.current = onHighlighted;
+  });
 
   useEffect(() => {
-    if (cachedHtml) {
-      setHtml(cachedHtml);
-      return;
-    }
-    setHtml(null);
+    if (cachedHtml) return;
     let cancelled = false;
     codeToHtml(code, { lang, theme: 'material-theme-palenight' })
       .then(result => {
         if (!cancelled) {
-          setHtml(result);
+          setComputedHtml(result);
           callbackRef.current?.(result);
         }
       })
@@ -158,7 +168,7 @@ function HighlightedCode({
         if (!cancelled) {
           const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const fallback = `<pre style="padding:1rem;font-size:12px;"><code>${escaped}</code></pre>`;
-          setHtml(fallback);
+          setComputedHtml(fallback);
           callbackRef.current?.(fallback);
         }
       });
@@ -166,6 +176,8 @@ function HighlightedCode({
       cancelled = true;
     };
   }, [code, lang, cachedHtml]);
+
+  const html = cachedHtml || computedHtml;
 
   if (html === null) {
     return (
@@ -208,7 +220,6 @@ function FileTreeNode({
 }) {
   const isExpanded = expandedDirs.has(node.path);
   const children = dirFiles[node.path];
-  const Icon = getFileIcon(node.name, node.type === 'directory', isExpanded);
   const iconColor = getFileIconColor(node.name, node.type === 'directory');
 
   if (node.type === 'directory') {
@@ -225,7 +236,12 @@ function FileTreeNode({
               isExpanded && 'rotate-90',
             )}
           />
-          <Icon className={cn('h-3.5 w-3.5 shrink-0', iconColor)} />
+          <FileIcon
+            name={node.name}
+            isDir
+            isExpanded={isExpanded}
+            className={cn('h-3.5 w-3.5 shrink-0', iconColor)}
+          />
           <span className='text-foreground/70 truncate'>{node.name}</span>
         </button>
         {isExpanded && children && (
@@ -276,7 +292,11 @@ function FileTreeNode({
     >
       {/* Spacing to align with directory chevrons */}
       <span className='w-3 shrink-0' />
-      <Icon className={cn('h-3.5 w-3.5 shrink-0', isSelected ? 'text-blue-400' : iconColor)} />
+      <FileIcon
+        name={node.name}
+        isDir={false}
+        className={cn('h-3.5 w-3.5 shrink-0', isSelected ? 'text-blue-400' : iconColor)}
+      />
       <span className='truncate'>{node.name}</span>
     </button>
   );
@@ -295,7 +315,6 @@ function EditorBreadcrumb({
 }) {
   const parts = filePath.split('/');
   const fileName = parts[parts.length - 1];
-  const Icon = getFileIcon(fileName, false);
   const iconColor = getFileIconColor(fileName, false);
 
   return (
@@ -306,7 +325,11 @@ function EditorBreadcrumb({
             {i > 0 && <ChevronRight className='text-muted-foreground/50 h-3 w-3 shrink-0' />}
             {i === parts.length - 1 ?
               <span className='flex items-center gap-1.5'>
-                <Icon className={cn('h-3 w-3 shrink-0', iconColor)} />
+                <FileIcon
+                  name={fileName}
+                  isDir={false}
+                  className={cn('h-3 w-3 shrink-0', iconColor)}
+                />
                 <span className='text-foreground font-medium'>{part}</span>
               </span>
             : <span className='text-muted-foreground'>{part}</span>}
@@ -418,7 +441,7 @@ export function FileBrowser({
   const contentCache = useRef(new Map<string, string>());
   const htmlCache = useRef(new Map<string, string>());
   const prefetchingPaths = useRef(new Set<string>());
-  const prefetchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const prefetchTimer = useRef<ReturnType<typeof setTimeout>>(null);
   const rootLoaded = useRef(false);
 
   // Helper: update dirFiles state + ref together

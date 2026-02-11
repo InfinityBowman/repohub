@@ -178,7 +178,7 @@ export class PackageIntelligenceService extends EventEmitter {
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        throw new Error('Request timed out. Check your network connection.');
+        throw new Error('Request timed out. Check your network connection.', { cause: err });
       }
       throw err;
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Save, Plus, X, FileCode, FolderOpen, Search, Palette, Moon, Check } from 'lucide-react';
 import { useConfig } from '@/hooks/useConfig';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -19,17 +19,17 @@ export function SettingsView() {
   const [codeSearchMaxFileSize, setCodeSearchMaxFileSize] = useState(1024);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    if (config) {
-      setScanDir(config.scanDirectory);
-      setProjectTemplatesDir(config.projectTemplatesDir || '');
-      setSetupTemplateDir(config.setupTemplateDir || '');
-      setPatterns([...config.ignorePatterns]);
-      setCodeSearchEnabled(config.codeSearchEnabled ?? true);
-      setCodeSearchExcludePatterns([...(config.codeSearchExcludePatterns || [])]);
-      setCodeSearchMaxFileSize(Math.round((config.codeSearchMaxFileSize || 1_048_576) / 1024));
-    }
-  }, [config]);
+  const [prevConfig, setPrevConfig] = useState(config);
+  if (config && config !== prevConfig) {
+    setPrevConfig(config);
+    setScanDir(config.scanDirectory);
+    setProjectTemplatesDir(config.projectTemplatesDir || '');
+    setSetupTemplateDir(config.setupTemplateDir || '');
+    setPatterns([...config.ignorePatterns]);
+    setCodeSearchEnabled(config.codeSearchEnabled ?? true);
+    setCodeSearchExcludePatterns([...(config.codeSearchExcludePatterns || [])]);
+    setCodeSearchMaxFileSize(Math.round((config.codeSearchMaxFileSize || 1_048_576) / 1024));
+  }
 
   const addSearchPattern = () => {
     if (newSearchPattern.trim() && !codeSearchExcludePatterns.includes(newSearchPattern.trim())) {

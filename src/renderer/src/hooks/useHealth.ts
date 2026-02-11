@@ -29,18 +29,18 @@ export function useHealth() {
   const store = useHealthStore();
 
   const checkHealth = useCallback(async (repoId: string) => {
-    store.setLoading(repoId, true);
+    useHealthStore.getState().setLoading(repoId, true);
     try {
       const health = await window.electron.health.check(repoId);
-      store.setHealth(health);
+      useHealthStore.getState().setHealth(health);
     } catch {
-      store.setLoading(repoId, false);
+      useHealthStore.getState().setLoading(repoId, false);
     }
   }, []);
 
   const checkAllHealth = useCallback(async (repoIds: string[]) => {
     for (const id of repoIds) {
-      store.setLoading(id, true);
+      useHealthStore.getState().setLoading(id, true);
     }
     await window.electron.health.checkAll(repoIds);
   }, []);

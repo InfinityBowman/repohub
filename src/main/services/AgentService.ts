@@ -332,9 +332,9 @@ export class AgentService extends EventEmitter {
                 typeof block.content === 'string' ? block.content : JSON.stringify(block.content);
               // Truncate long tool results for display
               const truncated =
-                text.length > TOOL_RESULT_MAX_DISPLAY
-                  ? text.slice(0, TOOL_RESULT_MAX_DISPLAY) + '\n... (truncated)'
-                  : text;
+                text.length > TOOL_RESULT_MAX_DISPLAY ?
+                  text.slice(0, TOOL_RESULT_MAX_DISPLAY) + '\n... (truncated)'
+                : text;
               this.addMessage(sessionId, 'tool_result', truncated, {
                 toolName: block.tool_use_id,
               });

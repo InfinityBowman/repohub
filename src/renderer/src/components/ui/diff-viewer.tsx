@@ -115,11 +115,8 @@ function useTokenizedLines(code: string, lang: string): ThemedToken[][] | null {
   const [tokens, setTokens] = useState<ThemedToken[][] | null>(null);
 
   useEffect(() => {
+    if (!code) return;
     let cancelled = false;
-    if (!code) {
-      setTokens([]);
-      return;
-    }
 
     codeToTokens(code, { lang, theme: SHIKI_THEME })
       .then(result => {
@@ -134,7 +131,7 @@ function useTokenizedLines(code: string, lang: string): ThemedToken[][] | null {
     };
   }, [code, lang]);
 
-  return tokens;
+  return !code ? [] : tokens;
 }
 
 // --- Token rendering ---

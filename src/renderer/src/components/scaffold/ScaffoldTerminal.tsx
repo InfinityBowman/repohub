@@ -92,6 +92,7 @@ export function ScaffoldTerminal({ onDone, disabled }: ScaffoldTerminalProps) {
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount effect: config?.theme handled via terminal options update
   }, [onDone]);
 
   // Hide cursor when disabled

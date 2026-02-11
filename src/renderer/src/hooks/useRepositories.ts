@@ -5,14 +5,14 @@ export function useRepositories() {
   const store = useRepositoryStore();
 
   const scan = useCallback(async () => {
-    store.setLoading(true);
+    useRepositoryStore.getState().setLoading(true);
     try {
       const repos = await window.electron.repositories.scan();
-      store.setRepositories(repos);
+      useRepositoryStore.getState().setRepositories(repos);
     } catch (err: any) {
-      store.setError(err.message);
+      useRepositoryStore.getState().setError(err.message);
     } finally {
-      store.setLoading(false);
+      useRepositoryStore.getState().setLoading(false);
     }
   }, []);
 
@@ -20,11 +20,11 @@ export function useRepositories() {
     scan();
 
     const unsubscribe = window.electron.on.repositoriesChanged(repos => {
-      store.setRepositories(repos);
+      useRepositoryStore.getState().setRepositories(repos);
     });
 
     return unsubscribe;
-  }, []);
+  }, [scan]);
 
   const filterLower = store.filterText.toLowerCase();
   const filtered = store.repositories.filter(

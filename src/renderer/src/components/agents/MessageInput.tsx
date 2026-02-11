@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -37,7 +37,7 @@ export function MessageInput({ agentState, onSend }: MessageInputProps) {
   }, [value, canSend, onSend]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -75,7 +75,7 @@ export function MessageInput({ agentState, onSend }: MessageInputProps) {
           placeholder={placeholder}
           disabled={!canSend}
           rows={1}
-          className='text-foreground placeholder:text-muted-foreground min-h-[36px] flex-1 resize-none border-none bg-transparent px-2 py-1.5 text-sm outline-none disabled:opacity-50'
+          className='text-foreground placeholder:text-muted-foreground min-h-9 flex-1 resize-none border-none bg-transparent px-2 py-1.5 text-sm outline-none disabled:opacity-50'
         />
         <Tooltip>
           <TooltipTrigger asChild>

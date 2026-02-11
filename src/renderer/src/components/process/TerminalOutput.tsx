@@ -127,6 +127,7 @@ export function TerminalOutput({ repoId, data, interactive = false }: TerminalOu
       fitAddonRef.current = null;
       lastDataLengthRef.current = 0;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount effect: config/data/resize/write handled in separate effects
   }, [repoId, interactive]);
 
   // Write new data incrementally

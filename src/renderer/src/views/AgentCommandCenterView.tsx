@@ -59,9 +59,12 @@ function SessionHistoryRow({
   isActive: boolean;
 }) {
   return (
-    <button
+    <div
+      role='button'
+      tabIndex={0}
       onClick={onView}
-      className={`group flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(); } }}
+      className={`group flex w-full cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
         isActive ?
           'border-primary/40 bg-primary/5'
         : 'border-border hover:border-border/80 hover:bg-secondary/30'
@@ -99,7 +102,7 @@ function SessionHistoryRow({
         <Play className='h-3.5 w-3.5' />
         Resume
       </Button>
-    </button>
+    </div>
   );
 }
 

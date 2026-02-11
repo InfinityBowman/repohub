@@ -7,11 +7,11 @@ export function usePorts() {
   useEffect(() => {
     // Start monitoring
     window.electron.ports.startMonitoring().then(() => {
-      store.setMonitoring(true);
+      usePortStore.getState().setMonitoring(true);
     });
 
     const unsubscribe = window.electron.on.portsChanged(ports => {
-      store.setPorts(ports);
+      usePortStore.getState().setPorts(ports);
     });
 
     return () => {
@@ -25,7 +25,7 @@ export function usePorts() {
 
   const refresh = useCallback(async () => {
     const ports = await window.electron.ports.scan();
-    store.setPorts(ports);
+    usePortStore.getState().setPorts(ports);
   }, []);
 
   return {
