@@ -69,6 +69,48 @@ function getResultPreview(content: string): string {
   return line ? truncate(line, 100) : '';
 }
 
+/** Map file extensions to syntax highlighting languages */
+const EXT_TO_LANG: Record<string, string> = {
+  ts: 'typescript',
+  tsx: 'tsx',
+  js: 'javascript',
+  jsx: 'jsx',
+  py: 'python',
+  rs: 'rust',
+  go: 'go',
+  java: 'java',
+  swift: 'swift',
+  rb: 'ruby',
+  sh: 'bash',
+  bash: 'bash',
+  zsh: 'bash',
+  json: 'json',
+  yaml: 'yaml',
+  yml: 'yaml',
+  toml: 'toml',
+  md: 'markdown',
+  css: 'css',
+  scss: 'scss',
+  html: 'html',
+  xml: 'xml',
+  sql: 'sql',
+  c: 'c',
+  cpp: 'cpp',
+  h: 'c',
+  hpp: 'cpp',
+};
+
+/** Extract language from a file path's extension */
+function langFromPath(filePath: string): string | null {
+  const ext = filePath.split('.').pop()?.toLowerCase();
+  return ext ? EXT_TO_LANG[ext] || null : null;
+}
+
+/** Strip `cat -n` style line number prefixes (e.g. "  1→" or "  42→") */
+function stripLineNumbers(content: string): string {
+  return content.replace(/^ *\d+→/gm, '');
+}
+
 /** Guess language for syntax highlighting from content */
 function guessLang(content: string, toolName?: string): string {
   if (toolName === 'Bash') return 'bash';
@@ -342,8 +384,31 @@ function ToolUseMessage({ message }: { message: AgentMessage }) {
   return <GenericToolUseMessage message={message} />;
 }
 
-function ToolResultMessage({ message }: { message: AgentMessage }) {
+function ToolResultMessage({
+  message,
+  parentToolName,
+  parentToolInput,
+}: {
+  message: AgentMessage;
+  parentToolName?: string;
+  parentToolInput?: string;
+}) {
   const preview = getResultPreview(message.content);
+
+  // For Read tool results: strip line numbers and detect language from file path
+  const isRead = parentToolName === 'Read';
+  const displayCode = isRead ? stripLineNumbers(message.content) : message.content;
+  const lang = useMemo(() => {
+    if (isRead && parentToolInput) {
+      try {
+        const parsed = JSON.parse(parentToolInput);
+        if (parsed.file_path) return langFromPath(parsed.file_path) || 'text';
+      } catch {
+        /* ignore */
+      }
+    }
+    return guessLang(message.content, parentToolName);
+  }, [message.content, parentToolName, parentToolInput, isRead]);
 
   return (
     <div className='flex items-center gap-3 py-1'>
@@ -364,7 +429,7 @@ function ToolResultMessage({ message }: { message: AgentMessage }) {
         >
           <div className='group/code relative min-w-0'>
             <CopyButton text={message.content} />
-            <CodeBlock code={message.content} lang={guessLang(message.content, message.toolName)} />
+            <CodeBlock code={displayCode} lang={lang} />
           </div>
         </PopoverContent>
       </Popover>
@@ -452,20 +517,36 @@ function ToolBatchGroup({ group }: { group: MessageGroupToolBatch }) {
       </button>
       {expanded && (
         <div className='mt-1 space-y-0.5'>
-          {group.pairs.map(pair => (
-            <div key={pair[0].id}>
-              {pair.map(msg => (
-                <MessageBlock key={msg.id} message={msg} />
-              ))}
-            </div>
-          ))}
+          {group.pairs.map(pair => {
+            const toolUse = pair[0];
+            return (
+              <div key={toolUse.id}>
+                {pair.map(msg => (
+                  <MessageBlock
+                    key={msg.id}
+                    message={msg}
+                    parentToolName={toolUse.toolName}
+                    parentToolInput={toolUse.toolInput}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-function MessageBlock({ message }: { message: AgentMessage }) {
+function MessageBlock({
+  message,
+  parentToolName,
+  parentToolInput,
+}: {
+  message: AgentMessage;
+  parentToolName?: string;
+  parentToolInput?: string;
+}) {
   switch (message.type) {
     case 'user':
       return <UserMessage message={message} />;
@@ -476,7 +557,13 @@ function MessageBlock({ message }: { message: AgentMessage }) {
     case 'tool_use':
       return <ToolUseMessage message={message} />;
     case 'tool_result':
-      return <ToolResultMessage message={message} />;
+      return (
+        <ToolResultMessage
+          message={message}
+          parentToolName={parentToolName}
+          parentToolInput={parentToolInput}
+        />
+      );
     case 'system':
       return <SystemMessage message={message} />;
     case 'error':
@@ -513,10 +600,16 @@ export function AgentTerminal({ messages, streamingText, streamingThinking }: Ag
             return <ToolBatchGroup key={group.pairs[0][0].id} group={group} />;
           }
           if (group.type === 'tool_pair') {
+            const toolUse = group.messages[0];
             return (
-              <div key={group.messages[0].id} className='ml-1 border-l border-yellow-400/15 pl-3'>
+              <div key={toolUse.id} className='ml-1 border-l border-yellow-400/15 pl-3'>
                 {group.messages.map(msg => (
-                  <MessageBlock key={msg.id} message={msg} />
+                  <MessageBlock
+                    key={msg.id}
+                    message={msg}
+                    parentToolName={toolUse.toolName}
+                    parentToolInput={toolUse.toolInput}
+                  />
                 ))}
               </div>
             );
