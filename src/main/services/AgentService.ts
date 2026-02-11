@@ -39,7 +39,7 @@ export class AgentService extends EventEmitter {
     this.stdoutBuffers.set(sessionId, '');
 
     const args = [
-      '-p', config.task,
+      '-p',
       '--output-format', 'stream-json',
       '--input-format', 'stream-json',
       '--verbose',
@@ -98,6 +98,16 @@ export class AgentService extends EventEmitter {
       session.state = 'working';
       this.addMessage(sessionId, 'user', config.task);
       this.emit('agent:launched', this.toSessionInfo(session));
+
+      // Send initial task via stdin NDJSON (positional prompt is ignored with --input-format stream-json)
+      const initMsg = JSON.stringify({
+        type: 'user',
+        message: { role: 'user', content: config.task },
+        session_id: 'init',
+        parent_tool_use_id: null,
+      }) + '\n';
+      child.stdin?.write(initMsg);
+
       return { sessionId };
     } catch (err: any) {
       session.state = 'error';

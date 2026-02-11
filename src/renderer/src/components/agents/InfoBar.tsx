@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Square, Code, Eye, Search, DollarSign } from 'lucide-react';
+import { Square, Code, Eye, Search, DollarSign, Clock, FolderGit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import type { AgentSessionInfo, AgentState } from '@/types';
 
 const ROLE_ICONS: Record<string, typeof Code> = {
@@ -50,7 +51,7 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
   const isActive = agent.state !== 'completed' && agent.state !== 'error';
 
   return (
-    <div className='bg-card border-border flex items-center gap-3 rounded-lg border px-4 py-2'>
+    <div className='bg-card border-border flex items-center gap-2 rounded-lg border px-3 py-2'>
       <Tooltip>
         <TooltipTrigger>
           <Badge variant='outline' className='gap-1 capitalize'>
@@ -61,9 +62,50 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
         <TooltipContent>Agent role</TooltipContent>
       </Tooltip>
 
-      <span className='text-muted-foreground min-w-0 flex-1 truncate text-sm'>
-        {agent.config.task}
-      </span>
+      {/* Task text — popover trigger */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <button className='text-muted-foreground hover:text-foreground min-w-0 flex-1 truncate text-left text-sm transition-colors'>
+            {agent.config.task}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align='start' className='w-80'>
+          <div className='space-y-3'>
+            <div>
+              <p className='text-xs font-medium text-muted-foreground'>Task</p>
+              <p className='mt-0.5 text-sm'>{agent.config.task}</p>
+            </div>
+            <div className='h-px bg-gradient-to-r from-transparent via-border to-transparent' />
+            <div className='grid grid-cols-2 gap-2 text-xs'>
+              <div>
+                <span className='text-muted-foreground'>Repository</span>
+                <div className='mt-0.5 flex items-center gap-1'>
+                  <FolderGit2 className='h-3 w-3 text-muted-foreground' />
+                  <span className='font-medium'>{agent.config.repoName}</span>
+                </div>
+              </div>
+              <div>
+                <span className='text-muted-foreground'>Session</span>
+                <p className='mt-0.5 font-mono text-muted-foreground'>
+                  {agent.id.slice(0, 8)}
+                </p>
+              </div>
+              <div>
+                <span className='text-muted-foreground'>Path</span>
+                <p className='mt-0.5 truncate font-mono text-muted-foreground' title={agent.config.repoPath}>
+                  {agent.config.repoPath}
+                </p>
+              </div>
+              <div>
+                <span className='text-muted-foreground'>Started</span>
+                <p className='mt-0.5 text-muted-foreground'>
+                  {new Date(agent.startedAt).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <Badge variant='secondary' className={stateInfo.color}>
         {agent.state === 'working' && (
@@ -72,12 +114,22 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
         {stateInfo.label}
       </Badge>
 
-      <span className='text-muted-foreground shrink-0 font-mono text-xs'>{elapsed}</span>
+      {/* Timer pill */}
+      <Tooltip>
+        <TooltipTrigger>
+          <span className='flex items-center gap-1 rounded-lg bg-blue-400/[0.06] px-2.5 py-1 font-mono text-xs text-blue-400'>
+            <Clock className='h-3 w-3' />
+            {elapsed}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Elapsed time</TooltipContent>
+      </Tooltip>
 
+      {/* Cost pill */}
       {agent.cost.totalCost > 0 && (
         <Tooltip>
           <TooltipTrigger>
-            <span className='text-muted-foreground flex items-center gap-1 text-xs'>
+            <span className='flex items-center gap-1 rounded-lg bg-green-400/[0.06] px-2.5 py-1 text-xs text-green-400'>
               <DollarSign className='h-3 w-3' />
               {agent.cost.totalCost.toFixed(4)}
             </span>

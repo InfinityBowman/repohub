@@ -7,7 +7,6 @@ import { AgentLaunchPanel } from '@/components/agents/AgentLaunchPanel';
 import { AgentTerminal } from '@/components/agents/AgentTerminal';
 import { InfoBar } from '@/components/agents/InfoBar';
 import { MessageInput } from '@/components/agents/MessageInput';
-import { PermissionRequestInline } from '@/components/agents/PermissionRequestInline';
 import type { AgentLaunchConfig } from '@/types';
 
 export function AgentCommandCenterView() {
@@ -124,21 +123,16 @@ export function AgentCommandCenterView() {
         <>
           <InfoBar agent={activeAgent} onStop={handleStop} />
 
-          {/* Permission requests */}
-          {activePermissions.length > 0 && (
-            <div className='flex flex-col gap-2'>
-              {activePermissions.map(p => (
-                <PermissionRequestInline
-                  key={p.requestId}
-                  permission={p}
-                  onRespond={handleRespondPermission}
-                />
-              ))}
-            </div>
-          )}
+          {/* Gradient divider */}
+          <div className='h-px bg-gradient-to-r from-transparent via-border/40 to-transparent' />
 
-          {/* Terminal */}
-          <AgentTerminal messages={activeMessages} streamingText={activeStreaming} />
+          {/* Terminal with inline permissions */}
+          <AgentTerminal
+            messages={activeMessages}
+            streamingText={activeStreaming}
+            permissions={activePermissions}
+            onRespondPermission={handleRespondPermission}
+          />
 
           {/* Input */}
           <MessageInput agentState={activeAgent.state} onSend={handleSendMessage} />

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { ShieldAlert, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldAlert, Check, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { CodeBlock } from '@/components/ui/code-block';
+import { getToolPreview } from './AgentTerminal';
 import type { PermissionRequest } from '@/types';
 
 interface PermissionRequestInlineProps {
@@ -11,6 +13,7 @@ interface PermissionRequestInlineProps {
 
 export function PermissionRequestInline({ permission, onRespond }: PermissionRequestInlineProps) {
   const [expanded, setExpanded] = useState(false);
+  const preview = getToolPreview(permission.toolName, permission.input);
 
   return (
     <Card className='border-amber-500/50 bg-amber-500/5'>
@@ -19,10 +22,12 @@ export function PermissionRequestInline({ permission, onRespond }: PermissionReq
           <ShieldAlert className='mt-0.5 h-4 w-4 shrink-0 text-amber-400' />
           <div className='min-w-0 flex-1'>
             <div className='flex items-center gap-2'>
-              <span className='text-sm font-medium text-amber-300'>{permission.toolName}</span>
-              {permission.description && (
-                <span className='text-muted-foreground truncate text-xs'>
-                  {permission.description}
+              <span className='inline-flex shrink-0 items-center rounded bg-amber-400/10 px-1.5 py-0.5 text-xs font-medium text-amber-300'>
+                {permission.toolName}
+              </span>
+              {preview && (
+                <span className='text-muted-foreground truncate font-mono text-xs'>
+                  {preview}
                 </span>
               )}
             </div>
@@ -33,13 +38,13 @@ export function PermissionRequestInline({ permission, onRespond }: PermissionReq
                   onClick={() => setExpanded(!expanded)}
                   className='text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors'
                 >
-                  {expanded ? <ChevronUp className='h-3 w-3' /> : <ChevronDown className='h-3 w-3' />}
+                  {expanded ? <ChevronDown className='h-3 w-3' /> : <ChevronRight className='h-3 w-3' />}
                   {expanded ? 'Hide' : 'Show'} details
                 </button>
                 {expanded && (
-                  <pre className='bg-secondary/50 mt-1 max-h-40 overflow-auto rounded p-2 text-xs'>
-                    {permission.input}
-                  </pre>
+                  <div className='mt-1'>
+                    <CodeBlock code={permission.input} lang='json' />
+                  </div>
                 )}
               </div>
             )}

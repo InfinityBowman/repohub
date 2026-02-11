@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import { cn } from '@/lib/utils';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -349,44 +347,7 @@ function ReadmeContent({ readme }: { readme: string }) {
           </code>
         </div>
       ) : (
-        <div className='markdown-body prose prose-sm max-w-none'>
-          <Markdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-            components={{
-              a: ({ href, children }) => (
-                <a
-                  href={href}
-                  onClick={e => {
-                    e.preventDefault();
-                    if (href) {
-                      try {
-                        const parsed = new URL(href);
-                        if (['http:', 'https:'].includes(parsed.protocol)) {
-                          window.electron.shell.openUrl(href);
-                        }
-                      } catch { /* relative link, ignore */ }
-                    }
-                  }}
-                >
-                  {children}
-                </a>
-              ),
-              img: ({ src, alt }) => (
-                <img
-                  src={src}
-                  alt={alt}
-                  onError={e => {
-                    const el = e.currentTarget;
-                    el.style.display = 'none';
-                  }}
-                />
-              ),
-            }}
-          >
-            {readme}
-          </Markdown>
-        </div>
+        <MarkdownRenderer>{readme}</MarkdownRenderer>
       )}
       </div>
     </div>
@@ -906,44 +867,7 @@ function PackageDetailPanel({
       {tab === 'preview' ? (
         <div className='min-h-0 flex-1 overflow-y-auto px-8 py-4'>
           {pkg.readme && pkg.readme.trim() !== '' ? (
-            <div className='markdown-body prose prose-sm max-w-none'>
-              <Markdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={{
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      onClick={e => {
-                        e.preventDefault();
-                        if (href) {
-                          try {
-                            const parsed = new URL(href);
-                            if (['http:', 'https:'].includes(parsed.protocol)) {
-                              window.electron.shell.openUrl(href);
-                            }
-                          } catch { /* relative link, ignore */ }
-                        }
-                      }}
-                    >
-                      {children}
-                    </a>
-                  ),
-                  img: ({ src, alt }) => (
-                    <img
-                      src={src}
-                      alt={alt}
-                      onError={e => {
-                        const el = e.currentTarget;
-                        el.style.display = 'none';
-                      }}
-                    />
-                  ),
-                }}
-              >
-                {pkg.readme}
-              </Markdown>
-            </div>
+            <MarkdownRenderer>{pkg.readme}</MarkdownRenderer>
           ) : (
             <div className='text-muted-foreground py-8 text-center text-sm'>
               No README available for this package.
