@@ -156,21 +156,42 @@ export class ClaudeSessionReader {
     };
   }
 
+  /** Strip Claude Code system-injected XML blocks (tags + their content) then remaining tags. */
+  private stripSystemXml(text: string): string {
+    // First, remove known system blocks entirely (tag + content + closing tag)
+    const systemTags = [
+      'system-reminder',
+      'local-command-caveat',
+      'command-name',
+      'command-message',
+      'command-args',
+      'local-command-stdout',
+      'fast_mode_info',
+    ];
+    let cleaned = text;
+    for (const tag of systemTags) {
+      // Match <tag>...</tag> including newlines (dotAll via [\s\S])
+      cleaned = cleaned.replace(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, 'g'), '');
+    }
+    // Strip any remaining XML-like tags
+    cleaned = cleaned.replace(/<[^>]+>/g, '');
+    return cleaned.trim();
+  }
+
   private extractUserText(obj: any): string {
     const msg = obj.message;
     if (!msg) return '';
 
     const content = msg.content;
     if (typeof content === 'string') {
-      // Strip XML-like tags that Claude Code wraps around internal messages
-      const cleaned = content.replace(/<[^>]+>/g, '').trim();
+      const cleaned = this.stripSystemXml(content);
       return cleaned.slice(0, 200);
     }
 
     if (Array.isArray(content)) {
       for (const block of content) {
         if (block.type === 'text' && typeof block.text === 'string') {
-          const cleaned = block.text.replace(/<[^>]+>/g, '').trim();
+          const cleaned = this.stripSystemXml(block.text);
           if (cleaned) return cleaned.slice(0, 200);
         }
       }
@@ -205,14 +226,14 @@ export class ClaudeSessionReader {
       case 'user': {
         const content = obj.message?.content;
         if (typeof content === 'string') {
-          const cleaned = content.replace(/<[^>]+>/g, '').trim();
+          const cleaned = this.stripSystemXml(content);
           if (cleaned) {
             messages.push(makeMsg('user', cleaned));
           }
         } else if (Array.isArray(content)) {
           for (const block of content) {
             if (block.type === 'text' && block.text?.trim()) {
-              const cleaned = block.text.replace(/<[^>]+>/g, '').trim();
+              const cleaned = this.stripSystemXml(block.text);
               if (cleaned) messages.push(makeMsg('user', cleaned));
             } else if (block.type === 'tool_result') {
               const text =

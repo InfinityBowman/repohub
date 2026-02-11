@@ -253,13 +253,18 @@ export function AgentCommandCenterView() {
                 setActiveAgent(a.id);
                 setViewingHistorySessionId(null);
               }}
-              className={`rounded px-2 py-0.5 text-xs transition-colors ${
+              title={a.config.task || a.config.repoName}
+              className={`max-w-[160px] truncate rounded px-2 py-0.5 text-xs transition-colors ${
                 a.id === activeAgentId && !viewingHistorySessionId
                   ? 'bg-primary/20 text-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {a.config.repoName}
+              {a.config.task
+                ? a.config.task.length > 25
+                  ? a.config.task.slice(0, 25) + '...'
+                  : a.config.task
+                : a.config.repoName}
               {a.state === 'working' && (
                 <span className='ml-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-green-400' />
               )}
