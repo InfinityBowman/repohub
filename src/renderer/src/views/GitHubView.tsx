@@ -58,17 +58,17 @@ function PRCard({ pr }: { pr: PRInfo }) {
             {ciStyles[pr.ciStatus].label}
           </Badge>
           <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon-xs'
-                  onClick={() => window.electron.shell.openUrl(pr.url)}
-                >
-                  <ExternalLink className='h-3.5 w-3.5' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Open on GitHub</TooltipContent>
-            </Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='icon-xs'
+                onClick={() => window.electron.shell.openUrl(pr.url)}
+              >
+                <ExternalLink className='h-3.5 w-3.5' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open on GitHub</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </Card>
@@ -125,19 +125,14 @@ export function GitHubView() {
       <div className='flex items-center justify-between'>
         <h2 className='text-xl font-semibold'>Pull Requests</h2>
         <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={refresh}
-                disabled={loading || !canRefresh}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                {loading ? 'Refreshing...' : 'Refresh'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Refresh pull requests</TooltipContent>
-          </Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant='outline' size='sm' onClick={refresh} disabled={loading || !canRefresh}>
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Refresh pull requests</TooltipContent>
+        </Tooltip>
       </div>
 
       <div className='flex flex-col gap-2'>

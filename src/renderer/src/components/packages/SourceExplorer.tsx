@@ -4,15 +4,8 @@ import { FileBrowser } from '@/components/ui/file-browser';
 import { Download, Loader2, AlertCircle } from 'lucide-react';
 import { usePackages } from '@/hooks/usePackages';
 
-export function SourceExplorer({
-  packageName,
-  repoUrl,
-}: {
-  packageName: string;
-  repoUrl: string;
-}) {
-  const { cloneStatuses, cloningPackages, error, clonePackage, loadCloneStatus } =
-    usePackages();
+export function SourceExplorer({ packageName, repoUrl }: { packageName: string; repoUrl: string }) {
+  const { cloneStatuses, cloningPackages, error, clonePackage, loadCloneStatus } = usePackages();
 
   const cloneStatus = cloneStatuses[packageName];
   const isCloning = cloningPackages.has(packageName);
@@ -48,9 +41,11 @@ export function SourceExplorer({
           <p className='text-muted-foreground mt-1.5 text-xs leading-relaxed'>
             Shallow-clone this package&apos;s GitHub repository to browse its source code inline.
           </p>
-          {repoUrl ? (
+          {repoUrl ?
             <>
-              <p className='mt-2 truncate font-mono text-[10px] text-muted-foreground/50'>{repoUrl}</p>
+              <p className='text-muted-foreground/50 mt-2 truncate font-mono text-[10px]'>
+                {repoUrl}
+              </p>
               <Button
                 onClick={handleClone}
                 className='mt-4 gap-2 bg-blue-400/15 text-blue-400 hover:bg-blue-400/25'
@@ -60,11 +55,10 @@ export function SourceExplorer({
                 Clone Repository
               </Button>
             </>
-          ) : (
-            <p className='mt-3 text-xs text-red-400/80'>
+          : <p className='mt-3 text-xs text-red-400/80'>
               No GitHub repository URL found for this package.
             </p>
-          )}
+          }
           {error && (
             <div className='mt-3 flex items-center justify-center gap-1.5 text-xs text-red-400'>
               <AlertCircle className='h-3 w-3' />
@@ -90,10 +84,5 @@ export function SourceExplorer({
   }
 
   // ─── Cloned — delegate to FileBrowser ──────────────────
-  return (
-    <FileBrowser
-      listFiles={listFiles}
-      readFile={readFile}
-    />
-  );
+  return <FileBrowser listFiles={listFiles} readFile={readFile} />;
 }

@@ -30,7 +30,7 @@ export function CodeBlock({ code, lang = 'json', theme = 'default' }: CodeBlockP
 
   return (
     <div
-      className='[&_pre]:max-h-96 [&_pre]:overflow-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:border-border [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs'
+      className='[&_pre]:border-border [&_pre]:max-h-96 [&_pre]:overflow-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs'
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

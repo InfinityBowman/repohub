@@ -32,7 +32,8 @@ export const BUILT_IN_ROLES: AgentRole[] = [
     id: 'reviewer',
     name: 'Reviewer',
     icon: 'Eye',
-    description: 'Read-only code reviewer. Analyzes code quality, finds bugs, suggests improvements.',
+    description:
+      'Read-only code reviewer. Analyzes code quality, finds bugs, suggests improvements.',
     systemPrompt:
       'You are a code review agent. Analyze the codebase for bugs, security issues, code quality problems, and suggest improvements. Do NOT modify any files — only read and analyze.',
     defaultPermissionMode: 'plan',
@@ -41,7 +42,8 @@ export const BUILT_IN_ROLES: AgentRole[] = [
     id: 'researcher',
     name: 'Researcher',
     icon: 'Search',
-    description: 'Read-only research agent. Explores codebases, answers questions, maps architecture.',
+    description:
+      'Read-only research agent. Explores codebases, answers questions, maps architecture.',
     systemPrompt:
       'You are a research agent. Explore the codebase to answer questions, map architecture, and explain how things work. Do NOT modify any files — only read and analyze.',
     defaultPermissionMode: 'plan',

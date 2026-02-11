@@ -128,20 +128,13 @@ export function useAgents() {
     }
   }, []);
 
-  const resumeSession = useCallback(
-    async (cliSessionId: string, config: AgentLaunchConfig) => {
-      const result = await window.electron.agent.resumeSession(
-        cliSessionId,
-        config.repoPath,
-        config,
-      );
-      useAgentStore.getState().setActiveAgent(result.sessionId);
-      useAgentStore.getState().setShowLaunchPanel(false);
-      useAgentStore.getState().setViewingHistorySessionId(null);
-      return result;
-    },
-    [],
-  );
+  const resumeSession = useCallback(async (cliSessionId: string, config: AgentLaunchConfig) => {
+    const result = await window.electron.agent.resumeSession(cliSessionId, config.repoPath, config);
+    useAgentStore.getState().setActiveAgent(result.sessionId);
+    useAgentStore.getState().setShowLaunchPanel(false);
+    useAgentStore.getState().setViewingHistorySessionId(null);
+    return result;
+  }, []);
 
   return {
     agents: store.agents,

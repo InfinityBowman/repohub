@@ -81,38 +81,38 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
           <span className='font-medium'>{node.name}</span>
         </button>
         {hovered && (
-            <div className='flex items-center gap-0.5'>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon-xs'
-                    onClick={e => {
-                      e.stopPropagation();
-                      window.electron.shell.openInVSCode(node.path);
-                    }}
-                  >
-                    <VSCodeIcon className='h-3.5 w-3.5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Open in VS Code</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon-xs'
-                    onClick={e => {
-                      e.stopPropagation();
-                      window.electron.shell.openInTerminal(node.path);
-                    }}
-                  >
-                    <GhosttyIcon className='h-3.5 w-3.5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Open in Ghostty</TooltipContent>
-              </Tooltip>
-            </div>
+          <div className='flex items-center gap-0.5'>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-xs'
+                  onClick={e => {
+                    e.stopPropagation();
+                    window.electron.shell.openInVSCode(node.path);
+                  }}
+                >
+                  <VSCodeIcon className='h-3.5 w-3.5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Open in VS Code</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-xs'
+                  onClick={e => {
+                    e.stopPropagation();
+                    window.electron.shell.openInTerminal(node.path);
+                  }}
+                >
+                  <GhosttyIcon className='h-3.5 w-3.5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Open in Ghostty</TooltipContent>
+            </Tooltip>
+          </div>
         )}
       </div>
       {open && (
@@ -153,23 +153,23 @@ export function RepositoriesView() {
             New Project
           </Button>
           <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => {
-                    const nodeRepoIds = allRepositories
-                      .filter(r => r.projectType === 'node' || r.projectType === 'monorepo')
-                      .map(r => r.id);
-                    if (nodeRepoIds.length > 0) checkAllHealth(nodeRepoIds);
-                  }}
-                >
-                  <Shield className='h-4 w-4' />
-                  Check All
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Check dependency health for all Node.js projects</TooltipContent>
-            </Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => {
+                  const nodeRepoIds = allRepositories
+                    .filter(r => r.projectType === 'node' || r.projectType === 'monorepo')
+                    .map(r => r.id);
+                  if (nodeRepoIds.length > 0) checkAllHealth(nodeRepoIds);
+                }}
+              >
+                <Shield className='h-4 w-4' />
+                Check All
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Check dependency health for all Node.js projects</TooltipContent>
+          </Tooltip>
           <Button variant='outline' size='sm' onClick={scan} disabled={loading}>
             <RefreshCw className={loading ? 'animate-spin' : ''} />
             {loading ? 'Scanning...' : 'Rescan'}

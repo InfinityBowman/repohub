@@ -81,12 +81,10 @@ export function usePackages() {
     searchResults: store.searchResults,
     isSearching: store.isSearching,
     selectedPackageName: store.selectedPackageName,
-    selectedPackage: store.selectedPackageName
-      ? store.packageDetails[store.selectedPackageName] || null
-      : null,
-    isLoadingDetail: store.selectedPackageName
-      ? store.loadingDetails.has(store.selectedPackageName)
-      : false,
+    selectedPackage:
+      store.selectedPackageName ? store.packageDetails[store.selectedPackageName] || null : null,
+    isLoadingDetail:
+      store.selectedPackageName ? store.loadingDetails.has(store.selectedPackageName) : false,
     error: store.error,
     search,
     loadDetails,

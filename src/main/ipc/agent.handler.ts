@@ -65,10 +65,7 @@ export function registerAgentHandlers(
     'agent:resume-session',
     async (
       _event,
-      {
-        cliSessionId,
-        config,
-      }: { cliSessionId: string; config: AgentLaunchConfig },
+      { cliSessionId, config }: { cliSessionId: string; config: AgentLaunchConfig },
     ) => {
       return agentService.resumeSession(cliSessionId, config);
     },

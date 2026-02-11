@@ -10,6 +10,7 @@
 When you run Claude Code in a terminal, the context window is a black box. You know it fills up. You know eventually the agent starts forgetting things. But you can't see what's in there, you can't remove the 500-line webpack output that's eating 4k tokens, and when you need to start a new session, you lose everything — or you awkwardly paste a summary and hope for the best.
 
 With multiple agents running in the Agent Command Center, this gets worse:
+
 - Agent A discovers something Agent B needs, but the shared scratchpad is just key-value strings
 - An agent's context fills up with verbose tool output from early exploration, leaving no room for the actual task
 - You want to split a conversation: "take everything about the auth work into a new agent, leave the rest here"
@@ -76,6 +77,7 @@ Every agent session's context is visualized as a **vertical stack of blocks** �
 ```
 
 Each block shows:
+
 - **Type**: System, You, Agent, Tool (Read/Write/Bash/Grep/etc.)
 - **Token count**: How much context this block consumes
 - **Preview**: Collapsed summary of the content (expandable to full)
@@ -84,6 +86,7 @@ Each block shows:
 ### Block Operations
 
 **Remove** — Delete a block from context. That 2.1k-token file read from early exploration that's no longer relevant? Gone. The agent won't remember it, but it has room for new things. Useful for:
+
 - Verbose tool outputs (npm install logs, test output, large file reads)
 - Early exploration that led nowhere
 - Outdated information the agent read before you corrected course
@@ -118,6 +121,7 @@ The bar is clickable — opens the full Context Block Viewer as a side panel or 
 When context gets full, instead of the blunt "summarize everything" approach, the block viewer enables **selective compaction**:
 
 **Auto-compact suggestions**: The UI highlights blocks that are good candidates for removal or collapse, based on:
+
 - Token size (large blocks save the most space)
 - Age (older blocks are less likely to be relevant)
 - Type (tool outputs are usually safe to collapse; user messages and agent plans are not)
@@ -198,6 +202,7 @@ The receiving agent gets a special "Transferred Context" block:
 ### Session Snapshots
 
 Save the current state of an agent's context as a named snapshot. Useful for:
+
 - **Checkpointing** before a risky operation: "save this state, then let the agent try something wild"
 - **Branching**: Restore a snapshot and take a different approach
 - **Templates**: A well-primed context (system prompt + key file reads + architecture notes) saved as a reusable starting point
@@ -238,6 +243,7 @@ Likely approach: Start with Path 2 (we already have the PTY stream), enhance wit
 ### Token Estimation
 
 For context budget visualization:
+
 - Use a fast tokenizer (tiktoken/cl100k_base or the Anthropic tokenizer) to count tokens per block
 - Cache counts — blocks don't change after creation
 - System prompt tokens estimated from role config + CLAUDE.md size
@@ -267,48 +273,48 @@ For context budget visualization:
 
 ```typescript
 class ContextService extends EventEmitter {
-  getBlocks(agentId: string): ContextBlock[]
-  removeBlock(agentId: string, blockId: string): void
-  collapseBlock(agentId: string, blockId: string): Promise<void>  // async: needs summarization
-  pinBlock(agentId: string, blockId: string, pinned: boolean): void
-  editBlock(agentId: string, blockId: string, newContent: string): void
+  getBlocks(agentId: string): ContextBlock[];
+  removeBlock(agentId: string, blockId: string): void;
+  collapseBlock(agentId: string, blockId: string): Promise<void>; // async: needs summarization
+  pinBlock(agentId: string, blockId: string, pinned: boolean): void;
+  editBlock(agentId: string, blockId: string, newContent: string): void;
 
-  transferBlocks(sourceAgentId: string, blockIds: string[], target: TransferTarget): void
+  transferBlocks(sourceAgentId: string, blockIds: string[], target: TransferTarget): void;
 
-  getUsage(agentId: string): { tokens: number; maxTokens: number; percentage: number }
+  getUsage(agentId: string): { tokens: number; maxTokens: number; percentage: number };
 
-  createSnapshot(agentId: string, name: string): string  // returns snapshotId
-  restoreSnapshot(agentId: string, snapshotId: string): void
+  createSnapshot(agentId: string, name: string): string; // returns snapshotId
+  restoreSnapshot(agentId: string, snapshotId: string): void;
 
-  suggestCompaction(agentId: string): CompactionSuggestion[]
-  applyCompaction(agentId: string, suggestions: CompactionSuggestion[]): void
+  suggestCompaction(agentId: string): CompactionSuggestion[];
+  applyCompaction(agentId: string, suggestions: CompactionSuggestion[]): void;
 }
 
 interface ContextBlock {
-  id: string
-  type: 'system' | 'user' | 'agent' | 'tool' | 'transfer'
-  toolName?: string            // Read, Write, Bash, Grep, etc.
-  content: string
-  summary?: string             // collapsed version
-  tokens: number
-  timestamp: string
-  pinned: boolean
-  collapsed: boolean
-  source?: string              // for transferred blocks: "shared-lib / Researcher"
+  id: string;
+  type: 'system' | 'user' | 'agent' | 'tool' | 'transfer';
+  toolName?: string; // Read, Write, Bash, Grep, etc.
+  content: string;
+  summary?: string; // collapsed version
+  tokens: number;
+  timestamp: string;
+  pinned: boolean;
+  collapsed: boolean;
+  source?: string; // for transferred blocks: "shared-lib / Researcher"
 }
 
 interface TransferTarget {
-  type: 'new-agent' | 'existing-agent'
-  agentId?: string             // for existing agent
-  agentConfig?: AgentConfig    // for new agent
-  injectAs: 'context' | 'user-message'
+  type: 'new-agent' | 'existing-agent';
+  agentId?: string; // for existing agent
+  agentConfig?: AgentConfig; // for new agent
+  injectAs: 'context' | 'user-message';
 }
 
 interface CompactionSuggestion {
-  blockId: string
-  action: 'remove' | 'collapse'
-  reason: string
-  tokensSaved: number
+  blockId: string;
+  action: 'remove' | 'collapse';
+  reason: string;
+  tokensSaved: number;
 }
 ```
 

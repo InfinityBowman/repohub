@@ -44,27 +44,32 @@ In the repo detail view, when a process is running and has an open port, a brows
 ### Key Features
 
 **Auto-Detection**
+
 - When a process starts and a port appears (via PortService), the preview auto-loads that URL
 - Configurable per repo: which port to preview, or disable auto-preview
 - Falls back to first detected port if no config
 
 **Responsive Preview**
+
 - Toggle between viewport sizes: Desktop, Tablet, Mobile
 - Custom dimensions input
 - Or drag to resize freely
 - Shows current dimensions in the toolbar
 
 **DevTools**
+
 - Uses Electron's real DevTools — the webview exposes `webContents.openDevTools()`
 - "DevTools" button in the toolbar opens/closes the real Chrome DevTools panel
 - No need to build a fake console/network/elements panel — the real thing is right there
 - DevTools can be docked to the bottom or opened in a separate window
 
 **Hot Reload Awareness**
+
 - The webview auto-refreshes when the dev server pushes an update (Vite HMR just works)
 - Manual refresh button for when it doesn't
 
 **Split View Options**
+
 - Preview + Terminal (vertical split, default)
 - Preview only (full width)
 - Terminal only (current behavior)
@@ -104,6 +109,7 @@ For non-web projects (APIs, CLIs), instead of building a custom API client, we e
 ```
 
 **Why Scalar instead of a custom client:**
+
 - Full-featured OpenAPI reference with "Try It" request builder already built
 - Schema visualization, authentication configuration, code examples in multiple languages
 - Themeable with CSS variables — we match it to RepoHub's palenight palette
@@ -111,6 +117,7 @@ For non-web projects (APIs, CLIs), instead of building a custom API client, we e
 - React component: `@scalar/api-reference-react`
 
 **What we get for free from Scalar:**
+
 - Endpoint list with method badges and grouping by tag
 - Request builder with parameter forms, body editor, auth headers
 - Response viewer with syntax highlighting
@@ -120,6 +127,7 @@ For non-web projects (APIs, CLIs), instead of building a custom API client, we e
 
 **OpenAPI Spec Detection:**
 The feature scans the repo for OpenAPI specs in common locations:
+
 - `openapi.json`, `openapi.yaml`, `openapi.yml`
 - `swagger.json`, `swagger.yaml`
 - `docs/openapi.*`, `api/openapi.*`
@@ -174,6 +182,7 @@ function ApiReference({ specUrl }: { specUrl: string }) {
 ```
 
 Custom palenight theming via CSS variables:
+
 ```css
 .scalar-api-reference {
   --scalar-background-1: #292d3e;
@@ -195,51 +204,58 @@ Custom palenight theming via CSS variables:
 // When a port appears for a managed process, check what it serves
 async function detectPreviewMode(port: number, repoPath: string): Promise<'web' | 'api' | null> {
   // 1. Check if an OpenAPI spec file exists in the repo
-  const specPath = await findOpenApiSpec(repoPath)
-  if (specPath) return 'api'
+  const specPath = await findOpenApiSpec(repoPath);
+  if (specPath) return 'api';
 
   // 2. Check if the server serves HTML or JSON
   try {
     const response = await fetch(`http://localhost:${port}`, {
       method: 'HEAD',
-      signal: AbortSignal.timeout(2000)
-    })
-    const contentType = response.headers.get('content-type') || ''
-    if (contentType.includes('text/html')) return 'web'
-    if (contentType.includes('application/json')) return 'api'
+      signal: AbortSignal.timeout(2000),
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) return 'web';
+    if (contentType.includes('application/json')) return 'api';
   } catch {
-    return null
+    return null;
   }
-  return null
+  return null;
 }
 
 // Scan repo for OpenAPI spec files
 async function findOpenApiSpec(repoPath: string): Promise<string | null> {
   const candidates = [
-    'openapi.json', 'openapi.yaml', 'openapi.yml',
-    'swagger.json', 'swagger.yaml', 'swagger.yml',
-    'docs/openapi.json', 'docs/openapi.yaml',
-    'api/openapi.json', 'api/openapi.yaml',
-  ]
+    'openapi.json',
+    'openapi.yaml',
+    'openapi.yml',
+    'swagger.json',
+    'swagger.yaml',
+    'swagger.yml',
+    'docs/openapi.json',
+    'docs/openapi.yaml',
+    'api/openapi.json',
+    'api/openapi.yaml',
+  ];
   for (const candidate of candidates) {
-    const fullPath = path.join(repoPath, candidate)
-    if (await fs.pathExists(fullPath)) return fullPath
+    const fullPath = path.join(repoPath, candidate);
+    if (await fs.pathExists(fullPath)) return fullPath;
   }
-  return null
+  return null;
 }
 ```
 
 ### Per-Repo Config
 
 Add to ConfigService:
+
 ```typescript
 interface RepoPreviewConfig {
-  enabled: boolean          // default: true
-  port?: number            // override auto-detection
-  path?: string            // e.g., "/dashboard" instead of "/"
-  mode: 'web' | 'api' | 'auto'
-  defaultViewport: 'desktop' | 'tablet' | 'mobile'
-  openApiSpecPath?: string  // override spec detection, e.g., "docs/api.yaml"
+  enabled: boolean; // default: true
+  port?: number; // override auto-detection
+  path?: string; // e.g., "/dashboard" instead of "/"
+  mode: 'web' | 'api' | 'auto';
+  defaultViewport: 'desktop' | 'tablet' | 'mobile';
+  openApiSpecPath?: string; // override spec detection, e.g., "docs/api.yaml"
 }
 ```
 

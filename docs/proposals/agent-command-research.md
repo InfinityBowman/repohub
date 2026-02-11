@@ -21,15 +21,15 @@
 
 Cloned into `_reference/` for source-level study:
 
-| Project            | Path                    | What It Is                                              | Why It Matters                                                            |
-| ------------------ | ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------- |
-| **Maestro**        | `_reference/Maestro/`   | Electron app for orchestrating multiple AI agents       | Primary inspiration — multi-agent UI, worktrees, playbooks, cost tracking |
-| **Vibe Companion** | `_reference/companion/` | Web UI for Claude Code via reverse-engineered WebSocket | Complete `--sdk-url` protocol doc, real message rendering code            |
-| **OpenCode**       | `_reference/opencode/`  | Open-source terminal AI coding agent (102K+ stars)      | Client/server arch, provider-agnostic, dual agent modes                   |
+| Project            | Path                    | What It Is                                              | Why It Matters                                                                                      |
+| ------------------ | ----------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Maestro**        | `_reference/Maestro/`   | Electron app for orchestrating multiple AI agents       | Primary inspiration — multi-agent UI, worktrees, playbooks, cost tracking                           |
+| **Vibe Companion** | `_reference/companion/` | Web UI for Claude Code via reverse-engineered WebSocket | Complete `--sdk-url` protocol doc, real message rendering code                                      |
+| **OpenCode**       | `_reference/opencode/`  | Open-source terminal AI coding agent (102K+ stars)      | Client/server arch, provider-agnostic, dual agent modes                                             |
 | **Codex App**      | (macOS app, Feb 2 2026) | OpenAI's multi-agent desktop command center             | Thread-per-task, auto-worktrees, automations + review queue, diff w/ inline comments, skills system |
-| **Codex CLI**      | `_reference/codex/`     | OpenAI's CLI coding agent (Rust)                        | Plan/review/code modes, sandbox policies, apply_patch system              |
-| **Aider**          | `_reference/aider/`     | AI pair programming in terminal (4.9M installs)         | Repo map, voice-to-code, auto git commits, lint/test integration          |
-| **Goose**          | `_reference/goose/`     | Block's open-source autonomous agent (Rust)             | MCP-first extensibility, sub-agents, desktop + CLI dual mode              |
+| **Codex CLI**      | `_reference/codex/`     | OpenAI's CLI coding agent (Rust)                        | Plan/review/code modes, sandbox policies, apply_patch system                                        |
+| **Aider**          | `_reference/aider/`     | AI pair programming in terminal (4.9M installs)         | Repo map, voice-to-code, auto git commits, lint/test integration                                    |
+| **Goose**          | `_reference/goose/`     | Block's open-source autonomous agent (Rust)             | MCP-first extensibility, sub-agents, desktop + CLI dual mode                                        |
 
 ---
 

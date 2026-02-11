@@ -27,53 +27,53 @@ export function HealthBadge({ repoId }: { repoId: string }) {
   if (checking) {
     return (
       <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge
-              variant='outline'
-              className='border-border bg-secondary text-muted-foreground gap-1'
-            >
-              <Loader2 className='h-3 w-3 animate-spin' />
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>Checking dependencies…</TooltipContent>
-        </Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant='outline'
+            className='border-border bg-secondary text-muted-foreground gap-1'
+          >
+            <Loader2 className='h-3 w-3 animate-spin' />
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>Checking dependencies…</TooltipContent>
+      </Tooltip>
     );
   }
 
   if (!health) {
     return (
       <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge
-              variant='outline'
-              className='border-border bg-secondary text-muted-foreground hover:bg-secondary/80 cursor-pointer gap-1'
-              onClick={e => {
-                e.stopPropagation();
-                checkHealth(repoId);
-              }}
-            >
-              <Shield className='h-3 w-3' />
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>Check dependency health</TooltipContent>
-        </Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant='outline'
+            className='border-border bg-secondary text-muted-foreground hover:bg-secondary/80 cursor-pointer gap-1'
+            onClick={e => {
+              e.stopPropagation();
+              checkHealth(repoId);
+            }}
+          >
+            <Shield className='h-3 w-3' />
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>Check dependency health</TooltipContent>
+      </Tooltip>
     );
   }
 
   return (
     <Tooltip>
-        <TooltipTrigger asChild>
-          <HealthDetailPopover repoId={repoId} health={health}>
-            <Badge
-              variant='outline'
-              className={`cursor-pointer gap-1 ${statusStyles[health.status]}`}
-              onClick={e => e.stopPropagation()}
-            >
-              <Shield className='h-3 w-3' />
-            </Badge>
-          </HealthDetailPopover>
-        </TooltipTrigger>
-        <TooltipContent>{statusTooltip[health.status]}</TooltipContent>
-      </Tooltip>
+      <TooltipTrigger asChild>
+        <HealthDetailPopover repoId={repoId} health={health}>
+          <Badge
+            variant='outline'
+            className={`cursor-pointer gap-1 ${statusStyles[health.status]}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <Shield className='h-3 w-3' />
+          </Badge>
+        </HealthDetailPopover>
+      </TooltipTrigger>
+      <TooltipContent>{statusTooltip[health.status]}</TooltipContent>
+    </Tooltip>
   );
 }

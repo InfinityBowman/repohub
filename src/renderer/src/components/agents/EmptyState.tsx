@@ -15,7 +15,7 @@ export function EmptyState({ onLaunch }: EmptyStateProps) {
   return (
     <div className='flex flex-col items-center gap-6 py-20 text-center'>
       <div className='relative rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 p-6'>
-        <Bot className='h-12 w-12 text-muted-foreground' />
+        <Bot className='text-muted-foreground h-12 w-12' />
         <span className='absolute right-4 bottom-4 h-2.5 w-2.5 animate-pulse rounded-full bg-green-400' />
       </div>
 

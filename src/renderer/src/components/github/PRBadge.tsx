@@ -33,19 +33,19 @@ export function PRBadge({ pr }: { pr: PRInfo }) {
 
   return (
     <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge
-            variant='outline'
-            className={`cursor-pointer gap-1 ${stateStyles[pr.state]}`}
-            onClick={handleClick}
-          >
-            <GitPullRequest className='h-3 w-3' />#{pr.number}
-            <span className={`h-1.5 w-1.5 rounded-full ${ciDotColors[pr.ciStatus]}`} />
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent>
-          PR #{pr.number}: {pr.title} (CI: {ciLabels[pr.ciStatus]}) — Click to open on GitHub
-        </TooltipContent>
-      </Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          variant='outline'
+          className={`cursor-pointer gap-1 ${stateStyles[pr.state]}`}
+          onClick={handleClick}
+        >
+          <GitPullRequest className='h-3 w-3' />#{pr.number}
+          <span className={`h-1.5 w-1.5 rounded-full ${ciDotColors[pr.ciStatus]}`} />
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>
+        PR #{pr.number}: {pr.title} (CI: {ciLabels[pr.ciStatus]}) — Click to open on GitHub
+      </TooltipContent>
+    </Tooltip>
   );
 }

@@ -312,12 +312,12 @@ Packages are checked for TypeScript support:
 
 ### Data Sources
 
-| Data                | Source           | API                                                |
-| ------------------- | ---------------- | -------------------------------------------------- |
-| Package search      | npm registry     | `https://registry.npmjs.org/-/v1/search`           |
-| Package metadata    | npm registry     | `https://registry.npmjs.org/{package}`             |
-| Weekly downloads    | npm API          | `https://api.npmjs.org/downloads/point/last-week/` |
-| README              | npm registry     | Included in packument                              |
+| Data             | Source       | API                                                |
+| ---------------- | ------------ | -------------------------------------------------- |
+| Package search   | npm registry | `https://registry.npmjs.org/-/v1/search`           |
+| Package metadata | npm registry | `https://registry.npmjs.org/{package}`             |
+| Weekly downloads | npm API      | `https://api.npmjs.org/downloads/point/last-week/` |
+| README           | npm registry | Included in packument                              |
 
 ### Error Handling
 
@@ -385,11 +385,11 @@ Uses Claude Code's `--sdk-url` WebSocket flag to get structured NDJSON messages 
 
 Three built-in roles:
 
-| Role | Permission Mode | Description |
-|------|----------------|-------------|
-| **Coder** | `default` (supervised) or `bypassPermissions` (autonomous) | Full coding agent. Reads, writes, and executes code. |
-| **Reviewer** | `plan` | Read-only code reviewer. Analyzes quality, finds bugs. |
-| **Researcher** | `plan` | Read-only research agent. Explores codebase, answers questions. |
+| Role           | Permission Mode                                            | Description                                                     |
+| -------------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
+| **Coder**      | `default` (supervised) or `bypassPermissions` (autonomous) | Full coding agent. Reads, writes, and executes code.            |
+| **Reviewer**   | `plan`                                                     | Read-only code reviewer. Analyzes quality, finds bugs.          |
+| **Researcher** | `plan`                                                     | Read-only research agent. Explores codebase, answers questions. |
 
 ### Launching an Agent
 

@@ -17,6 +17,7 @@ claude \
 ```
 
 **Flags explained:**
+
 - `--sdk-url`: Connect to WebSocket server instead of running in terminal
 - `--print`: Non-interactive mode (no TTY prompts)
 - `--output-format stream-json`: NDJSON output (one JSON object per line)
@@ -25,6 +26,7 @@ claude \
 - `-p ""`: Empty initial prompt (we send the real prompt via WebSocket)
 
 **Additional flags per launch:**
+
 - `--cwd {repoPath}`: Set working directory to the repo
 - `--system-prompt {text}`: Role-specific system prompt
 - `--resume {cliSessionId}`: Resume a previous session
@@ -147,11 +149,11 @@ Real-time token streaming (when `--verbose` is used).
 
 #### Other CLI Messages
 
-| Type | Purpose | Action |
-|------|---------|--------|
+| Type            | Purpose                              | Action                     |
+| --------------- | ------------------------------------ | -------------------------- |
 | `tool_progress` | Heartbeat during long tool execution | Update "working" indicator |
-| `keep_alive` | Liveness check | Ignore |
-| `auth_status` | Authentication flow | Handle if auth needed |
+| `keep_alive`    | Liveness check                       | Ignore                     |
+| `auth_status`   | Authentication flow                  | Handle if auth needed      |
 
 ### Direction: RepoHub → CLI (NDJSON)
 
@@ -191,10 +193,10 @@ Messages sent to the CLI must be newline-terminated JSON.
 
 ```typescript
 interface PermissionUpdate {
-  type: "addRules",
-  rules: Array<{ toolName: string, ruleContent: string }>,
-  behavior: "allow" | "deny",
-  destination: "session"
+  type: 'addRules';
+  rules: Array<{ toolName: string; ruleContent: string }>;
+  behavior: 'allow' | 'deny';
+  destination: 'session';
 }
 ```
 
@@ -213,24 +215,24 @@ interface PermissionUpdate {
 
 ## Permission Modes
 
-| Mode | Behavior | RepoHub Use |
-|------|----------|-------------|
-| `default` | Ask for each tool | Supervised mode |
-| `acceptEdits` | Auto-approve file edits | Semi-autonomous |
-| `bypassPermissions` | Everything auto-approved | Autonomous mode |
-| `plan` | Read-only exploration | Researcher/Reviewer roles |
+| Mode                | Behavior                 | RepoHub Use               |
+| ------------------- | ------------------------ | ------------------------- |
+| `default`           | Ask for each tool        | Supervised mode           |
+| `acceptEdits`       | Auto-approve file edits  | Semi-autonomous           |
+| `bypassPermissions` | Everything auto-approved | Autonomous mode           |
+| `plan`              | Read-only exploration    | Researcher/Reviewer roles |
 
 **Mapping to RepoHub roles:**
 
 ```typescript
 const ROLE_PERMISSION_MAP: Record<AgentRole, string> = {
-  coder:      'default',            // Supervised: ask for each tool
-  reviewer:   'plan',               // Read-only
-  researcher: 'plan',               // Read-only
-  architect:  'plan',               // Read-only (suggests, doesn't write)
-  tester:     'default',            // Needs to run commands
-  security:   'plan',               // Read-only auditing
-}
+  coder: 'default', // Supervised: ask for each tool
+  reviewer: 'plan', // Read-only
+  researcher: 'plan', // Read-only
+  architect: 'plan', // Read-only (suggests, doesn't write)
+  tester: 'default', // Needs to run commands
+  security: 'plan', // Read-only auditing
+};
 
 // In autonomous mode, coders/testers use 'bypassPermissions'
 // In autonomous mode, read-only roles use 'plan' (already read-only)
@@ -271,29 +273,29 @@ For replay when renderer connects or when resuming:
 
 ```typescript
 interface AgentMessage {
-  id: string
-  type: 'user' | 'assistant' | 'tool_use' | 'tool_result' | 'system' | 'permission' | 'error'
-  timestamp: number
+  id: string;
+  type: 'user' | 'assistant' | 'tool_use' | 'tool_result' | 'system' | 'permission' | 'error';
+  timestamp: number;
 
   // For user messages
-  content?: string
+  content?: string;
 
   // For assistant messages
-  contentBlocks?: ContentBlock[]
-  usage?: { input_tokens: number; output_tokens: number }
+  contentBlocks?: ContentBlock[];
+  usage?: { input_tokens: number; output_tokens: number };
 
   // For tool use
-  toolName?: string
-  toolInput?: Record<string, unknown>
-  toolUseId?: string
+  toolName?: string;
+  toolInput?: Record<string, unknown>;
+  toolUseId?: string;
 
   // For tool result
-  toolResult?: string | ContentBlock[]
-  isError?: boolean
+  toolResult?: string | ContentBlock[];
+  isError?: boolean;
 
   // For permission requests
-  permissionRequest?: { requestId: string; toolName: string; input: Record<string, unknown> }
-  permissionResponse?: { behavior: 'allow' | 'deny' }
+  permissionRequest?: { requestId: string; toolName: string; input: Record<string, unknown> };
+  permissionResponse?: { behavior: 'allow' | 'deny' };
 }
 ```
 
@@ -318,43 +320,48 @@ session.pendingMessages = []
 ## WebSocket Server Implementation
 
 ```typescript
-import { WebSocketServer, WebSocket } from 'ws'
-import http from 'http'
+import { WebSocketServer, WebSocket } from 'ws';
+import http from 'http';
 
 class AgentWebSocketServer {
-  private httpServer: http.Server
-  private wss: WebSocketServer
-  private port: number = 0
+  private httpServer: http.Server;
+  private wss: WebSocketServer;
+  private port: number = 0;
 
   constructor(private agentService: AgentService) {}
 
   async start(): Promise<number> {
-    this.httpServer = http.createServer()
-    this.wss = new WebSocketServer({ server: this.httpServer })
+    this.httpServer = http.createServer();
+    this.wss = new WebSocketServer({ server: this.httpServer });
 
     this.wss.on('connection', (ws, req) => {
-      const url = new URL(req.url!, `http://localhost`)
-      const match = url.pathname.match(/^\/ws\/cli\/(.+)$/)
-      if (!match) { ws.close(4000, 'Invalid path'); return }
+      const url = new URL(req.url!, `http://localhost`);
+      const match = url.pathname.match(/^\/ws\/cli\/(.+)$/);
+      if (!match) {
+        ws.close(4000, 'Invalid path');
+        return;
+      }
 
-      const sessionId = match[1]
-      this.agentService.handleCLIConnection(sessionId, ws)
-    })
+      const sessionId = match[1];
+      this.agentService.handleCLIConnection(sessionId, ws);
+    });
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.httpServer.listen(0, '127.0.0.1', () => {
-        const addr = this.httpServer.address() as { port: number }
-        this.port = addr.port
-        resolve(this.port)
-      })
-    })
+        const addr = this.httpServer.address() as { port: number };
+        this.port = addr.port;
+        resolve(this.port);
+      });
+    });
   }
 
-  getPort(): number { return this.port }
+  getPort(): number {
+    return this.port;
+  }
 
   stop(): void {
-    this.wss.close()
-    this.httpServer.close()
+    this.wss.close();
+    this.httpServer.close();
   }
 }
 ```
@@ -368,17 +375,17 @@ function parseNDJSON(data: string): object[] {
   return data
     .split('\n')
     .filter(line => line.trim())
-    .map(line => JSON.parse(line))
+    .map(line => JSON.parse(line));
 }
 
 // In the WebSocket message handler:
-ws.on('message', (raw) => {
-  const text = raw.toString()
-  const messages = parseNDJSON(text)
+ws.on('message', raw => {
+  const text = raw.toString();
+  const messages = parseNDJSON(text);
   for (const msg of messages) {
-    this.routeCLIMessage(sessionId, msg)
+    this.routeCLIMessage(sessionId, msg);
   }
-})
+});
 ```
 
 ## Cost Tracking from Protocol
@@ -387,23 +394,23 @@ The `result` message includes `total_cost_usd` directly from Claude Code. No nee
 
 ```typescript
 // On receiving a result message:
-session.totalCostUsd = result.total_cost_usd  // Cumulative for session
+session.totalCostUsd = result.total_cost_usd; // Cumulative for session
 session.totalTokens = {
   input: result.usage.input_tokens,
   output: result.usage.output_tokens,
-  cache: result.usage.cache_read_input_tokens
-}
+  cache: result.usage.cache_read_input_tokens,
+};
 ```
 
 ## Differences from Companion's Architecture
 
 Companion runs a standalone Bun server that bridges between browser WebSockets and CLI WebSockets. RepoHub's architecture is simpler:
 
-| Companion | RepoHub |
-|-----------|---------|
+| Companion                                      | RepoHub                                         |
+| ---------------------------------------------- | ----------------------------------------------- |
 | Browser ↔ WebSocket ↔ Server ↔ WebSocket ↔ CLI | Renderer ↔ IPC ↔ AgentService ↔ WebSocket ↔ CLI |
-| Server translates NDJSON ↔ JSON for browser | AgentService translates NDJSON internally |
-| Browser needs WebSocket client | Renderer uses standard IPC (already exists) |
-| REST API for session management | IPC channels for session management |
+| Server translates NDJSON ↔ JSON for browser    | AgentService translates NDJSON internally       |
+| Browser needs WebSocket client                 | Renderer uses standard IPC (already exists)     |
+| REST API for session management                | IPC channels for session management             |
 
 RepoHub doesn't need a browser-facing WebSocket because the renderer communicates via Electron IPC. The WebSocket server only faces inward (toward Claude CLI processes). This is simpler and more secure.

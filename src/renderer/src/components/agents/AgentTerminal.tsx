@@ -89,10 +89,12 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className='text-muted-foreground hover:text-foreground absolute top-2 right-2 z-10 rounded p-1 opacity-0 transition-all group-hover/code:opacity-100 bg-accent'
+      className='text-muted-foreground hover:text-foreground bg-accent absolute top-2 right-2 z-10 rounded p-1 opacity-0 transition-all group-hover/code:opacity-100'
       title='Copy'
     >
-      {copied ? <Check className='h-3.5 w-3.5 text-green-400' /> : <Copy className='h-3.5 w-3.5' />}
+      {copied ?
+        <Check className='h-3.5 w-3.5 text-green-400' />
+      : <Copy className='h-3.5 w-3.5' />}
     </button>
   );
 }
@@ -104,13 +106,25 @@ function shortPath(filePath: string): string {
 }
 
 /** Parse Edit tool input into structured data */
-function parseEditInput(toolInput: string): { filePath: string; oldString: string; newString: string } | null {
+function parseEditInput(
+  toolInput: string,
+): { filePath: string; oldString: string; newString: string } | null {
   try {
     const parsed = JSON.parse(toolInput);
-    if (parsed.file_path && typeof parsed.old_string === 'string' && typeof parsed.new_string === 'string') {
-      return { filePath: parsed.file_path, oldString: parsed.old_string, newString: parsed.new_string };
+    if (
+      parsed.file_path &&
+      typeof parsed.old_string === 'string' &&
+      typeof parsed.new_string === 'string'
+    ) {
+      return {
+        filePath: parsed.file_path,
+        oldString: parsed.old_string,
+        newString: parsed.new_string,
+      };
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 
@@ -121,7 +135,9 @@ function parseWriteInput(toolInput: string): { filePath: string; content: string
     if (parsed.file_path && typeof parsed.content === 'string') {
       return { filePath: parsed.file_path, content: parsed.content };
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 
@@ -145,7 +161,11 @@ function groupMessages(messages: AgentMessage[]): MessageGroup[] {
   let i = 0;
   while (i < messages.length) {
     const msg = messages[i];
-    if (msg.type === 'tool_use' && i + 1 < messages.length && messages[i + 1].type === 'tool_result') {
+    if (
+      msg.type === 'tool_use' &&
+      i + 1 < messages.length &&
+      messages[i + 1].type === 'tool_result'
+    ) {
       groups.push({ type: 'tool_pair', messages: [msg, messages[i + 1]] });
       i += 2;
     } else {
@@ -163,7 +183,7 @@ function UserMessage({ message }: { message: AgentMessage }) {
     <div className='flex gap-3 rounded-lg bg-purple-500/5 px-3 py-2.5'>
       <User className='mt-0.5 h-4 w-4 shrink-0 text-purple-400' />
       <div className='min-w-0 flex-1'>
-        <span className='whitespace-pre-wrap text-sm text-purple-200/90'>{message.content}</span>
+        <span className='text-sm whitespace-pre-wrap text-purple-200/90'>{message.content}</span>
       </div>
     </div>
   );
@@ -213,8 +233,9 @@ function WriteToolMessage({ message }: { message: AgentMessage }) {
   if (!writeData) return <GenericToolUseMessage message={message} />;
 
   // Truncate very long write content for display
-  const displayContent = writeData.content.length > 5000
-    ? writeData.content.slice(0, 5000) + '\n... (truncated)'
+  const displayContent =
+    writeData.content.length > 5000 ?
+      writeData.content.slice(0, 5000) + '\n... (truncated)'
     : writeData.content;
 
   return (
@@ -245,14 +266,12 @@ function GenericToolUseMessage({ message }: { message: AgentMessage }) {
       <Wrench className='h-3.5 w-3.5 shrink-0 text-yellow-400/70' />
       <Popover>
         <PopoverTrigger asChild>
-          <button className='flex min-w-0 max-w-full items-center gap-2 transition-colors hover:text-yellow-200'>
+          <button className='flex max-w-full min-w-0 items-center gap-2 transition-colors hover:text-yellow-200'>
             <span className='inline-flex shrink-0 items-center rounded-md bg-yellow-400/10 px-1.5 py-0.5 text-xs font-medium text-yellow-300'>
               {message.toolName || 'Tool'}
             </span>
             {preview && (
-              <span className='text-muted-foreground truncate font-mono text-xs'>
-                {preview}
-              </span>
+              <span className='text-muted-foreground truncate font-mono text-xs'>{preview}</span>
             )}
           </button>
         </PopoverTrigger>
@@ -289,13 +308,9 @@ function ToolResultMessage({ message }: { message: AgentMessage }) {
       <CheckCircle className='h-3.5 w-3.5 shrink-0 text-green-400/50' />
       <Popover>
         <PopoverTrigger asChild>
-          <button className='text-muted-foreground hover:text-foreground flex min-w-0 max-w-full items-center gap-2 text-xs transition-colors'>
+          <button className='text-muted-foreground hover:text-foreground flex max-w-full min-w-0 items-center gap-2 text-xs transition-colors'>
             <span className='shrink-0 font-medium'>Result</span>
-            {preview && (
-              <span className='truncate font-mono opacity-50'>
-                {preview}
-              </span>
-            )}
+            {preview && <span className='truncate font-mono opacity-50'>{preview}</span>}
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -318,7 +333,7 @@ function ToolResultMessage({ message }: { message: AgentMessage }) {
 function SystemMessage({ message }: { message: AgentMessage }) {
   return (
     <div className='flex items-center gap-3 py-1.5'>
-      <Info className='h-3.5 w-3.5 shrink-0 text-muted-foreground/50' />
+      <Info className='text-muted-foreground/50 h-3.5 w-3.5 shrink-0' />
       <span className='text-muted-foreground/70 text-xs'>{message.content}</span>
     </div>
   );
@@ -338,7 +353,7 @@ function ResultMessage({ message }: { message: AgentMessage }) {
     <div className='flex gap-3 rounded-lg border border-green-500/20 bg-green-500/5 px-3 py-3'>
       <Terminal className='mt-0.5 h-4 w-4 shrink-0 text-green-400' />
       <div className='min-w-0 flex-1'>
-        <span className='mb-1 block text-[10px] font-semibold uppercase tracking-wider text-green-400/80'>
+        <span className='mb-1 block text-[10px] font-semibold tracking-wider text-green-400/80 uppercase'>
           Complete
         </span>
         <div className='text-sm'>
@@ -396,7 +411,7 @@ export function AgentTerminal({
   return (
     <div className='flex-1 overflow-y-auto'>
       <div className='space-y-1 px-4 py-3'>
-        {groups.map((group) => {
+        {groups.map(group => {
           if (group.type === 'tool_pair') {
             return (
               <div key={group.messages[0].id} className='ml-1 border-l border-yellow-400/15 pl-3'>
@@ -414,7 +429,7 @@ export function AgentTerminal({
           <div className='flex gap-3 py-2'>
             <Bot className='mt-0.5 h-4 w-4 shrink-0 animate-pulse text-blue-400' />
             <div className='min-w-0 flex-1'>
-              <span className='whitespace-pre-wrap text-sm'>
+              <span className='text-sm whitespace-pre-wrap'>
                 {streamingText}
                 <span className='inline-block animate-pulse text-blue-400'>|</span>
               </span>

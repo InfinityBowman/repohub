@@ -8,6 +8,7 @@ demo is located in `_reference/`
 ## The Problem
 
 You're in RepoHub, looking at a repo. You need to:
+
 - Tweak an env variable in `.env`
 - Update a version in `package.json`
 - Edit your `CLAUDE.md`
@@ -42,6 +43,7 @@ A file panel in the repo detail view that lets you browse and edit project files
 ### Key Features
 
 **Smart File Tree**
+
 - Shows project root files + directories
 - Important files float to top: `.env`, `package.json`, `CLAUDE.md`, `tsconfig.json`, config files
 - Collapse directories you don't need
@@ -49,6 +51,7 @@ A file panel in the repo detail view that lets you browse and edit project files
 - Gitignored files dimmed or hidden (toggle)
 
 **Lightweight Editor**
+
 - Syntax highlighting (Shiki — already in the project for package.json preview)
 - Line numbers
 - Basic editing: type, delete, undo/redo, select, copy/paste
@@ -57,6 +60,7 @@ A file panel in the repo detail view that lets you browse and edit project files
 - No need for full IDE features — this is for quick edits, not development
 
 **What This Is NOT**
+
 - Not VS Code. No extensions, no intellisense, no multi-cursor.
 - This is for the 80% of edits that are < 10 lines in config/env/doc files.
 - A clear "Open in VS Code" button for when you need the real thing.
@@ -66,6 +70,7 @@ A file panel in the repo detail view that lets you browse and edit project files
 Different file types get specialized UIs:
 
 **`.env` files**: Key-value editor with masked secrets
+
 ```
 ┌──────────────────────────────────────────────────┐
 │ .env                                     [Raw ↔] │
@@ -79,16 +84,19 @@ Different file types get specialized UIs:
 │ [+ Add Variable]                                 │
 └──────────────────────────────────────────────────┘
 ```
+
 - Values with "key", "secret", "token", "password" auto-masked
 - Click eye icon to reveal
 - Toggle between structured view and raw text
 
 **`package.json`**: Already have a preview — extend it to be editable for common fields:
+
 - Scripts: edit/add/remove with one click
 - Dependencies: version bump buttons
 - Name, description, etc.
 
 **`CLAUDE.md` / markdown files**: Rendered preview with edit toggle
+
 - Read mode: rendered markdown
 - Edit mode: raw text with syntax highlighting
 - Split view option (edit + preview side by side)
@@ -135,6 +143,7 @@ ipcMain.handle('repo:list-files', async (_, repoPath, relativePath = '.') => {
 ### Editor Component
 
 Use CodeMirror 6 for the editor:
+
 - Lightweight, modular, fast
 - Built-in language modes for JSON, YAML, TypeScript, Markdown, env files
 - Undo/redo, search/replace, keybindings
@@ -151,11 +160,11 @@ Alternative: **Monaco Editor** (VS Code's editor) — more powerful but heavier 
 
 ```typescript
 interface FileNode {
-  name: string
-  path: string          // relative to repo root
-  isDirectory: boolean
-  children?: FileNode[] // lazy-loaded on expand
-  importance: number    // for sorting (config files rank higher)
+  name: string;
+  path: string; // relative to repo root
+  isDirectory: boolean;
+  children?: FileNode[]; // lazy-loaded on expand
+  importance: number; // for sorting (config files rank higher)
 }
 
 // Importance ranking
@@ -166,7 +175,7 @@ const FILE_IMPORTANCE: Record<string, number> = {
   'tsconfig.json': 85,
   'README.md': 80,
   // ...
-}
+};
 ```
 
 ### IPC Channels

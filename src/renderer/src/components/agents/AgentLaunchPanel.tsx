@@ -1,13 +1,5 @@
 import { useState, useMemo } from 'react';
-import {
-  Bot,
-  Code,
-  Eye,
-  Search,
-  AlertTriangle,
-  ArrowLeft,
-  Rocket,
-} from 'lucide-react';
+import { Bot, Code, Eye, Search, AlertTriangle, ArrowLeft, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -99,7 +91,7 @@ export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) 
       {/* Repository picker */}
       <div>
         <label className='text-muted-foreground mb-2 block text-sm font-medium'>Repository</label>
-        {selectedRepo ? (
+        {selectedRepo ?
           <div className='flex items-center gap-2'>
             <Badge variant='secondary' className='gap-1'>
               {selectedRepo.name}
@@ -114,8 +106,7 @@ export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) 
               Change
             </Button>
           </div>
-        ) : (
-          <div className='flex flex-col gap-2'>
+        : <div className='flex flex-col gap-2'>
             <Input
               placeholder='Filter repositories...'
               value={repoFilter}
@@ -141,11 +132,13 @@ export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) 
                 </button>
               ))}
               {filteredRepos.length === 0 && (
-                <span className='text-muted-foreground px-3 py-2 text-sm'>No repositories found</span>
+                <span className='text-muted-foreground px-3 py-2 text-sm'>
+                  No repositories found
+                </span>
               )}
             </div>
           </div>
-        )}
+        }
       </div>
 
       {/* Role picker */}

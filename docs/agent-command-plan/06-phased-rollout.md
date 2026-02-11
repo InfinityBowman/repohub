@@ -281,10 +281,12 @@ No new deps for worktrees (just `git worktree` commands). MCP integration uses `
 ### `--sdk-url` Flag Stability
 
 This is an undocumented Claude Code CLI flag. Risks:
+
 - Could be removed or changed in future versions
 - Behavior may differ across versions
 
 **Mitigation**:
+
 - Pin Claude Code version in docs/requirements
 - Implement graceful fallback: if `--sdk-url` fails, fall back to PTY mode with heuristic parsing
 - Monitor Claude Code releases for changes
@@ -299,6 +301,7 @@ This is an undocumented Claude Code CLI flag. Risks:
 If RepoHub crashes, spawned Claude processes may linger.
 
 **Mitigation**:
+
 - Write PIDs to a file on launch, clean up on startup
 - Use process group IDs so children die when parent dies
 - Electron's `app.on('will-quit')` handler to kill all agents
@@ -308,6 +311,7 @@ If RepoHub crashes, spawned Claude processes may linger.
 In autonomous mode, the agent can do anything.
 
 **Mitigation**:
+
 - Default to supervised mode
 - Read-only roles always use `plan` mode regardless of user selection
 - Show clear warning when selecting autonomous mode for write-capable roles
@@ -318,6 +322,7 @@ In autonomous mode, the agent can do anything.
 ## Success Metrics
 
 ### Phase 1
+
 - Can launch a Claude Code agent from RepoHub
 - Can see structured terminal output with color-coded messages
 - Can approve/deny tool calls in supervised mode
@@ -325,6 +330,7 @@ In autonomous mode, the agent can do anything.
 - Can stop an agent
 
 ### Phase 2
+
 - Can run 3+ agents simultaneously
 - Can switch between focused and grid views
 - Can see cost per agent and aggregate
@@ -332,12 +338,14 @@ In autonomous mode, the agent can do anything.
 - Can view file diffs from agent changes
 
 ### Phase 3
+
 - Can see context usage and individual blocks
 - Can remove/collapse blocks to free context
 - Can transfer context between agents
 - Can save/restore snapshots
 
 ### Phase 4
+
 - Agents work in isolated git worktrees
 - Can create custom roles
 - Can dispatch agents from Cmd+K

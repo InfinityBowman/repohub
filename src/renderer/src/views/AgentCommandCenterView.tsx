@@ -62,9 +62,9 @@ function SessionHistoryRow({
     <button
       onClick={onView}
       className={`group flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-        isActive
-          ? 'border-primary/40 bg-primary/5'
-          : 'border-border hover:border-border/80 hover:bg-secondary/30'
+        isActive ?
+          'border-primary/40 bg-primary/5'
+        : 'border-border hover:border-border/80 hover:bg-secondary/30'
       }`}
     >
       <MessageSquare className='mt-0.5 h-4 w-4 shrink-0 text-blue-400' />
@@ -81,8 +81,7 @@ function SessionHistoryRow({
           </span>
           {session.costUsd > 0 && (
             <span className='flex items-center gap-1'>
-              <DollarSign className='h-3 w-3' />
-              ${session.costUsd.toFixed(4)}
+              <DollarSign className='h-3 w-3' />${session.costUsd.toFixed(4)}
             </span>
           )}
           <span>{formatDuration(session.durationSeconds)}</span>
@@ -192,11 +191,7 @@ function SessionHistory({
     return (
       <div className='flex h-full flex-col gap-3'>
         <div className='flex items-center gap-3'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => setViewingHistorySessionId(null)}
-          >
+          <Button variant='ghost' size='sm' onClick={() => setViewingHistorySessionId(null)}>
             <ArrowLeft className='h-4 w-4' />
           </Button>
           <h3 className='min-w-0 flex-1 truncate text-sm font-medium'>
@@ -209,16 +204,14 @@ function SessionHistory({
               disabled={resuming === session.sessionId}
               onClick={() => handleResume(session)}
             >
-              {resuming === session.sessionId ? (
+              {resuming === session.sessionId ?
                 <Loader2 className='h-3.5 w-3.5 animate-spin' />
-              ) : (
-                <Play className='h-3.5 w-3.5' />
-              )}
+              : <Play className='h-3.5 w-3.5' />}
               Resume
             </Button>
           )}
         </div>
-        <div className='h-px bg-gradient-to-r from-transparent via-border/40 to-transparent' />
+        <div className='via-border/40 h-px bg-gradient-to-r from-transparent to-transparent' />
         <AgentTerminal messages={viewingMessages} streamingText='' />
       </div>
     );
@@ -229,7 +222,7 @@ function SessionHistory({
       {/* Header with actions */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-3'>
-          <History className='h-5 w-5 text-muted-foreground' />
+          <History className='text-muted-foreground h-5 w-5' />
           <h3 className='text-lg font-semibold'>Recent Sessions</h3>
         </div>
         <div className='flex gap-2'>
@@ -273,11 +266,11 @@ function SessionHistory({
       )}
 
       {/* Session list */}
-      {loading ? (
+      {loading ?
         <div className='flex items-center justify-center py-12'>
-          <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+          <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
         </div>
-      ) : sessionHistory.length > 0 ? (
+      : sessionHistory.length > 0 ?
         <div className='flex flex-col gap-1.5'>
           {sessionHistory.map(session => (
             <SessionHistoryRow
@@ -289,15 +282,14 @@ function SessionHistory({
             />
           ))}
         </div>
-      ) : (
-        <div className='flex flex-col items-center gap-3 py-12 text-center'>
-          <Bot className='h-8 w-8 text-muted-foreground' />
+      : <div className='flex flex-col items-center gap-3 py-12 text-center'>
+          <Bot className='text-muted-foreground h-8 w-8' />
           <div>
             <p className='text-sm font-medium'>No sessions found</p>
             <p className='text-muted-foreground text-xs'>
-              {selectedRepoPath
-                ? 'No Claude Code sessions exist for this repository yet.'
-                : 'Select a repository to browse session history.'}
+              {selectedRepoPath ?
+                'No Claude Code sessions exist for this repository yet.'
+              : 'Select a repository to browse session history.'}
             </p>
           </div>
           <Button size='sm' onClick={onLaunch}>
@@ -305,7 +297,7 @@ function SessionHistory({
             Launch Agent
           </Button>
         </div>
-      )}
+      }
     </div>
   );
 }
@@ -411,9 +403,9 @@ export function AgentCommandCenterView() {
                     setViewingHistorySessionId(null);
                   }}
                   className={`rounded px-2 py-0.5 text-xs transition-colors ${
-                    a.id === activeAgentId && !viewingHistorySessionId
-                      ? 'bg-primary/20 text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
+                    a.id === activeAgentId && !viewingHistorySessionId ?
+                      'bg-primary/20 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {a.config.repoName}
@@ -425,9 +417,9 @@ export function AgentCommandCenterView() {
                   setViewingHistorySessionId(null);
                 }}
                 className={`rounded px-2 py-0.5 text-xs transition-colors ${
-                  !activeAgentId && !viewingHistorySessionId
-                    ? 'bg-primary/20 text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
+                  !activeAgentId && !viewingHistorySessionId ?
+                    'bg-primary/20 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <History className='inline h-3 w-3' /> History
@@ -442,17 +434,17 @@ export function AgentCommandCenterView() {
       </div>
 
       {/* Show history view when no agent selected */}
-      {!activeAgent && !viewingHistorySessionId ? (
+      {!activeAgent && !viewingHistorySessionId ?
         <SessionHistory
           onLaunch={() => setShowLaunchPanel(true)}
           setShowLaunchPanel={setShowLaunchPanel}
         />
-      ) : activeAgent ? (
+      : activeAgent ?
         <>
           <InfoBar agent={activeAgent} onStop={handleStop} />
 
           {/* Gradient divider */}
-          <div className='h-px bg-gradient-to-r from-transparent via-border/40 to-transparent' />
+          <div className='via-border/40 h-px bg-gradient-to-r from-transparent to-transparent' />
 
           {/* Terminal with inline permissions */}
           <AgentTerminal
@@ -465,13 +457,12 @@ export function AgentCommandCenterView() {
           {/* Input */}
           <MessageInput agentState={activeAgent.state} onSend={handleSendMessage} />
         </>
-      ) : (
         // Viewing history session with active agents in tabs
-        <SessionHistory
+      : <SessionHistory
           onLaunch={() => setShowLaunchPanel(true)}
           setShowLaunchPanel={setShowLaunchPanel}
         />
-      )}
+      }
     </div>
   );
 }

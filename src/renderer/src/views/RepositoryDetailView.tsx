@@ -41,7 +41,8 @@ export function RepositoryDetailView() {
   const repositories = useRepositoryStore(s => s.repositories);
   const repo = repositories.find(r => r.id === id);
 
-  const { processes, start, stop, restart, isRunning, terminalData, openShell, clearOutput } = useProcesses();
+  const { processes, start, stop, restart, isRunning, terminalData, openShell, clearOutput } =
+    useProcesses();
   const { config, setCommandOverride, removeCommandOverride } = useConfig();
   const { getPRForRepo, status: githubStatus } = useGitHub();
 
@@ -58,7 +59,8 @@ export function RepositoryDetailView() {
   const commandOverride = repo ? config?.commandOverrides?.[repo.id] : undefined;
   const effectiveCommand = repo ? commandOverride || repo.defaultCommand : null;
   const hasTerminalContent = !!terminalData[id || ''];
-  const isShell = running && processInfo?.command && /\/(bash|zsh|sh|fish)$/.test(processInfo.command);
+  const isShell =
+    running && processInfo?.command && /\/(bash|zsh|sh|fish)$/.test(processInfo.command);
 
   // Escape key navigates back
   useEffect(() => {
@@ -178,108 +180,113 @@ export function RepositoryDetailView() {
           </div>
 
           <div className='flex items-center gap-1'>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  onClick={() => window.electron.shell.openInVSCode(repo.path)}
+                >
+                  <VSCodeIcon className='h-5 w-5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Open in VS Code</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  onClick={() => window.electron.shell.openInTerminal(repo.path)}
+                >
+                  <GhosttyIcon className='h-5 w-5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Open in Ghostty</TooltipContent>
+            </Tooltip>
+            {repo.githubUrl && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon-sm'
-                    onClick={() => window.electron.shell.openInVSCode(repo.path)}
+                    onClick={() => window.electron.shell.openUrl(repo.githubUrl!)}
                   >
-                    <VSCodeIcon className='h-5 w-5' />
+                    <Github />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Open in VS Code</TooltipContent>
+                <TooltipContent>Open on GitHub</TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon-sm'
-                    onClick={() => window.electron.shell.openInTerminal(repo.path)}
-                  >
-                    <GhosttyIcon className='h-5 w-5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Open in Ghostty</TooltipContent>
-              </Tooltip>
-              {repo.githubUrl && (
+            )}
+            {!pr &&
+              repo.gitBranch &&
+              repo.gitBranch !== 'main' &&
+              repo.gitBranch !== 'master' &&
+              githubStatus?.available &&
+              githubStatus?.authenticated && <CreatePRButton repoId={repo.id} />}
+            {running ?
+              <>
+                {!isShell && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant='ghost' size='icon-sm' onClick={handleRestart}>
+                        <RotateCcw />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Restart</TooltipContent>
+                  </Tooltip>
+                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant='ghost'
                       size='icon-sm'
-                      onClick={() => window.electron.shell.openUrl(repo.githubUrl!)}
+                      onClick={() => {
+                        handleStop();
+                        clearOutput(repo.id);
+                      }}
+                      className='hover:bg-destructive/20 hover:text-destructive-foreground'
                     >
-                      <Github />
+                      {isShell ?
+                        <X />
+                      : <Square />}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Open on GitHub</TooltipContent>
+                  <TooltipContent>{isShell ? 'Close Shell' : 'Stop'}</TooltipContent>
                 </Tooltip>
-              )}
-              {!pr &&
-                repo.gitBranch &&
-                repo.gitBranch !== 'main' &&
-                repo.gitBranch !== 'master' &&
-                githubStatus?.available &&
-                githubStatus?.authenticated && <CreatePRButton repoId={repo.id} />}
-              {running ?
-                <>
-                  {!isShell && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant='ghost' size='icon-sm' onClick={handleRestart}>
-                          <RotateCcw />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Restart</TooltipContent>
-                    </Tooltip>
-                  )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='icon-sm'
-                        onClick={() => { handleStop(); clearOutput(repo.id); }}
-                        className='hover:bg-destructive/20 hover:text-destructive-foreground'
-                      >
-                        {isShell ? <X /> : <Square />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{isShell ? 'Close Shell' : 'Stop'}</TooltipContent>
-                  </Tooltip>
-                </>
-              : <>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='icon-sm'
-                        onClick={() => openShell(repo.id)}
-                        className='hover:bg-blue-900/30 hover:text-blue-400'
-                      >
-                        <TerminalSquare />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Open Shell</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant='ghost'
-                        size='icon-sm'
-                        onClick={handleStart}
-                        disabled={!effectiveCommand}
-                        className='hover:bg-green-900/30 hover:text-green-400'
-                      >
-                        <Play />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {effectiveCommand ? `Run: ${effectiveCommand}` : 'No run command detected'}
-                    </TooltipContent>
-                  </Tooltip>
-                </>
-              }
+              </>
+            : <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon-sm'
+                      onClick={() => openShell(repo.id)}
+                      className='hover:bg-blue-900/30 hover:text-blue-400'
+                    >
+                      <TerminalSquare />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Open Shell</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon-sm'
+                      onClick={handleStart}
+                      disabled={!effectiveCommand}
+                      className='hover:bg-green-900/30 hover:text-green-400'
+                    >
+                      <Play />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {effectiveCommand ? `Run: ${effectiveCommand}` : 'No run command detected'}
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            }
           </div>
         </div>
       </div>
@@ -327,15 +334,17 @@ export function RepositoryDetailView() {
             }
           </div>
           {running || hasTerminalContent ?
-            <TerminalOutput repoId={repo.id} data={terminalData[repo.id] || ''} interactive={running} />
+            <TerminalOutput
+              repoId={repo.id}
+              data={terminalData[repo.id] || ''}
+              interactive={running}
+            />
           : <div
               className='border-border flex h-32 items-center justify-center rounded-md border'
               style={{ backgroundColor: getTerminalTheme(config?.theme).background }}
             >
               <div className='flex flex-col items-center gap-2'>
-                <p className='text-muted-foreground text-sm'>
-                  No process running.
-                </p>
+                <p className='text-muted-foreground text-sm'>No process running.</p>
                 <Button
                   variant='ghost'
                   size='sm'
@@ -371,9 +380,7 @@ export function RepositoryDetailView() {
               <FileJson className='h-4 w-4' />
               package.json
             </button>
-            {showPackageJson && (
-              <CodeBlock code={packageJson} lang='json' theme={config?.theme} />
-            )}
+            {showPackageJson && <CodeBlock code={packageJson} lang='json' theme={config?.theme} />}
           </section>
         )}
 

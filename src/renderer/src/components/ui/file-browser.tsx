@@ -105,7 +105,12 @@ function getFileIconColor(name: string, isDir: boolean): string {
   if (isDir) return 'text-amber-400';
   const lower = name.toLowerCase();
   if (lower === '.env' || lower.startsWith('.env.')) return 'text-amber-400';
-  if (lower.endsWith('.json') || lower.endsWith('.yaml') || lower.endsWith('.yml') || lower.endsWith('.toml'))
+  if (
+    lower.endsWith('.json') ||
+    lower.endsWith('.yaml') ||
+    lower.endsWith('.yml') ||
+    lower.endsWith('.toml')
+  )
     return 'text-amber-400';
   if (lower.endsWith('.md')) return 'text-blue-400';
   if (lower.endsWith('.ts') || lower.endsWith('.tsx')) return 'text-blue-400';
@@ -151,10 +156,7 @@ function HighlightedCode({
       })
       .catch(() => {
         if (!cancelled) {
-          const escaped = code
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+          const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const fallback = `<pre style="padding:1rem;font-size:12px;"><code>${escaped}</code></pre>`;
           setHtml(fallback);
           callbackRef.current?.(fallback);
@@ -214,17 +216,17 @@ function FileTreeNode({
       <div>
         <button
           onClick={() => onToggleDir(node.path)}
-          className='flex w-full items-center gap-1.5 rounded-sm py-1 text-left text-[11px] transition-colors hover:bg-secondary/40'
+          className='hover:bg-secondary/40 flex w-full items-center gap-1.5 rounded-sm py-1 text-left text-[11px] transition-colors'
           style={{ paddingLeft: level * 14 + 8 }}
         >
           <ChevronRight
             className={cn(
-              'h-3 w-3 shrink-0 text-muted-foreground/50 transition-transform duration-150',
+              'text-muted-foreground/50 h-3 w-3 shrink-0 transition-transform duration-150',
               isExpanded && 'rotate-90',
             )}
           />
           <Icon className={cn('h-3.5 w-3.5 shrink-0', iconColor)} />
-          <span className='truncate text-foreground/70'>{node.name}</span>
+          <span className='text-foreground/70 truncate'>{node.name}</span>
         </button>
         {isExpanded && children && (
           <div>
@@ -246,7 +248,7 @@ function FileTreeNode({
         )}
         {isExpanded && !children && (
           <div
-            className='flex items-center gap-1.5 py-1 text-[10px] text-muted-foreground/50'
+            className='text-muted-foreground/50 flex items-center gap-1.5 py-1 text-[10px]'
             style={{ paddingLeft: (level + 1) * 14 + 8 }}
           >
             <Loader2 className='h-3 w-3 animate-spin' />
@@ -266,9 +268,9 @@ function FileTreeNode({
       onMouseLeave={onHoverLeave}
       className={cn(
         'flex w-full items-center gap-1.5 rounded-sm py-1 text-left text-[11px] transition-colors',
-        isSelected
-          ? 'bg-blue-400/10 text-blue-400'
-          : 'text-foreground/70 hover:bg-secondary/40 hover:text-foreground/80',
+        isSelected ?
+          'bg-blue-400/10 text-blue-400'
+        : 'text-foreground/70 hover:bg-secondary/40 hover:text-foreground/80',
       )}
       style={{ paddingLeft: level * 14 + 8 }}
     >
@@ -297,19 +299,17 @@ function EditorBreadcrumb({
   const iconColor = getFileIconColor(fileName, false);
 
   return (
-    <div className='flex shrink-0 items-center justify-between border-b border-border/30 bg-card/50 px-3 py-2'>
+    <div className='border-border/30 bg-card/50 flex shrink-0 items-center justify-between border-b px-3 py-2'>
       <div className='flex min-w-0 items-center gap-1 text-[11px]'>
         {parts.map((part, i) => (
           <span key={i} className='flex items-center gap-1'>
-            {i > 0 && <ChevronRight className='h-3 w-3 shrink-0 text-muted-foreground/50' />}
-            {i === parts.length - 1 ? (
+            {i > 0 && <ChevronRight className='text-muted-foreground/50 h-3 w-3 shrink-0' />}
+            {i === parts.length - 1 ?
               <span className='flex items-center gap-1.5'>
                 <Icon className={cn('h-3 w-3 shrink-0', iconColor)} />
                 <span className='text-foreground font-medium'>{part}</span>
               </span>
-            ) : (
-              <span className='text-muted-foreground'>{part}</span>
-            )}
+            : <span className='text-muted-foreground'>{part}</span>}
           </span>
         ))}
       </div>
@@ -319,12 +319,14 @@ function EditorBreadcrumb({
             onClick={onToggleInfo}
             className={cn(
               'flex h-6 w-6 shrink-0 items-center justify-center rounded transition-colors',
-              infoOpen
-                ? 'bg-blue-400/15 text-blue-400'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+              infoOpen ?
+                'bg-blue-400/15 text-blue-400'
+              : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
             )}
           >
-            {infoOpen ? <ChevronsRight className='h-3.5 w-3.5' /> : <Info className='h-3.5 w-3.5' />}
+            {infoOpen ?
+              <ChevronsRight className='h-3.5 w-3.5' />
+            : <Info className='h-3.5 w-3.5' />}
           </button>
         </TooltipTrigger>
         <TooltipContent className='text-xs'>
@@ -362,18 +364,15 @@ function FileInfoSidebar({ filePath, content }: { filePath: string; content: str
   );
 
   return (
-    <div className='flex w-52 shrink-0 flex-col overflow-y-auto border-l border-border/50 bg-card/30'>
-      <div className='border-b border-border/30 px-3 py-2'>
-        <span className='text-muted-foreground text-[10px] font-mono uppercase tracking-wider'>
+    <div className='border-border/50 bg-card/30 flex w-52 shrink-0 flex-col overflow-y-auto border-l'>
+      <div className='border-border/30 border-b px-3 py-2'>
+        <span className='text-muted-foreground font-mono text-[10px] tracking-wider uppercase'>
           File Info
         </span>
       </div>
       <div className='space-y-0.5 p-2'>
         {items.map(item => (
-          <div
-            key={item.label}
-            className='flex items-center gap-2 rounded-md px-2 py-1.5 text-xs'
-          >
+          <div key={item.label} className='flex items-center gap-2 rounded-md px-2 py-1.5 text-xs'>
             <item.icon className='text-muted-foreground h-3 w-3 shrink-0' />
             <span className='text-muted-foreground'>{item.label}</span>
             <span className='text-foreground ml-auto font-mono text-[11px]'>{item.value}</span>
@@ -548,9 +547,8 @@ export function FileBrowser({
   }, []);
 
   // ─── Highlight cache callback ──────────────────────────
-  const handleHighlighted = selectedFile
-    ? (html: string) => htmlCache.current.set(selectedFile.path, html)
-    : undefined;
+  const handleHighlighted =
+    selectedFile ? (html: string) => htmlCache.current.set(selectedFile.path, html) : undefined;
 
   // ─── Derived values ────────────────────────────────────
   const rootFiles = dirFiles[''];
@@ -558,29 +556,32 @@ export function FileBrowser({
   const cachedHtml = selectedFile ? htmlCache.current.get(selectedFile.path) || null : null;
 
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden rounded-lg border border-border/50', className)}>
-      {/* Optional header */}
-      {header && (
-        <div className='shrink-0 border-b border-border/30 px-3 py-2'>{header}</div>
+    <div
+      className={cn(
+        'border-border/50 flex h-full flex-col overflow-hidden rounded-lg border',
+        className,
       )}
+    >
+      {/* Optional header */}
+      {header && <div className='border-border/30 shrink-0 border-b px-3 py-2'>{header}</div>}
 
       {/* Split layout: tree + viewer */}
       <div className='flex min-h-0 flex-1'>
         {/* File tree panel */}
         <div
-          className='flex shrink-0 flex-col overflow-hidden border-r border-border/50 bg-card/30'
+          className='border-border/50 bg-card/30 flex shrink-0 flex-col overflow-hidden border-r'
           style={{ width: treeWidth }}
         >
           {/* Explorer header */}
-          <div className='flex shrink-0 items-center gap-1.5 border-b border-border/30 px-3 py-2'>
-            <FolderTree className='h-3 w-3 text-muted-foreground' />
-            <span className='text-muted-foreground text-[10px] font-mono uppercase tracking-wider'>
+          <div className='border-border/30 flex shrink-0 items-center gap-1.5 border-b px-3 py-2'>
+            <FolderTree className='text-muted-foreground h-3 w-3' />
+            <span className='text-muted-foreground font-mono text-[10px] tracking-wider uppercase'>
               Explorer
             </span>
           </div>
           {/* Tree nodes */}
           <div className='flex-1 overflow-y-auto py-1'>
-            {rootFiles ? (
+            {rootFiles ?
               rootFiles.map(node => (
                 <FileTreeNode
                   key={node.path}
@@ -595,21 +596,20 @@ export function FileBrowser({
                   onHoverLeave={handleHoverLeave}
                 />
               ))
-            ) : (
-              <div className='flex items-center justify-center py-4'>
+            : <div className='flex items-center justify-center py-4'>
                 <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
               </div>
-            )}
+            }
           </div>
         </div>
 
         {/* Code viewer */}
         <div className='flex min-w-0 flex-1 flex-col overflow-hidden'>
-          {loadingFile ? (
+          {loadingFile ?
             <div className='flex flex-1 items-center justify-center'>
               <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
             </div>
-          ) : selectedFile ? (
+          : selectedFile ?
             <>
               <EditorBreadcrumb
                 filePath={selectedFile.path}
@@ -631,22 +631,18 @@ export function FileBrowser({
                   )}
                 >
                   {infoOpen && (
-                    <FileInfoSidebar
-                      filePath={selectedFile.path}
-                      content={selectedFile.content}
-                    />
+                    <FileInfoSidebar filePath={selectedFile.path} content={selectedFile.content} />
                   )}
                 </div>
               </div>
             </>
-          ) : (
-            <div className='flex flex-1 items-center justify-center'>
+          : <div className='flex flex-1 items-center justify-center'>
               <div className='text-center'>
                 <FileCode2 className='text-muted-foreground/20 mx-auto mb-2 h-8 w-8' />
                 <p className='text-muted-foreground/50 text-xs'>Select a file to view</p>
               </div>
             </div>
-          )}
+          }
         </div>
       </div>
     </div>

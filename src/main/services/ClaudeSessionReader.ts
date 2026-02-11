@@ -51,12 +51,7 @@ export class ClaudeSessionReader {
     const summaries = await Promise.all(
       valid.map(async ({ file, path: fp, mtime, birthtime }) => {
         try {
-          return await this.parseSessionSummary(
-            file.replace('.jsonl', ''),
-            fp,
-            birthtime,
-            mtime,
-          );
+          return await this.parseSessionSummary(file.replace('.jsonl', ''), fp, birthtime, mtime);
         } catch {
           return null;
         }
@@ -216,14 +211,10 @@ export class ClaudeSessionReader {
               if (cleaned) messages.push(makeMsg('user', cleaned));
             } else if (block.type === 'tool_result') {
               const text =
-                typeof block.content === 'string'
-                  ? block.content
-                  : JSON.stringify(block.content);
+                typeof block.content === 'string' ? block.content : JSON.stringify(block.content);
               const truncated =
                 text.length > 2000 ? text.slice(0, 2000) + '\n... (truncated)' : text;
-              messages.push(
-                makeMsg('tool_result', truncated, { toolName: block.tool_use_id }),
-              );
+              messages.push(makeMsg('tool_result', truncated, { toolName: block.tool_use_id }));
             }
           }
         }

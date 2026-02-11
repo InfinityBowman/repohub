@@ -79,7 +79,7 @@ export function TerminalOutput({ repoId, data, interactive = false }: TerminalOu
 
     // Send keystrokes to the PTY when interactive
     if (interactive) {
-      terminal.onData((data) => {
+      terminal.onData(data => {
         write(repoId, data);
       });
     }

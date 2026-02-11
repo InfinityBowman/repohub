@@ -99,16 +99,16 @@ function ResultCard({
             </button>
           </div>
           <Tooltip>
-              <TooltipTrigger>
-                <div className='flex shrink-0 items-center gap-1'>
-                  <ScoreBar score={scorePercent} />
-                  <span className='text-muted-foreground w-8 text-right text-xs'>
-                    {scorePercent}%
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>Similarity: {scorePercent}%</TooltipContent>
-            </Tooltip>
+            <TooltipTrigger>
+              <div className='flex shrink-0 items-center gap-1'>
+                <ScoreBar score={scorePercent} />
+                <span className='text-muted-foreground w-8 text-right text-xs'>
+                  {scorePercent}%
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>Similarity: {scorePercent}%</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className='relative'>

@@ -61,9 +61,7 @@ export function MessageInput({ agentState, onSend }: MessageInputProps) {
     <div>
       <div
         className={`bg-card flex items-end gap-2 rounded-lg border p-2 transition-all ${
-          showFocusRing
-            ? 'border-blue-500/40 ring-1 ring-blue-500/30'
-            : 'border-border'
+          showFocusRing ? 'border-blue-500/40 ring-1 ring-blue-500/30' : 'border-border'
         }`}
       >
         <textarea
@@ -77,7 +75,7 @@ export function MessageInput({ agentState, onSend }: MessageInputProps) {
           placeholder={placeholder}
           disabled={!canSend}
           rows={1}
-          className='bg-transparent text-foreground placeholder:text-muted-foreground min-h-[36px] flex-1 resize-none border-none px-2 py-1.5 text-sm outline-none disabled:opacity-50'
+          className='text-foreground placeholder:text-muted-foreground min-h-[36px] flex-1 resize-none border-none bg-transparent px-2 py-1.5 text-sm outline-none disabled:opacity-50'
         />
         <Tooltip>
           <TooltipTrigger asChild>

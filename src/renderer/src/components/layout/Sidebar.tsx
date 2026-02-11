@@ -18,7 +18,7 @@ export function Sidebar() {
   return (
     <aside className='border-border bg-sidebar-background flex h-full w-56 flex-col border-r pt-12'>
       <div className='px-4 pb-4'>
-        <h1 className='text-lg font-semibold text-primary'>RepoHub</h1>
+        <h1 className='text-primary text-lg font-semibold'>RepoHub</h1>
       </div>
       <nav className='flex flex-col gap-1 px-2'>
         {navItems.map(({ to, icon: Icon, label }) => (
@@ -28,9 +28,9 @@ export function Sidebar() {
             className={({ isActive }) => {
               const active = isActive || (to === '/' && isRepoDetail);
               return `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                active
-                  ? 'bg-sidebar-accent font-medium text-foreground'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                active ?
+                  'bg-sidebar-accent text-foreground font-medium'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
               }`;
             }}
           >

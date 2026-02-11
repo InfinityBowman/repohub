@@ -187,7 +187,9 @@ function ExternalLinks({ pkg }: { pkg: PackageDetail }) {
             className='text-muted-foreground'
             onClick={handleCopy}
           >
-            {copied ? <Check className='h-3.5 w-3.5 text-green-400' /> : <Copy className='h-3.5 w-3.5' />}
+            {copied ?
+              <Check className='h-3.5 w-3.5 text-green-400' />
+            : <Copy className='h-3.5 w-3.5' />}
           </Button>
         </TooltipTrigger>
         <TooltipContent className='text-xs'>
@@ -223,7 +225,7 @@ function CloneActions({ pkg }: { pkg: PackageDetail }) {
   return (
     <>
       <div className='flex items-center gap-1'>
-        {isCloned ? (
+        {isCloned ?
           <>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -253,8 +255,7 @@ function CloneActions({ pkg }: { pkg: PackageDetail }) {
               <TooltipContent className='text-xs'>Delete clone</TooltipContent>
             </Tooltip>
           </>
-        ) : (
-          <Tooltip>
+        : <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size='xs'
@@ -271,7 +272,7 @@ function CloneActions({ pkg }: { pkg: PackageDetail }) {
               {hasRepo ? 'Clone & explore source code' : 'No GitHub repository available'}
             </TooltipContent>
           </Tooltip>
-        )}
+        }
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -280,10 +281,7 @@ function CloneActions({ pkg }: { pkg: PackageDetail }) {
           showCloseButton
         >
           <DialogTitle className='sr-only'>{pkg.name} — Source</DialogTitle>
-          <SourceExplorer
-            packageName={pkg.name}
-            repoUrl={pkg.links.repository || ''}
-          />
+          <SourceExplorer packageName={pkg.name} repoUrl={pkg.links.repository || ''} />
         </DialogContent>
       </Dialog>
     </>
@@ -306,19 +304,19 @@ function ReadmeContent({ readme }: { readme: string }) {
       {/* Mode toggle — pinned above scroll */}
       <div className='shrink-0 px-8 pt-4 pb-3'>
         <div className='flex items-center gap-1'>
-          {([
+          {[
             { id: 'preview' as const, icon: BookOpen, label: 'Preview' },
             { id: 'source' as const, icon: Code2, label: 'Source' },
-          ]).map(m => (
+          ].map(m => (
             <Tooltip key={m.id}>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setMode(m.id)}
                   className={cn(
                     'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] transition-colors',
-                    mode === m.id
-                      ? 'bg-blue-400/15 text-blue-400'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+                    mode === m.id ?
+                      'bg-blue-400/15 text-blue-400'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
                   )}
                 >
                   <m.icon className='h-3 w-3' />
@@ -333,22 +331,20 @@ function ReadmeContent({ readme }: { readme: string }) {
 
       {/* Scrollable content */}
       <div className='min-h-0 flex-1 overflow-y-auto px-8 pb-6'>
-      {mode === 'source' ? (
-        <div className='overflow-auto rounded-lg border border-border/30 bg-background p-4 font-mono text-xs leading-relaxed'>
-          <code className='block'>
-            {readme.split('\n').map((line, i) => (
-              <div key={i} className='-mx-1 flex rounded-sm px-1 hover:bg-secondary/30'>
-                <span className='mr-4 w-8 shrink-0 select-none text-right text-muted-foreground/50'>
-                  {i + 1}
-                </span>
-                <span className='text-foreground/70'>{line || '\u200B'}</span>
-              </div>
-            ))}
-          </code>
-        </div>
-      ) : (
-        <MarkdownRenderer>{readme}</MarkdownRenderer>
-      )}
+        {mode === 'source' ?
+          <div className='border-border/30 bg-background overflow-auto rounded-lg border p-4 font-mono text-xs leading-relaxed'>
+            <code className='block'>
+              {readme.split('\n').map((line, i) => (
+                <div key={i} className='hover:bg-secondary/30 -mx-1 flex rounded-sm px-1'>
+                  <span className='text-muted-foreground/50 mr-4 w-8 shrink-0 text-right select-none'>
+                    {i + 1}
+                  </span>
+                  <span className='text-foreground/70'>{line || '\u200B'}</span>
+                </div>
+              ))}
+            </code>
+          </div>
+        : <MarkdownRenderer>{readme}</MarkdownRenderer>}
       </div>
     </div>
   );
@@ -362,7 +358,9 @@ function AISummaryPlaceholder() {
       </div>
       <div className='text-left'>
         <div className='text-foreground text-xs font-medium'>AI Summary</div>
-        <div className='text-muted-foreground text-[10px]'>Coming soon — Claude-powered analysis</div>
+        <div className='text-muted-foreground text-[10px]'>
+          Coming soon — Claude-powered analysis
+        </div>
       </div>
       <ChevronRight className='text-muted-foreground/40 ml-auto h-4 w-4' />
     </div>
@@ -526,23 +524,23 @@ export function PackagesView() {
   return (
     <div className='-mx-6 -mb-6 flex h-[calc(100%+1.5rem)] overflow-hidden'>
       {/* Left: Search/Trending + Results — soft sidebar */}
-      <div className='flex w-72 shrink-0 flex-col overflow-hidden bg-gradient-to-b from-background/60 to-background/80'>
+      <div className='from-background/60 to-background/80 flex w-72 shrink-0 flex-col overflow-hidden bg-gradient-to-b'>
         {/* Mode toggle */}
         <div className='shrink-0 px-4 pt-4 pb-2'>
-          <div className='inline-flex w-full items-center gap-1 rounded-xl bg-background/60 p-1'>
-            {([
+          <div className='bg-background/60 inline-flex w-full items-center gap-1 rounded-xl p-1'>
+            {[
               { key: 'search' as ViewMode, icon: Search, label: 'Search' },
               { key: 'trending' as ViewMode, icon: TrendingUp, label: 'Trending' },
-            ]).map(m => (
+            ].map(m => (
               <Tooltip key={m.key}>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => handleSwitchMode(m.key)}
                     className={cn(
                       'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-150',
-                      mode === m.key
-                        ? 'bg-blue-400/15 text-blue-400'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50',
+                      mode === m.key ?
+                        'bg-blue-400/15 text-blue-400'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50',
                     )}
                   >
                     <m.icon className='h-3 w-3' />
@@ -557,7 +555,7 @@ export function PackagesView() {
           </div>
         </div>
 
-        {mode === 'search' ? (
+        {mode === 'search' ?
           <>
             {/* Search input */}
             <div className='shrink-0 px-4 pt-1 pb-3'>
@@ -568,7 +566,7 @@ export function PackagesView() {
                   placeholder='Search packages...'
                   value={inputValue}
                   onChange={e => handleSearchChange(e.target.value)}
-                  className='h-9 rounded-xl border-border/30 bg-card/60 pl-9 text-xs transition-colors focus:border-blue-400/40 focus:bg-card/80'
+                  className='border-border/30 bg-card/60 focus:bg-card/80 h-9 rounded-xl pl-9 text-xs transition-colors focus:border-blue-400/40'
                 />
                 {isSearching && (
                   <Loader2 className='text-muted-foreground absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 animate-spin' />
@@ -589,9 +587,7 @@ export function PackagesView() {
                     onClick={() => handleSelectPackage(r.name)}
                     className={cn(
                       'group w-full rounded-2xl px-3.5 py-3 text-left transition-all duration-150',
-                      selectedPackageName === r.name
-                        ? 'bg-card/80'
-                        : 'hover:bg-card/30',
+                      selectedPackageName === r.name ? 'bg-card/80' : 'hover:bg-card/30',
                     )}
                   >
                     <div className='flex items-baseline gap-2'>
@@ -618,24 +614,23 @@ export function PackagesView() {
               </div>
             </div>
           </>
-        ) : (
-          <>
+        : <>
             {/* Trending filters */}
             <div className='shrink-0 space-y-2 px-4 pt-1 pb-3'>
               {/* Period toggle */}
               <div className='flex items-center gap-1'>
-                {([
+                {[
                   { key: 'week' as TrendingPeriod, label: 'This week' },
                   { key: 'month' as TrendingPeriod, label: 'This month' },
-                ]).map(p => (
+                ].map(p => (
                   <button
                     key={p.key}
                     onClick={() => setPeriod(p.key)}
                     className={cn(
                       'rounded-lg px-2.5 py-1 text-[10px] font-medium transition-colors',
-                      trendingPeriod === p.key
-                        ? 'bg-blue-400/15 text-blue-400'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50',
+                      trendingPeriod === p.key ?
+                        'bg-blue-400/15 text-blue-400'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50',
                     )}
                   >
                     {p.label}
@@ -650,9 +645,9 @@ export function PackagesView() {
                     onClick={() => setLanguage(l.value)}
                     className={cn(
                       'rounded-lg px-2 py-0.5 text-[10px] font-medium transition-colors',
-                      trendingLanguage === l.value
-                        ? 'bg-green-400/15 text-green-400'
-                        : 'text-muted-foreground/60 hover:text-foreground hover:bg-secondary/50',
+                      trendingLanguage === l.value ?
+                        'bg-green-400/15 text-green-400'
+                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-secondary/50',
                     )}
                   >
                     {l.label}
@@ -685,9 +680,9 @@ export function PackagesView() {
                     onClick={() => handleSelectTrendingRepo(repo)}
                     className={cn(
                       'group w-full rounded-2xl px-3.5 py-3 text-left transition-all duration-150',
-                      selectedTrendingRepo?.fullName === repo.fullName
-                        ? 'bg-card/80'
-                        : 'hover:bg-card/30',
+                      selectedTrendingRepo?.fullName === repo.fullName ?
+                        'bg-card/80'
+                      : 'hover:bg-card/30',
                     )}
                   >
                     <div className='flex items-center gap-2'>
@@ -717,11 +712,11 @@ export function PackagesView() {
               </div>
             </div>
           </>
-        )}
+        }
       </div>
 
       {/* Soft divider */}
-      <div className='w-px bg-gradient-to-b from-transparent via-border/30 to-transparent' />
+      <div className='via-border/30 w-px bg-gradient-to-b from-transparent to-transparent' />
 
       {/* Right panel */}
       {rightPanel}
@@ -776,7 +771,7 @@ function PackageDetailPanel({
           </div>
         </div>
         {/* Gradient fade border */}
-        <div className='absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent' />
+        <div className='via-border/40 absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent to-transparent' />
       </div>
 
       {/* Stats — flowing pill row */}
@@ -821,11 +816,14 @@ function PackageDetailPanel({
           ].map(stat => (
             <div
               key={stat.label}
-              className={cn('flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all duration-200 hover:bg-card/60', stat.bgClass)}
+              className={cn(
+                'hover:bg-card/60 flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all duration-200',
+                stat.bgClass,
+              )}
             >
               <stat.icon className={cn('h-3.5 w-3.5 opacity-60', stat.textClass)} />
               <div>
-                <div className={cn('font-mono text-xs font-semibold leading-none', stat.textClass)}>
+                <div className={cn('font-mono text-xs leading-none font-semibold', stat.textClass)}>
                   {stat.value}
                 </div>
                 <div className='text-muted-foreground/50 mt-1 text-[9px]'>{stat.label}</div>
@@ -837,7 +835,7 @@ function PackageDetailPanel({
 
       {/* Pill tabs + gradient divider */}
       <div className='relative shrink-0 px-8 pb-2'>
-        <div className='inline-flex items-center gap-1.5 rounded-2xl bg-background/40 p-1.5'>
+        <div className='bg-background/40 inline-flex items-center gap-1.5 rounded-2xl p-1.5'>
           {(
             [
               { key: 'preview', label: 'Preview', icon: BookOpen },
@@ -850,9 +848,9 @@ function PackageDetailPanel({
               onClick={() => setTab(t.key)}
               className={cn(
                 'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all duration-200',
-                tab === t.key
-                  ? 'bg-blue-400/12 text-blue-400 shadow-sm'
-                  : 'text-muted-foreground/60 hover:text-muted-foreground hover:bg-card/30',
+                tab === t.key ?
+                  'bg-blue-400/12 text-blue-400 shadow-sm'
+                : 'text-muted-foreground/60 hover:text-muted-foreground hover:bg-card/30',
               )}
             >
               <t.icon className='h-3.5 w-3.5' />
@@ -860,28 +858,27 @@ function PackageDetailPanel({
             </button>
           ))}
         </div>
-        <div className='absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent via-border/25 to-transparent' />
+        <div className='via-border/25 absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent to-transparent' />
       </div>
 
       {/* Content */}
-      {tab === 'preview' ? (
+      {tab === 'preview' ?
         <div className='min-h-0 flex-1 overflow-y-auto px-8 py-4'>
-          {pkg.readme && pkg.readme.trim() !== '' ? (
+          {pkg.readme && pkg.readme.trim() !== '' ?
             <MarkdownRenderer>{pkg.readme}</MarkdownRenderer>
-          ) : (
-            <div className='text-muted-foreground py-8 text-center text-sm'>
+          : <div className='text-muted-foreground py-8 text-center text-sm'>
               No README available for this package.
             </div>
-          )}
+          }
         </div>
-      ) : tab === 'source' ? (
+      : tab === 'source' ?
         <div className='min-h-0 flex-1 overflow-y-auto px-8 py-4'>
-          {pkg.readme && pkg.readme.trim() !== '' ? (
-            <div className='overflow-auto rounded-lg border border-border/30 bg-background p-4 font-mono text-xs leading-relaxed'>
+          {pkg.readme && pkg.readme.trim() !== '' ?
+            <div className='border-border/30 bg-background overflow-auto rounded-lg border p-4 font-mono text-xs leading-relaxed'>
               <code className='block'>
                 {pkg.readme.split('\n').map((line, i) => (
-                  <div key={i} className='-mx-1 flex rounded-sm px-1 hover:bg-secondary/30'>
-                    <span className='mr-4 w-8 shrink-0 select-none text-right text-muted-foreground/50'>
+                  <div key={i} className='hover:bg-secondary/30 -mx-1 flex rounded-sm px-1'>
+                    <span className='text-muted-foreground/50 mr-4 w-8 shrink-0 text-right select-none'>
                       {i + 1}
                     </span>
                     <span className='text-foreground/70'>{line || '\u200B'}</span>
@@ -889,19 +886,17 @@ function PackageDetailPanel({
                 ))}
               </code>
             </div>
-          ) : (
-            <div className='text-muted-foreground py-8 text-center text-sm'>
+          : <div className='text-muted-foreground py-8 text-center text-sm'>
               No README available for this package.
             </div>
-          )}
+          }
         </div>
-      ) : (
-        <div className='min-h-0 flex-1 overflow-y-auto'>
+      : <div className='min-h-0 flex-1 overflow-y-auto'>
           <div className='px-8 py-6'>
             <AISummaryPlaceholder />
           </div>
         </div>
-      )}
+      }
     </div>
   );
 }
@@ -919,18 +914,21 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
     fetchedRef.current = repo.fullName;
     setReadme(null);
     setLoadingReadme(true);
-    window.electron.github.getTrendingReadme(repo.fullName).then(content => {
-      // Guard against stale responses
-      if (fetchedRef.current === repo.fullName) {
-        setReadme(content);
-        setLoadingReadme(false);
-      }
-    }).catch(() => {
-      if (fetchedRef.current === repo.fullName) {
-        setReadme('');
-        setLoadingReadme(false);
-      }
-    });
+    window.electron.github
+      .getTrendingReadme(repo.fullName)
+      .then(content => {
+        // Guard against stale responses
+        if (fetchedRef.current === repo.fullName) {
+          setReadme(content);
+          setLoadingReadme(false);
+        }
+      })
+      .catch(() => {
+        if (fetchedRef.current === repo.fullName) {
+          setReadme('');
+          setLoadingReadme(false);
+        }
+      });
   }, [repo.fullName]);
 
   const openUrl = useCallback((url: string) => {
@@ -972,10 +970,7 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
             </p>
             <div className='mt-3 flex flex-wrap items-center gap-2'>
               {repo.language && (
-                <Badge
-                  variant='outline'
-                  className='gap-1.5 rounded-full text-[10px]'
-                >
+                <Badge variant='outline' className='gap-1.5 rounded-full text-[10px]'>
                   <LanguageDot language={repo.language} />
                   {repo.language}
                 </Badge>
@@ -1019,7 +1014,7 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
           </div>
         </div>
         {/* Gradient fade border */}
-        <div className='absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent' />
+        <div className='via-border/40 absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent to-transparent' />
       </div>
 
       {/* Stats — flowing pill row */}
@@ -1064,11 +1059,14 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
           ].map(stat => (
             <div
               key={stat.label}
-              className={cn('flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all duration-200 hover:bg-card/60', stat.bgClass)}
+              className={cn(
+                'hover:bg-card/60 flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all duration-200',
+                stat.bgClass,
+              )}
             >
               <stat.icon className={cn('h-3.5 w-3.5 opacity-60', stat.textClass)} />
               <div>
-                <div className={cn('font-mono text-xs font-semibold leading-none', stat.textClass)}>
+                <div className={cn('font-mono text-xs leading-none font-semibold', stat.textClass)}>
                   {stat.value}
                 </div>
                 <div className='text-muted-foreground/50 mt-1 text-[9px]'>{stat.label}</div>
@@ -1118,19 +1116,19 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
             </Button>
           )}
         </div>
-        <div className='mt-3 h-px bg-gradient-to-r from-transparent via-border/25 to-transparent' />
+        <div className='via-border/25 mt-3 h-px bg-gradient-to-r from-transparent to-transparent' />
       </div>
 
       {/* README */}
       <div className='min-h-0 flex-1 overflow-y-auto'>
         <div className='px-8 py-6'>
-          {loadingReadme ? (
+          {loadingReadme ?
             <div className='flex items-center justify-center py-8'>
               <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
             </div>
-          ) : readme !== null ? (
+          : readme !== null ?
             <ReadmeContent readme={readme} />
-          ) : null}
+          : null}
         </div>
       </div>
     </div>

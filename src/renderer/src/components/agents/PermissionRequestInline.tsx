@@ -26,9 +26,7 @@ export function PermissionRequestInline({ permission, onRespond }: PermissionReq
                 {permission.toolName}
               </span>
               {preview && (
-                <span className='text-muted-foreground truncate font-mono text-xs'>
-                  {preview}
-                </span>
+                <span className='text-muted-foreground truncate font-mono text-xs'>{preview}</span>
               )}
             </div>
 
@@ -38,7 +36,9 @@ export function PermissionRequestInline({ permission, onRespond }: PermissionReq
                   onClick={() => setExpanded(!expanded)}
                   className='text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors'
                 >
-                  {expanded ? <ChevronDown className='h-3 w-3' /> : <ChevronRight className='h-3 w-3' />}
+                  {expanded ?
+                    <ChevronDown className='h-3 w-3' />
+                  : <ChevronRight className='h-3 w-3' />}
                   {expanded ? 'Hide' : 'Show'} details
                 </button>
                 {expanded && (

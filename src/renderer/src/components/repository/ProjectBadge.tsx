@@ -18,14 +18,14 @@ export function ProjectBadge({ type }: { type: ProjectType }) {
   if (type === 'unknown') return null;
   return (
     <Tooltip>
-        <TooltipTrigger asChild>
-          <span className='inline-flex shrink-0'>
-            {type === 'monorepo' ?
-              <Boxes className='h-4 w-4 text-purple-400' />
-            : <LanguageIcon type={type} className='h-4 w-4' />}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{typeLabels[type]}</TooltipContent>
-      </Tooltip>
+      <TooltipTrigger asChild>
+        <span className='inline-flex shrink-0'>
+          {type === 'monorepo' ?
+            <Boxes className='h-4 w-4 text-purple-400' />
+          : <LanguageIcon type={type} className='h-4 w-4' />}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{typeLabels[type]}</TooltipContent>
+    </Tooltip>
   );
 }

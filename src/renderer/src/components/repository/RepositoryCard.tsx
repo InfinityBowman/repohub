@@ -81,19 +81,19 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 <HealthBadge repoId={repo.id} />
               )}
               {repo.projectType === 'monorepo' && repo.workspace && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant='outline'
-                        className='border-purple-800/50 bg-purple-900/20 text-purple-400'
-                      >
-                        {repo.workspace.packages.length} pkgs
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {repo.workspace.packages.length} workspace packages
-                    </TooltipContent>
-                  </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant='outline'
+                      className='border-purple-800/50 bg-purple-900/20 text-purple-400'
+                    >
+                      {repo.workspace.packages.length} pkgs
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {repo.workspace.packages.length} workspace packages
+                  </TooltipContent>
+                </Tooltip>
               )}
               {repo.gitBranch && (
                 <Badge
@@ -123,79 +123,79 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
         </div>
 
         <div className='no-drag flex items-center gap-1'>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant='ghost' size='icon-sm' onClick={handleOpenVSCode}>
+                <VSCodeIcon className='h-5 w-5' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open in VS Code</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant='ghost' size='icon-sm' onClick={handleOpenTerminal}>
+                <GhosttyIcon className='h-5 w-5' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open in Ghostty</TooltipContent>
+          </Tooltip>
+          {repo.githubUrl && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant='ghost' size='icon-sm' onClick={handleOpenVSCode}>
-                  <VSCodeIcon className='h-5 w-5' />
+                <Button variant='ghost' size='icon-sm' onClick={handleOpenGitHub}>
+                  <Github />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Open in VS Code</TooltipContent>
+              <TooltipContent>Open on GitHub</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant='ghost' size='icon-sm' onClick={handleOpenTerminal}>
-                  <GhosttyIcon className='h-5 w-5' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Open in Ghostty</TooltipContent>
-            </Tooltip>
-            {repo.githubUrl && (
+          )}
+          {!pr &&
+            repo.gitBranch &&
+            repo.gitBranch !== 'main' &&
+            repo.gitBranch !== 'master' &&
+            githubStatus?.available &&
+            githubStatus?.authenticated && <CreatePRButton repoId={repo.id} />}
+          {running ?
+            <>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant='ghost' size='icon-sm' onClick={handleOpenGitHub}>
-                    <Github />
+                  <Button variant='ghost' size='icon-sm' onClick={handleRestart}>
+                    <RotateCcw />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Open on GitHub</TooltipContent>
+                <TooltipContent>Restart</TooltipContent>
               </Tooltip>
-            )}
-            {!pr &&
-              repo.gitBranch &&
-              repo.gitBranch !== 'main' &&
-              repo.gitBranch !== 'master' &&
-              githubStatus?.available &&
-              githubStatus?.authenticated && <CreatePRButton repoId={repo.id} />}
-            {running ?
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant='ghost' size='icon-sm' onClick={handleRestart}>
-                      <RotateCcw />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Restart</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon-sm'
-                      onClick={handleStop}
-                      className='hover:bg-destructive/20 hover:text-destructive-foreground'
-                    >
-                      <Square />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Stop</TooltipContent>
-                </Tooltip>
-              </>
-            : <Tooltip>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon-sm'
-                    onClick={handleStart}
-                    disabled={!effectiveCommand}
-                    className='hover:bg-green-900/30 hover:text-green-400'
+                    onClick={handleStop}
+                    className='hover:bg-destructive/20 hover:text-destructive-foreground'
                   >
-                    <Play />
+                    <Square />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {effectiveCommand ? `Run: ${effectiveCommand}` : 'No run command detected'}
-                </TooltipContent>
+                <TooltipContent>Stop</TooltipContent>
               </Tooltip>
-            }
+            </>
+          : <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  onClick={handleStart}
+                  disabled={!effectiveCommand}
+                  className='hover:bg-green-900/30 hover:text-green-400'
+                >
+                  <Play />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {effectiveCommand ? `Run: ${effectiveCommand}` : 'No run command detected'}
+              </TooltipContent>
+            </Tooltip>
+          }
         </div>
       </div>
     </Card>

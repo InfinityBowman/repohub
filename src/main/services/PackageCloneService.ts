@@ -54,9 +54,9 @@ export class PackageCloneService {
 
     try {
       // Use execFile to avoid shell interpretation (no command injection)
-      await execFileAsync('git', [
-        'clone', '--depth', '1', '--single-branch', repoUrl, clonePath,
-      ], { timeout: CLONE_TIMEOUT });
+      await execFileAsync('git', ['clone', '--depth', '1', '--single-branch', repoUrl, clonePath], {
+        timeout: CLONE_TIMEOUT,
+      });
 
       // Store metadata
       const clones = this.store.get('clones');

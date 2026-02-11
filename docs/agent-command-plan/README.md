@@ -16,14 +16,14 @@ This is a fundamentally better integration path than spawning Claude in a PTY an
 
 ## Documents
 
-| Doc | Contents |
-|-----|----------|
-| [01-architecture.md](./01-architecture.md) | System architecture, process model, data flow |
-| [02-websocket-protocol.md](./02-websocket-protocol.md) | Claude Code WebSocket integration protocol |
-| [03-agent-service.md](./03-agent-service.md) | AgentService, session management, role system |
-| [04-renderer-components.md](./04-renderer-components.md) | UI components, views, state management |
-| [05-ipc-channels.md](./05-ipc-channels.md) | Complete IPC channel specification |
-| [06-phased-rollout.md](./06-phased-rollout.md) | Phase-by-phase implementation plan |
+| Doc                                                      | Contents                                      |
+| -------------------------------------------------------- | --------------------------------------------- |
+| [01-architecture.md](./01-architecture.md)               | System architecture, process model, data flow |
+| [02-websocket-protocol.md](./02-websocket-protocol.md)   | Claude Code WebSocket integration protocol    |
+| [03-agent-service.md](./03-agent-service.md)             | AgentService, session management, role system |
+| [04-renderer-components.md](./04-renderer-components.md) | UI components, views, state management        |
+| [05-ipc-channels.md](./05-ipc-channels.md)               | Complete IPC channel specification            |
+| [06-phased-rollout.md](./06-phased-rollout.md)           | Phase-by-phase implementation plan            |
 
 ## Reference Materials
 
@@ -66,12 +66,12 @@ This is a fundamentally better integration path than spawning Claude in a PTY an
 
 ## Decision Log
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Agent integration | WebSocket (`--sdk-url`) | Structured messages > PTY parsing. Companion proves it works. |
-| WebSocket server | Bun/Hono in main process | Lightweight, runs in Electron's Node.js. One server, many agents. |
-| Session persistence | CLI session IDs + electron-store | Claude Code `--resume` restores conversation. We store metadata. |
-| Permission flow | WebSocket control_request/response | UI-driven approve/deny/modify per tool call. |
-| Message format | NDJSON (CLI) ↔ JSON (internal) | Match what Claude Code expects. Translate at the bridge. |
-| State management | Zustand store (agentStore) | Consistent with existing stores (repositoryStore, processStore). |
-| UI architecture | Focused + Grid views | Mockups already prototyped in _reference. Match proposal spec. |
+| Decision            | Choice                             | Rationale                                                         |
+| ------------------- | ---------------------------------- | ----------------------------------------------------------------- |
+| Agent integration   | WebSocket (`--sdk-url`)            | Structured messages > PTY parsing. Companion proves it works.     |
+| WebSocket server    | Bun/Hono in main process           | Lightweight, runs in Electron's Node.js. One server, many agents. |
+| Session persistence | CLI session IDs + electron-store   | Claude Code `--resume` restores conversation. We store metadata.  |
+| Permission flow     | WebSocket control_request/response | UI-driven approve/deny/modify per tool call.                      |
+| Message format      | NDJSON (CLI) ↔ JSON (internal)     | Match what Claude Code expects. Translate at the bridge.          |
+| State management    | Zustand store (agentStore)         | Consistent with existing stores (repositoryStore, processStore).  |
+| UI architecture     | Focused + Grid views               | Mockups already prototyped in \_reference. Match proposal spec.   |

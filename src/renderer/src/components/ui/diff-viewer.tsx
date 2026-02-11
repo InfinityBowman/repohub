@@ -7,15 +7,42 @@ const SHIKI_THEME = 'github-dark-default';
 // --- Language detection from file path ---
 
 const extToLang: Record<string, string> = {
-  ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx',
-  py: 'python', rs: 'rust', go: 'go', java: 'java', kt: 'kotlin',
-  swift: 'swift', rb: 'ruby', php: 'php', c: 'c', cpp: 'cpp', h: 'c',
-  cs: 'csharp', css: 'css', scss: 'scss', less: 'less',
-  html: 'html', vue: 'vue', svelte: 'svelte',
-  json: 'json', yaml: 'yaml', yml: 'yaml', toml: 'toml',
-  md: 'markdown', mdx: 'mdx', sql: 'sql', sh: 'bash', bash: 'bash',
-  zsh: 'bash', dockerfile: 'dockerfile', graphql: 'graphql',
-  xml: 'xml', svg: 'xml',
+  ts: 'typescript',
+  tsx: 'tsx',
+  js: 'javascript',
+  jsx: 'jsx',
+  py: 'python',
+  rs: 'rust',
+  go: 'go',
+  java: 'java',
+  kt: 'kotlin',
+  swift: 'swift',
+  rb: 'ruby',
+  php: 'php',
+  c: 'c',
+  cpp: 'cpp',
+  h: 'c',
+  cs: 'csharp',
+  css: 'css',
+  scss: 'scss',
+  less: 'less',
+  html: 'html',
+  vue: 'vue',
+  svelte: 'svelte',
+  json: 'json',
+  yaml: 'yaml',
+  yml: 'yaml',
+  toml: 'toml',
+  md: 'markdown',
+  mdx: 'mdx',
+  sql: 'sql',
+  sh: 'bash',
+  bash: 'bash',
+  zsh: 'bash',
+  dockerfile: 'dockerfile',
+  graphql: 'graphql',
+  xml: 'xml',
+  svg: 'xml',
 };
 
 function langFromPath(filePath?: string): string {
@@ -52,11 +79,27 @@ function computeDiffLines(oldCode: string, newCode: string): DiffLine[] {
 
     for (const text of rawLines) {
       if (change.added) {
-        lines.push({ type: 'added', content: text, newLineNo: newLine++, sourceLineIndex: newIdx++ });
+        lines.push({
+          type: 'added',
+          content: text,
+          newLineNo: newLine++,
+          sourceLineIndex: newIdx++,
+        });
       } else if (change.removed) {
-        lines.push({ type: 'removed', content: text, oldLineNo: oldLine++, sourceLineIndex: oldIdx++ });
+        lines.push({
+          type: 'removed',
+          content: text,
+          oldLineNo: oldLine++,
+          sourceLineIndex: oldIdx++,
+        });
       } else {
-        lines.push({ type: 'unchanged', content: text, oldLineNo: oldLine++, newLineNo: newLine++, sourceLineIndex: newIdx });
+        lines.push({
+          type: 'unchanged',
+          content: text,
+          oldLineNo: oldLine++,
+          newLineNo: newLine++,
+          sourceLineIndex: newIdx,
+        });
         oldIdx++;
         newIdx++;
       }
@@ -73,13 +116,22 @@ function useTokenizedLines(code: string, lang: string): ThemedToken[][] | null {
 
   useEffect(() => {
     let cancelled = false;
-    if (!code) { setTokens([]); return; }
+    if (!code) {
+      setTokens([]);
+      return;
+    }
 
     codeToTokens(code, { lang, theme: SHIKI_THEME })
-      .then(result => { if (!cancelled) setTokens(result.tokens); })
-      .catch(() => { if (!cancelled) setTokens(null); });
+      .then(result => {
+        if (!cancelled) setTokens(result.tokens);
+      })
+      .catch(() => {
+        if (!cancelled) setTokens(null);
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [code, lang]);
 
   return tokens;
@@ -147,11 +199,11 @@ export function DiffViewer({ oldCode, newCode, fileName, lang }: DiffViewerProps
   }, [lines]);
 
   return (
-    <div className='overflow-hidden rounded-md border border-border bg-black'>
+    <div className='border-border overflow-hidden rounded-md border bg-black'>
       {/* Header */}
       {fileName && (
-        <div className='flex items-center justify-between border-b border-border bg-muted/30 px-3 py-1.5'>
-          <span className='truncate font-mono text-xs text-muted-foreground'>{fileName}</span>
+        <div className='border-border bg-muted/30 flex items-center justify-between border-b px-3 py-1.5'>
+          <span className='text-muted-foreground truncate font-mono text-xs'>{fileName}</span>
           <div className='flex items-center gap-2 text-[10px] font-medium'>
             {stats.added > 0 && <span className='text-green-400'>+{stats.added}</span>}
             {stats.removed > 0 && <span className='text-red-400'>-{stats.removed}</span>}
@@ -169,17 +221,25 @@ export function DiffViewer({ oldCode, newCode, fileName, lang }: DiffViewerProps
 
               return (
                 <tr key={i} className={rowBg[line.type]}>
-                  <td className={`w-[1px] min-w-8 select-none whitespace-nowrap px-2 text-right ${gutterStyles[line.type]}`}>
+                  <td
+                    className={`w-[1px] min-w-8 px-2 text-right whitespace-nowrap select-none ${gutterStyles[line.type]}`}
+                  >
                     {line.oldLineNo ?? ''}
                   </td>
-                  <td className={`w-[1px] min-w-8 select-none whitespace-nowrap px-2 text-right ${gutterStyles[line.type]}`}>
+                  <td
+                    className={`w-[1px] min-w-8 px-2 text-right whitespace-nowrap select-none ${gutterStyles[line.type]}`}
+                  >
                     {line.newLineNo ?? ''}
                   </td>
-                  <td className={`w-[1px] select-none whitespace-nowrap px-1 text-center ${gutterStyles[line.type]}`}>
+                  <td
+                    className={`w-[1px] px-1 text-center whitespace-nowrap select-none ${gutterStyles[line.type]}`}
+                  >
                     {prefixMap[line.type]}
                   </td>
-                  <td className='whitespace-pre-wrap break-all px-2 py-px'>
-                    {lineTokens ? <TokenizedContent tokens={lineTokens} /> : (line.content || '\u00A0')}
+                  <td className='px-2 py-px break-all whitespace-pre-wrap'>
+                    {lineTokens ?
+                      <TokenizedContent tokens={lineTokens} />
+                    : line.content || '\u00A0'}
                   </td>
                 </tr>
               );
@@ -190,7 +250,7 @@ export function DiffViewer({ oldCode, newCode, fileName, lang }: DiffViewerProps
 
       {/* Footer stats (only when no header) */}
       {!fileName && (stats.added > 0 || stats.removed > 0) && (
-        <div className='flex items-center gap-2 border-t border-border px-3 py-1 text-[10px] font-medium'>
+        <div className='border-border flex items-center gap-2 border-t px-3 py-1 text-[10px] font-medium'>
           {stats.added > 0 && <span className='text-green-400'>+{stats.added}</span>}
           {stats.removed > 0 && <span className='text-red-400'>-{stats.removed}</span>}
         </div>
@@ -212,10 +272,10 @@ export function NewContentViewer({ content, fileName }: { content: string; fileN
   }, [content]);
 
   return (
-    <div className='overflow-hidden rounded-md border border-border bg-black'>
+    <div className='border-border overflow-hidden rounded-md border bg-black'>
       {fileName && (
-        <div className='flex items-center justify-between border-b border-border bg-muted/30 px-3 py-1.5'>
-          <span className='truncate font-mono text-xs text-muted-foreground'>{fileName}</span>
+        <div className='border-border bg-muted/30 flex items-center justify-between border-b px-3 py-1.5'>
+          <span className='text-muted-foreground truncate font-mono text-xs'>{fileName}</span>
           <span className='text-[10px] font-medium text-green-400'>+{lines.length} (new file)</span>
         </div>
       )}
@@ -224,12 +284,16 @@ export function NewContentViewer({ content, fileName }: { content: string; fileN
           <tbody>
             {lines.map((line, i) => (
               <tr key={i} className='bg-green-500/10'>
-                <td className='w-[1px] min-w-8 select-none whitespace-nowrap px-2 text-right text-green-500/60'>
+                <td className='w-[1px] min-w-8 px-2 text-right whitespace-nowrap text-green-500/60 select-none'>
                   {i + 1}
                 </td>
-                <td className='w-[1px] select-none whitespace-nowrap px-1 text-center text-green-500/60'>+</td>
-                <td className='whitespace-pre-wrap break-all px-2 py-px'>
-                  {tokens?.[i] ? <TokenizedContent tokens={tokens[i]} /> : (line || '\u00A0')}
+                <td className='w-[1px] px-1 text-center whitespace-nowrap text-green-500/60 select-none'>
+                  +
+                </td>
+                <td className='px-2 py-px break-all whitespace-pre-wrap'>
+                  {tokens?.[i] ?
+                    <TokenizedContent tokens={tokens[i]} />
+                  : line || '\u00A0'}
                 </td>
               </tr>
             ))}

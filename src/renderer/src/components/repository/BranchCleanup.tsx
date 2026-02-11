@@ -80,13 +80,13 @@ export function BranchCleanup({ repoId }: { repoId: string }) {
         </div>
         <div className='flex items-center gap-1'>
           <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant='ghost' size='icon-xs' onClick={fetchBranches}>
-                  <RefreshCw className='h-3.5 w-3.5' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh branches</TooltipContent>
-            </Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant='ghost' size='icon-xs' onClick={fetchBranches}>
+                <RefreshCw className='h-3.5 w-3.5' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refresh branches</TooltipContent>
+          </Tooltip>
           {mergedBranches.length > 0 && (
             <Button
               variant='destructive'
@@ -146,21 +146,21 @@ export function BranchCleanup({ repoId }: { repoId: string }) {
                 </div>
                 {isMergedDeletable && (
                   <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='icon-xs'
-                          onClick={() => handleDelete(branch.name)}
-                          disabled={deleting.has(branch.name)}
-                          className='hover:bg-destructive/20 hover:text-destructive-foreground'
-                        >
-                          {deleting.has(branch.name) ?
-                            <Loader2 className='h-3.5 w-3.5 animate-spin' />
-                          : <Trash2 className='h-3.5 w-3.5' />}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Delete branch</TooltipContent>
-                    </Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant='ghost'
+                        size='icon-xs'
+                        onClick={() => handleDelete(branch.name)}
+                        disabled={deleting.has(branch.name)}
+                        className='hover:bg-destructive/20 hover:text-destructive-foreground'
+                      >
+                        {deleting.has(branch.name) ?
+                          <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                        : <Trash2 className='h-3.5 w-3.5' />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete branch</TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             );

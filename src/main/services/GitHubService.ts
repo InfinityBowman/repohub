@@ -314,10 +314,9 @@ export class GitHubService extends EventEmitter {
     if (!status.available || !status.authenticated) return '';
 
     try {
-      const { stdout } = await execAsync(
-        `gh api repos/${fullName}/readme --jq .content`,
-        { timeout: 10000 },
-      );
+      const { stdout } = await execAsync(`gh api repos/${fullName}/readme --jq .content`, {
+        timeout: 10000,
+      });
 
       const base64Content = stdout.trim();
       if (!base64Content) return '';

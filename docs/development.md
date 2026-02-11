@@ -78,24 +78,24 @@ Follow the existing pattern:
 
 ## IPC Channels
 
-| Channel | Direction | Description |
-|---------|-----------|-------------|
-| `github:trending` | Renderer → Main | Search trending GitHub repos. Args: `language?: string, period?: string`. Returns `TrendingRepo[]`. |
-| `package-clone:clone` | Renderer → Main | Shallow-clone a package's GitHub repo. Args: `packageName: string, repoUrl: string`. Returns `CloneResult`. |
-| `package-clone:status` | Renderer → Main | Get clone status for a package. Args: `packageName: string`. Returns `CloneStatus`. |
+| Channel                    | Direction       | Description                                                                                                     |
+| -------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------- |
+| `github:trending`          | Renderer → Main | Search trending GitHub repos. Args: `language?: string, period?: string`. Returns `TrendingRepo[]`.             |
+| `package-clone:clone`      | Renderer → Main | Shallow-clone a package's GitHub repo. Args: `packageName: string, repoUrl: string`. Returns `CloneResult`.     |
+| `package-clone:status`     | Renderer → Main | Get clone status for a package. Args: `packageName: string`. Returns `CloneStatus`.                             |
 | `package-clone:list-files` | Renderer → Main | List files in a cloned repo directory. Args: `packageName: string, relativePath: string`. Returns `FileNode[]`. |
-| `package-clone:read-file` | Renderer → Main | Read a file from a cloned repo. Args: `packageName: string, relativePath: string`. Returns `string`. |
-| `package-clone:delete` | Renderer → Main | Delete a cloned repo. Args: `packageName: string`. Returns `CloneResult`. |
-| `agent:launch` | Renderer → Main | Launch a Claude Code agent. Args: `AgentLaunchConfig`. Returns `{ sessionId: string }`. |
-| `agent:stop` | Renderer → Main | Stop a running agent. Args: `sessionId: string`. Returns `{ success: boolean }`. |
-| `agent:send-message` | Renderer → Main | Send a follow-up message. Args: `{ sessionId, content }`. |
-| `agent:respond-permission` | Renderer → Main | Respond to a permission request. Args: `{ sessionId, requestId, allow }`. |
-| `agent:list` | Renderer → Main | List all agent sessions. Returns `AgentSessionInfo[]`. |
-| `agent:get-messages` | Renderer → Main | Get message history. Args: `sessionId`. Returns `AgentMessage[]`. |
-| `agent:status-changed` | Main → Renderer | Agent state changed. Data: `AgentSessionInfo`. |
-| `agent:output` | Main → Renderer | New agent message. Data: `{ sessionId, message: AgentMessage }`. |
-| `agent:permission-request` | Main → Renderer | Agent needs permission. Data: `{ sessionId, permission: PermissionRequest }`. |
-| `agent:stream` | Main → Renderer | Streaming text delta. Data: `{ sessionId, delta: string }`. |
+| `package-clone:read-file`  | Renderer → Main | Read a file from a cloned repo. Args: `packageName: string, relativePath: string`. Returns `string`.            |
+| `package-clone:delete`     | Renderer → Main | Delete a cloned repo. Args: `packageName: string`. Returns `CloneResult`.                                       |
+| `agent:launch`             | Renderer → Main | Launch a Claude Code agent. Args: `AgentLaunchConfig`. Returns `{ sessionId: string }`.                         |
+| `agent:stop`               | Renderer → Main | Stop a running agent. Args: `sessionId: string`. Returns `{ success: boolean }`.                                |
+| `agent:send-message`       | Renderer → Main | Send a follow-up message. Args: `{ sessionId, content }`.                                                       |
+| `agent:respond-permission` | Renderer → Main | Respond to a permission request. Args: `{ sessionId, requestId, allow }`.                                       |
+| `agent:list`               | Renderer → Main | List all agent sessions. Returns `AgentSessionInfo[]`.                                                          |
+| `agent:get-messages`       | Renderer → Main | Get message history. Args: `sessionId`. Returns `AgentMessage[]`.                                               |
+| `agent:status-changed`     | Main → Renderer | Agent state changed. Data: `AgentSessionInfo`.                                                                  |
+| `agent:output`             | Main → Renderer | New agent message. Data: `{ sessionId, message: AgentMessage }`.                                                |
+| `agent:permission-request` | Main → Renderer | Agent needs permission. Data: `{ sessionId, permission: PermissionRequest }`.                                   |
+| `agent:stream`             | Main → Renderer | Streaming text delta. Data: `{ sessionId, delta: string }`.                                                     |
 
 For a full list of IPC channels, see the preload bridge at `src/preload/index.ts`.
 

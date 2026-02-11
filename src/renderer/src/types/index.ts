@@ -521,12 +521,8 @@ declare global {
             cost: { inputTokens: number; outputTokens: number; totalCost: number };
           }) => void,
         ) => () => void;
-        agentStream: (
-          callback: (data: { sessionId: string; delta: string }) => void,
-        ) => () => void;
-        agentError: (
-          callback: (data: { sessionId: string; error: string }) => void,
-        ) => () => void;
+        agentStream: (callback: (data: { sessionId: string; delta: string }) => void) => () => void;
+        agentError: (callback: (data: { sessionId: string; error: string }) => void) => () => void;
         searchStatusChanged: (callback: (status: IndexStatus) => void) => () => void;
         searchModelProgress: (callback: (progress: ModelProgress) => void) => () => void;
       };

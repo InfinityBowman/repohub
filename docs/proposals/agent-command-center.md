@@ -99,15 +99,15 @@ Each tile shows a compact terminal preview (last 4 messages). Clicking a tile ex
 
 When launching an agent, pick a role that shapes its system prompt and behavior:
 
-| Role | What it does | Typical use |
-|------|-------------|-------------|
-| **Coder** | Writes features, fixes bugs, implements things | "Add auth to the API" |
-| **Reviewer** | Reviews uncommitted changes, finds issues, suggests fixes | "Review my changes before I commit" |
-| **Researcher** | Explores code, reads docs, investigates approaches | "How does the auth work in this project?" |
-| **Architect** | Discusses design, helps plan before coding | "Help me plan how to add real-time features" |
-| **Tester** | Writes and runs tests, checks coverage | "Add tests for the auth module" |
-| **Security** | Audits code for vulnerabilities, checks deps | "Audit this project for security issues" |
-| **Custom** | User-defined system prompt | Whatever you need |
+| Role           | What it does                                              | Typical use                                  |
+| -------------- | --------------------------------------------------------- | -------------------------------------------- |
+| **Coder**      | Writes features, fixes bugs, implements things            | "Add auth to the API"                        |
+| **Reviewer**   | Reviews uncommitted changes, finds issues, suggests fixes | "Review my changes before I commit"          |
+| **Researcher** | Explores code, reads docs, investigates approaches        | "How does the auth work in this project?"    |
+| **Architect**  | Discusses design, helps plan before coding                | "Help me plan how to add real-time features" |
+| **Tester**     | Writes and runs tests, checks coverage                    | "Add tests for the auth module"              |
+| **Security**   | Audits code for vulnerabilities, checks deps              | "Audit this project for security issues"     |
+| **Custom**     | User-defined system prompt                                | Whatever you need                            |
 
 Roles are just pre-configured system prompts + permission sets. The Reviewer role gets read-only tools. The Coder gets full access. The Researcher can read and search but not write. You can customize any of these.
 
@@ -183,6 +183,7 @@ The Grid view uses a more compact form — dropdown selectors instead of the ful
 #### Form Components
 
 **Repository Picker**
+
 - Searchable list of all repos RepoHub manages
 - Shows: repo name, project type badge, current branch, git status (ahead/behind/dirty)
 - Repos with existing running agents get a subtle indicator
@@ -190,6 +191,7 @@ The Grid view uses a more compact form — dropdown selectors instead of the ful
 - In Grid view: dropdown with search instead of inline list
 
 **Role Picker**
+
 - Grid of role cards (6 built-in + custom)
 - Each card: icon, name, one-line description
 - Selected card gets highlighted border + expanded description showing permissions
@@ -197,17 +199,20 @@ The Grid view uses a more compact form — dropdown selectors instead of the ful
 - Inspired by Maestro's expandable accordion pattern — selecting a role reveals its details inline
 
 **Task Input**
+
 - Multi-line text area (2–4 lines visible, expandable)
 - Placeholder: "What should this agent do?"
 - Optional — if left blank, agent starts in interactive mode (no initial prompt)
 - Cmd+Enter to submit (same as launch)
 
 **Mode Toggle**
+
 - **Supervised** (default): Agent asks for approval before writes. You see tool calls and can approve/deny.
 - **Autonomous**: Agent works independently. You see the stream but it doesn't wait for approval.
 - Read-only roles (Reviewer, Researcher) default to Autonomous since they can't make changes.
 
 **Advanced Options** (collapsed by default, expandable)
+
 - Custom environment variables (key-value pairs, borrowing from Maestro's AgentConfigPanel pattern)
 - Custom system prompt override (pre-filled from selected role)
 - Max token budget
@@ -216,6 +221,7 @@ The Grid view uses a more compact form — dropdown selectors instead of the ful
 #### Keyboard Flow
 
 The inline form is fully keyboard-navigable:
+
 1. Press `+` or `N` when tab strip is focused → opens new agent tab
 2. Type to filter repos → Enter to select
 3. Tab to role picker → arrow keys to select role → Enter to confirm
@@ -225,6 +231,7 @@ The inline form is fully keyboard-navigable:
 #### Transition Animation
 
 When "Launch Agent" is clicked:
+
 1. Form fields fade out (150ms)
 2. A brief "Connecting..." state shows with a spinner and the agent name
 3. Terminal content fades in from below as the PTY connects
@@ -285,6 +292,7 @@ The agent starts pre-loaded in the repo's directory with its CLAUDE.md (if it ex
 ### Session History
 
 Past agent sessions are saved and browsable:
+
 - See what an agent did, what files it changed, what it suggested
 - Re-launch a completed session to continue where it left off
 - Search across past sessions: "when did I last add auth to something?"
@@ -299,8 +307,8 @@ RepoHub spawns Claude Code via the CLI in its existing PTY infrastructure:
 // Launch claude code in a PTY (same as ProcessService.startProcess)
 const pty = spawn('claude', ['--print', ...flags], {
   cwd: repoPath,
-  env: { ...process.env, /* inject shared context path */ }
-})
+  env: { ...process.env /* inject shared context path */ },
+});
 ```
 
 **Two integration paths** (choose based on what's available):
@@ -315,24 +323,24 @@ Start with CLI mode since it works immediately with existing PTY infrastructure.
 
 ```typescript
 class AgentService extends EventEmitter {
-  launchAgent(config: AgentConfig): string  // returns agentId
-  stopAgent(agentId: string): void
-  sendMessage(agentId: string, message: string): void
-  getRunningAgents(): AgentInfo[]
-  getSessionHistory(repoId?: string): AgentSession[]
+  launchAgent(config: AgentConfig): string; // returns agentId
+  stopAgent(agentId: string): void;
+  sendMessage(agentId: string, message: string): void;
+  getRunningAgents(): AgentInfo[];
+  getSessionHistory(repoId?: string): AgentSession[];
 
   // Shared context
-  addSharedContext(key: string, value: string, source: string): void
-  getSharedContext(): SharedContextEntry[]
+  addSharedContext(key: string, value: string, source: string): void;
+  getSharedContext(): SharedContextEntry[];
 }
 
 interface AgentConfig {
-  repoId: string
-  repoPath: string
-  role: AgentRole
-  task?: string           // initial prompt
-  mode: 'autonomous' | 'supervised'
-  systemPrompt?: string   // custom role override
+  repoId: string;
+  repoPath: string;
+  role: AgentRole;
+  task?: string; // initial prompt
+  mode: 'autonomous' | 'supervised';
+  systemPrompt?: string; // custom role override
 }
 ```
 
@@ -344,13 +352,13 @@ Roles are stored as configurable presets:
 
 ```typescript
 interface AgentRole {
-  id: string
-  name: string
-  icon: string
-  description: string
-  systemPromptPrefix: string  // prepended to the agent's context
-  permissions: 'full' | 'read-write' | 'read-only'
-  color: string               // for UI badges
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  systemPromptPrefix: string; // prepended to the agent's context
+  permissions: 'full' | 'read-write' | 'read-only';
+  color: string; // for UI badges
 }
 ```
 
@@ -359,6 +367,7 @@ Default roles ship with the app. Users can edit or add custom roles in Settings.
 ### Shared Scratchpad
 
 Simple file-based approach:
+
 - `~/Library/Application Support/repohub/agent-context/` directory
 - One JSON file per active session group
 - Agents get the scratchpad path as an environment variable

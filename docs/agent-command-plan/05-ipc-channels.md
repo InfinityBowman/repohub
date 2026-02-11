@@ -3,6 +3,7 @@
 ## Overview
 
 All IPC channels follow the existing RepoHub pattern:
+
 - **Invoke** channels: Renderer calls main, gets a response (request/response)
 - **Send** channels: Main pushes events to renderer (one-way)
 - **Handler** registration: In `src/main/ipc/agent.handler.ts`
@@ -50,7 +51,7 @@ invoke('agent:stop', sessionId: string)
 Send a user message to an agent.
 
 ```typescript
-invoke('agent:send-message', { sessionId: string, content: string })
+invoke('agent:send-message', { sessionId: string, content: string });
 // Returns: void
 ```
 
@@ -77,7 +78,7 @@ invoke('agent:respond-permission', {
 Get all running and recent agents.
 
 ```typescript
-invoke('agent:list')
+invoke('agent:list');
 // Returns: AgentInfo[]
 ```
 
@@ -95,7 +96,7 @@ invoke('agent:get-messages', sessionId: string)
 Get persisted session history (completed sessions).
 
 ```typescript
-invoke('agent:get-history')
+invoke('agent:get-history');
 // Returns: PersistedSession[]
 ```
 
@@ -113,7 +114,7 @@ invoke('agent:resume', sessionId: string)
 Get shared context entries.
 
 ```typescript
-invoke('agent:get-shared-context')
+invoke('agent:get-shared-context');
 // Returns: SharedContextEntry[]
 ```
 
@@ -125,8 +126,8 @@ Add or update a shared context entry.
 invoke('agent:set-shared-context', {
   key: string,
   value: string,
-  source: string
-})
+  source: string,
+});
 // Returns: void
 ```
 
@@ -164,7 +165,7 @@ invoke('agent:interrupt', sessionId: string)
 Change the model mid-session.
 
 ```typescript
-invoke('agent:set-model', { sessionId: string, model: string })
+invoke('agent:set-model', { sessionId: string, model: string });
 // Returns: void
 ```
 
@@ -177,8 +178,8 @@ Emitted when an agent is fully launched.
 ```typescript
 send('agent:launched', {
   sessionId: string,
-  agent: AgentInfo
-})
+  agent: AgentInfo,
+});
 ```
 
 ### `agent:status-changed`
@@ -189,8 +190,8 @@ Emitted when agent state changes.
 send('agent:status-changed', {
   sessionId: string,
   state: AgentState,
-  previousState: AgentState
-})
+  previousState: AgentState,
+});
 ```
 
 ### `agent:output`
@@ -237,9 +238,9 @@ send('agent:result', {
     total_cost_usd: number,
     usage: TokenUsage,
     duration_ms: number,
-    num_turns: number
-  }
-})
+    num_turns: number,
+  },
+});
 ```
 
 ### `agent:stream`
@@ -267,9 +268,9 @@ send('agent:completed', {
     tokens: TokenUsage,
     cost: number,
     duration: number,
-    filesChanged: number
-  }
-})
+    filesChanged: number,
+  },
+});
 ```
 
 ### `agent:error`
@@ -280,8 +281,8 @@ Emitted on agent error (crash, timeout, etc.).
 send('agent:error', {
   sessionId: string,
   error: string,
-  recoverable: boolean  // true if resume is possible
-})
+  recoverable: boolean, // true if resume is possible
+});
 ```
 
 ### `agent:shared-context-updated`
@@ -304,8 +305,7 @@ const api = {
   agent: {
     launch: (config: AgentLaunchConfig) => ipcRenderer.invoke('agent:launch', config),
     stop: (id: string) => ipcRenderer.invoke('agent:stop', id),
-    sendMessage: (id: string, content: string) =>
-      ipcRenderer.invoke('agent:send-message', { sessionId: id, content }),
+    sendMessage: (id: string, content: string) => ipcRenderer.invoke('agent:send-message', { sessionId: id, content }),
     respondPermission: (agentId: string, requestId: string, response: PermissionResponse) =>
       ipcRenderer.invoke('agent:respond-permission', { sessionId: agentId, requestId, response }),
     list: () => ipcRenderer.invoke('agent:list'),
@@ -315,16 +315,14 @@ const api = {
     getSharedContext: () => ipcRenderer.invoke('agent:get-shared-context'),
     setSharedContext: (entry: { key: string; value: string; source: string }) =>
       ipcRenderer.invoke('agent:set-shared-context', entry),
-    removeSharedContext: (key: string) =>
-      ipcRenderer.invoke('agent:remove-shared-context', key),
+    removeSharedContext: (key: string) => ipcRenderer.invoke('agent:remove-shared-context', key),
 
     // Phase 2
     getDiff: (id: string) => ipcRenderer.invoke('agent:get-diff', id),
     interrupt: (id: string) => ipcRenderer.invoke('agent:interrupt', id),
-    setModel: (id: string, model: string) =>
-      ipcRenderer.invoke('agent:set-model', { sessionId: id, model }),
+    setModel: (id: string, model: string) => ipcRenderer.invoke('agent:set-model', { sessionId: id, model }),
   },
-}
+};
 ```
 
 ## IPC Handler Registration
@@ -332,44 +330,41 @@ const api = {
 ```typescript
 // src/main/ipc/agent.handler.ts
 
-export function registerAgentHandlers(
-  agentService: AgentService,
-  mainWindow: BrowserWindow
-): void {
+export function registerAgentHandlers(agentService: AgentService, mainWindow: BrowserWindow): void {
   // Invoke handlers
   ipcMain.handle('agent:launch', async (_e, config) => {
-    const sessionId = await agentService.launchAgent(config)
-    return { sessionId, state: 'starting' }
-  })
+    const sessionId = await agentService.launchAgent(config);
+    return { sessionId, state: 'starting' };
+  });
 
   ipcMain.handle('agent:stop', async (_e, sessionId) => {
-    agentService.stopAgent(sessionId)
-  })
+    agentService.stopAgent(sessionId);
+  });
 
   ipcMain.handle('agent:send-message', async (_e, { sessionId, content }) => {
-    agentService.sendMessage(sessionId, content)
-  })
+    agentService.sendMessage(sessionId, content);
+  });
 
   ipcMain.handle('agent:respond-permission', async (_e, { sessionId, requestId, response }) => {
-    agentService.respondPermission(sessionId, requestId, response)
-  })
+    agentService.respondPermission(sessionId, requestId, response);
+  });
 
   ipcMain.handle('agent:list', async () => {
-    return agentService.getAllAgents()
-  })
+    return agentService.getAllAgents();
+  });
 
   ipcMain.handle('agent:get-messages', async (_e, sessionId) => {
-    return agentService.getMessageHistory(sessionId)
-  })
+    return agentService.getMessageHistory(sessionId);
+  });
 
   ipcMain.handle('agent:get-history', async () => {
-    return agentService.getSessionHistory()
-  })
+    return agentService.getSessionHistory();
+  });
 
   ipcMain.handle('agent:resume', async (_e, sessionId) => {
-    const newId = await agentService.resumeSession(sessionId)
-    return { sessionId: newId }
-  })
+    const newId = await agentService.resumeSession(sessionId);
+    return { sessionId: newId };
+  });
 
   // ... shared context handlers ...
 
@@ -384,12 +379,12 @@ export function registerAgentHandlers(
     'agent:completed',
     'agent:error',
     'agent:shared-context-updated',
-  ]
+  ];
 
   for (const event of forwardEvents) {
-    agentService.on(event, (data) => {
-      mainWindow.webContents.send(event, data)
-    })
+    agentService.on(event, data => {
+      mainWindow.webContents.send(event, data);
+    });
   }
 }
 ```

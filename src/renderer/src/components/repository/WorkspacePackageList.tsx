@@ -54,47 +54,47 @@ function PackageItem({ repo, pkg }: { repo: Repository; pkg: WorkspacePackage })
           )}
         </div>
         <div className='flex items-center gap-0.5'>
-            {running ?
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant='ghost' size='icon-xs' onClick={handleRestart}>
-                      <RotateCcw className='h-3.5 w-3.5' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Restart</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon-xs'
-                      onClick={handleStop}
-                      className='hover:bg-destructive/20 hover:text-destructive-foreground'
-                    >
-                      <Square className='h-3.5 w-3.5' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Stop</TooltipContent>
-                </Tooltip>
-              </>
-            : <Tooltip>
+          {running ?
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant='ghost' size='icon-xs' onClick={handleRestart}>
+                    <RotateCcw className='h-3.5 w-3.5' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Restart</TooltipContent>
+              </Tooltip>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
                     size='icon-xs'
-                    onClick={handleStart}
-                    disabled={!defaultScript}
-                    className='hover:bg-green-900/30 hover:text-green-400'
+                    onClick={handleStop}
+                    className='hover:bg-destructive/20 hover:text-destructive-foreground'
                   >
-                    <Play className='h-3.5 w-3.5' />
+                    <Square className='h-3.5 w-3.5' />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {defaultScript ? `Run: ${defaultScript}` : 'No scripts available'}
-                </TooltipContent>
+                <TooltipContent>Stop</TooltipContent>
               </Tooltip>
-            }
+            </>
+          : <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-xs'
+                  onClick={handleStart}
+                  disabled={!defaultScript}
+                  className='hover:bg-green-900/30 hover:text-green-400'
+                >
+                  <Play className='h-3.5 w-3.5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {defaultScript ? `Run: ${defaultScript}` : 'No scripts available'}
+              </TooltipContent>
+            </Tooltip>
+          }
         </div>
       </div>
       {(running || showTerminal) && terminalData[compositeKey] && (
@@ -115,16 +115,16 @@ export function WorkspacePackageList({ repo }: { repo: Repository }) {
         <span>{repo.workspace.packages.length} packages</span>
         {repo.workspace.hasTurbo && (
           <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge
-                  variant='outline'
-                  className='border-cyan-800/50 bg-cyan-900/20 px-1.5 py-0 text-[10px] text-cyan-400'
-                >
-                  Turborepo
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>Uses Turborepo for optimized builds</TooltipContent>
-            </Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant='outline'
+                className='border-cyan-800/50 bg-cyan-900/20 px-1.5 py-0 text-[10px] text-cyan-400'
+              >
+                Turborepo
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>Uses Turborepo for optimized builds</TooltipContent>
+          </Tooltip>
         )}
         <span>{repo.workspace.packageManager}</span>
       </div>

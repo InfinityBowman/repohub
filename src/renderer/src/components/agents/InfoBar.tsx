@@ -72,33 +72,34 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
         <PopoverContent align='start' className='w-80'>
           <div className='space-y-3'>
             <div>
-              <p className='text-xs font-medium text-muted-foreground'>Task</p>
+              <p className='text-muted-foreground text-xs font-medium'>Task</p>
               <p className='mt-0.5 text-sm'>{agent.config.task}</p>
             </div>
-            <div className='h-px bg-gradient-to-r from-transparent via-border to-transparent' />
+            <div className='via-border h-px bg-gradient-to-r from-transparent to-transparent' />
             <div className='grid grid-cols-2 gap-2 text-xs'>
               <div>
                 <span className='text-muted-foreground'>Repository</span>
                 <div className='mt-0.5 flex items-center gap-1'>
-                  <FolderGit2 className='h-3 w-3 text-muted-foreground' />
+                  <FolderGit2 className='text-muted-foreground h-3 w-3' />
                   <span className='font-medium'>{agent.config.repoName}</span>
                 </div>
               </div>
               <div>
                 <span className='text-muted-foreground'>Session</span>
-                <p className='mt-0.5 font-mono text-muted-foreground'>
-                  {agent.id.slice(0, 8)}
-                </p>
+                <p className='text-muted-foreground mt-0.5 font-mono'>{agent.id.slice(0, 8)}</p>
               </div>
               <div>
                 <span className='text-muted-foreground'>Path</span>
-                <p className='mt-0.5 truncate font-mono text-muted-foreground' title={agent.config.repoPath}>
+                <p
+                  className='text-muted-foreground mt-0.5 truncate font-mono'
+                  title={agent.config.repoPath}
+                >
                   {agent.config.repoPath}
                 </p>
               </div>
               <div>
                 <span className='text-muted-foreground'>Started</span>
-                <p className='mt-0.5 text-muted-foreground'>
+                <p className='text-muted-foreground mt-0.5'>
                   {new Date(agent.startedAt).toLocaleTimeString()}
                 </p>
               </div>
@@ -135,7 +136,8 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            {agent.cost.inputTokens.toLocaleString()} input / {agent.cost.outputTokens.toLocaleString()} output tokens
+            {agent.cost.inputTokens.toLocaleString()} input /{' '}
+            {agent.cost.outputTokens.toLocaleString()} output tokens
           </TooltipContent>
         </Tooltip>
       )}
@@ -143,12 +145,7 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
       {isActive && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              size='sm'
-              variant='destructive'
-              className='h-7 w-7 p-0'
-              onClick={onStop}
-            >
+            <Button size='sm' variant='destructive' className='h-7 w-7 p-0' onClick={onStop}>
               <Square className='h-3 w-3' />
             </Button>
           </TooltipTrigger>

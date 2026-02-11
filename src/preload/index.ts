@@ -31,10 +31,8 @@ const electronAPI = {
       ipcRenderer.invoke('process:restart-package', repoId, packageName, scriptName),
     resizePackage: (repoId: string, packageName: string, cols: number, rows: number) =>
       ipcRenderer.invoke('process:resize-package', repoId, packageName, cols, rows),
-    write: (repoId: string, data: string) =>
-      ipcRenderer.invoke('process:write', repoId, data),
-    openShell: (repoId: string) =>
-      ipcRenderer.invoke('process:open-shell', repoId),
+    write: (repoId: string, data: string) => ipcRenderer.invoke('process:write', repoId, data),
+    openShell: (repoId: string) => ipcRenderer.invoke('process:open-shell', repoId),
   },
 
   ports: {
@@ -79,8 +77,7 @@ const electronAPI = {
     createPR: (repoId: string) => ipcRenderer.invoke('github:create-pr', repoId),
     searchTrending: (language?: string, period?: string) =>
       ipcRenderer.invoke('github:trending', language, period),
-    getTrendingReadme: (fullName: string) =>
-      ipcRenderer.invoke('github:trending-readme', fullName),
+    getTrendingReadme: (fullName: string) => ipcRenderer.invoke('github:trending-readme', fullName),
   },
 
   scaffold: {
@@ -98,23 +95,19 @@ const electronAPI = {
   },
 
   packages: {
-    search: (query: string, limit?: number) =>
-      ipcRenderer.invoke('packages:search', query, limit),
-    getDetails: (packageName: string) =>
-      ipcRenderer.invoke('packages:get-details', packageName),
+    search: (query: string, limit?: number) => ipcRenderer.invoke('packages:search', query, limit),
+    getDetails: (packageName: string) => ipcRenderer.invoke('packages:get-details', packageName),
   },
 
   packageClone: {
     clone: (packageName: string, repoUrl: string) =>
       ipcRenderer.invoke('package-clone:clone', packageName, repoUrl),
-    getStatus: (packageName: string) =>
-      ipcRenderer.invoke('package-clone:status', packageName),
+    getStatus: (packageName: string) => ipcRenderer.invoke('package-clone:status', packageName),
     listFiles: (packageName: string, relativePath?: string) =>
       ipcRenderer.invoke('package-clone:list-files', packageName, relativePath || ''),
     readFile: (packageName: string, relativePath: string) =>
       ipcRenderer.invoke('package-clone:read-file', packageName, relativePath),
-    deleteClone: (packageName: string) =>
-      ipcRenderer.invoke('package-clone:delete', packageName),
+    deleteClone: (packageName: string) => ipcRenderer.invoke('package-clone:delete', packageName),
   },
 
   agent: {

@@ -31,18 +31,18 @@ export function HealthDetailPopover({
           <div className='flex items-center justify-between'>
             <h4 className='text-sm font-medium'>Dependency Health</h4>
             <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon-xs'
-                    onClick={() => checkHealth(repoId)}
-                    disabled={checking}
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 ${checking ? 'animate-spin' : ''}`} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Re-check dependencies</TooltipContent>
-              </Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon-xs'
+                  onClick={() => checkHealth(repoId)}
+                  disabled={checking}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${checking ? 'animate-spin' : ''}`} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Re-check dependencies</TooltipContent>
+            </Tooltip>
           </div>
 
           {health.vulnerabilities.total > 0 && (

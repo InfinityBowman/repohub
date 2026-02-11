@@ -12,6 +12,9 @@ import type {
 } from '../types/agent.types';
 import { BUILT_IN_ROLES } from '../types/agent.types';
 
+const SIGKILL_DELAY_MS = 5000;
+const TOOL_RESULT_MAX_DISPLAY = 2000;
+
 export class AgentService extends EventEmitter {
   private sessions = new Map<string, AgentSession>();
   private processes = new Map<string, ChildProcess>();
@@ -40,12 +43,16 @@ export class AgentService extends EventEmitter {
 
     const args = [
       '-p',
-      '--output-format', 'stream-json',
-      '--input-format', 'stream-json',
+      '--output-format',
+      'stream-json',
+      '--input-format',
+      'stream-json',
       '--verbose',
       '--include-partial-messages',
-      '--permission-mode', permissionMode,
-      '--system-prompt', role.systemPrompt,
+      '--permission-mode',
+      permissionMode,
+      '--system-prompt',
+      role.systemPrompt,
     ];
 
     try {
@@ -56,12 +63,13 @@ export class AgentService extends EventEmitter {
       this.emit('agent:launched', this.toSessionInfo(session));
 
       // Send initial task via stdin NDJSON
-      const initMsg = JSON.stringify({
-        type: 'user',
-        message: { role: 'user', content: config.task },
-        session_id: 'init',
-        parent_tool_use_id: null,
-      }) + '\n';
+      const initMsg =
+        JSON.stringify({
+          type: 'user',
+          message: { role: 'user', content: config.task },
+          session_id: 'init',
+          parent_tool_use_id: null,
+        }) + '\n';
       child.stdin?.write(initMsg);
 
       return { sessionId };
@@ -84,7 +92,7 @@ export class AgentService extends EventEmitter {
         if (this.processes.has(sessionId)) {
           child.kill('SIGKILL');
         }
-      }, 5000);
+      }, SIGKILL_DELAY_MS);
     }
 
     session.state = 'completed';
@@ -117,12 +125,16 @@ export class AgentService extends EventEmitter {
     this.stdoutBuffers.set(sessionId, '');
 
     const args = [
-      '--resume', cliSessionId,
-      '--output-format', 'stream-json',
-      '--input-format', 'stream-json',
+      '--resume',
+      cliSessionId,
+      '--output-format',
+      'stream-json',
+      '--input-format',
+      'stream-json',
       '--verbose',
       '--include-partial-messages',
-      '--permission-mode', permissionMode,
+      '--permission-mode',
+      permissionMode,
     ];
 
     try {
@@ -153,23 +165,20 @@ export class AgentService extends EventEmitter {
     this.addMessage(sessionId, 'user', content);
 
     // stdin stream-json format: {"type":"user","message":{"role":"user","content":"..."},"session_id":"..."}
-    const msg = JSON.stringify({
-      type: 'user',
-      message: { role: 'user', content },
-      session_id: session.cliSessionId || 'default',
-      parent_tool_use_id: null,
-    }) + '\n';
+    const msg =
+      JSON.stringify({
+        type: 'user',
+        message: { role: 'user', content },
+        session_id: session.cliSessionId || 'default',
+        parent_tool_use_id: null,
+      }) + '\n';
     child.stdin.write(msg);
 
     session.state = 'working';
     this.emitStatusChanged(sessionId);
   }
 
-  respondPermission(
-    _sessionId: string,
-    _requestId: string,
-    _allow: boolean,
-  ): void {
+  respondPermission(_sessionId: string, _requestId: string, _allow: boolean): void {
     // Permission handling in print mode uses --permission-mode flag at launch.
     // Interactive permission approval via stdin is not supported in basic stream-json mode.
     // For supervised mode, use --permission-mode acceptEdits (auto-approves edits).
@@ -275,7 +284,11 @@ export class AgentService extends EventEmitter {
       case 'system': {
         session.cliSessionId = msg.session_id;
         const tools = msg.tools ? ` tools: ${msg.tools.join(', ')}` : '';
-        this.addMessage(sessionId, 'system', `Connected (model: ${msg.model || 'unknown'}${tools})`);
+        this.addMessage(
+          sessionId,
+          'system',
+          `Connected (model: ${msg.model || 'unknown'}${tools})`,
+        );
         break;
       }
 
@@ -315,11 +328,13 @@ export class AgentService extends EventEmitter {
         if (content && Array.isArray(content)) {
           for (const block of content) {
             if (block.type === 'tool_result') {
-              const text = typeof block.content === 'string'
-                ? block.content
-                : JSON.stringify(block.content);
+              const text =
+                typeof block.content === 'string' ? block.content : JSON.stringify(block.content);
               // Truncate long tool results for display
-              const truncated = text.length > 2000 ? text.slice(0, 2000) + '\n... (truncated)' : text;
+              const truncated =
+                text.length > TOOL_RESULT_MAX_DISPLAY
+                  ? text.slice(0, TOOL_RESULT_MAX_DISPLAY) + '\n... (truncated)'
+                  : text;
               this.addMessage(sessionId, 'tool_result', truncated, {
                 toolName: block.tool_use_id,
               });
@@ -363,8 +378,11 @@ export class AgentService extends EventEmitter {
           this.addMessage(sessionId, 'system', `Permission denied for: ${denied}`);
         }
 
-        this.addMessage(sessionId, 'result',
-          `Completed (${msg.num_turns || 0} turns, $${session.cost.totalCost.toFixed(4)})`);
+        this.addMessage(
+          sessionId,
+          'result',
+          `Completed (${msg.num_turns || 0} turns, $${session.cost.totalCost.toFixed(4)})`,
+        );
 
         session.state = 'idle';
         this.emitStatusChanged(sessionId);

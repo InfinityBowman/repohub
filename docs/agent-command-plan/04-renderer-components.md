@@ -6,49 +6,49 @@
 
 ```typescript
 // src/renderer/src/store/agentStore.ts
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 interface AgentState {
   // Agent data
-  agents: Map<string, AgentInfo>
-  activeAgentId: string | null
-  viewMode: 'focused' | 'grid'
+  agents: Map<string, AgentInfo>;
+  activeAgentId: string | null;
+  viewMode: 'focused' | 'grid';
 
   // Message histories (per agent)
-  messages: Map<string, AgentMessage[]>
+  messages: Map<string, AgentMessage[]>;
 
   // Pending permission requests
-  pendingPermissions: Map<string, PermissionRequest[]>
+  pendingPermissions: Map<string, PermissionRequest[]>;
 
   // Streaming state (accumulating text per agent)
-  streaming: Map<string, string>
+  streaming: Map<string, string>;
 
   // Session history (completed sessions)
-  sessionHistory: PersistedSession[]
+  sessionHistory: PersistedSession[];
 
   // Shared context
-  sharedContext: SharedContextEntry[]
+  sharedContext: SharedContextEntry[];
 
   // Actions
-  setAgents: (agents: AgentInfo[]) => void
-  addAgent: (agent: AgentInfo) => void
-  updateAgent: (id: string, updates: Partial<AgentInfo>) => void
-  removeAgent: (id: string) => void
+  setAgents: (agents: AgentInfo[]) => void;
+  addAgent: (agent: AgentInfo) => void;
+  updateAgent: (id: string, updates: Partial<AgentInfo>) => void;
+  removeAgent: (id: string) => void;
 
-  setActiveAgent: (id: string | null) => void
-  setViewMode: (mode: 'focused' | 'grid') => void
+  setActiveAgent: (id: string | null) => void;
+  setViewMode: (mode: 'focused' | 'grid') => void;
 
-  appendMessage: (agentId: string, message: AgentMessage) => void
-  setMessages: (agentId: string, messages: AgentMessage[]) => void
+  appendMessage: (agentId: string, message: AgentMessage) => void;
+  setMessages: (agentId: string, messages: AgentMessage[]) => void;
 
-  addPermissionRequest: (agentId: string, request: PermissionRequest) => void
-  removePermissionRequest: (agentId: string, requestId: string) => void
+  addPermissionRequest: (agentId: string, request: PermissionRequest) => void;
+  removePermissionRequest: (agentId: string, requestId: string) => void;
 
-  appendStreamChunk: (agentId: string, chunk: string) => void
-  clearStream: (agentId: string) => void
+  appendStreamChunk: (agentId: string, chunk: string) => void;
+  clearStream: (agentId: string) => void;
 
-  setSessionHistory: (sessions: PersistedSession[]) => void
-  setSharedContext: (entries: SharedContextEntry[]) => void
+  setSessionHistory: (sessions: PersistedSession[]) => void;
+  setSharedContext: (entries: SharedContextEntry[]) => void;
 }
 ```
 
@@ -56,23 +56,23 @@ interface AgentState {
 
 ```typescript
 interface AgentInfo {
-  id: string
-  config: AgentLaunchConfig
-  state: AgentState     // 'starting' | 'connected' | 'working' | 'idle' | etc
-  model?: string
-  pid?: number
-  cliSessionId?: string
+  id: string;
+  config: AgentLaunchConfig;
+  state: AgentState; // 'starting' | 'connected' | 'working' | 'idle' | etc
+  model?: string;
+  pid?: number;
+  cliSessionId?: string;
 
   // Stats
-  tokensUsed: number
-  costUsd: number
-  startedAt: number
-  completedAt?: number
-  filesChanged: number
+  tokensUsed: number;
+  costUsd: number;
+  startedAt: number;
+  completedAt?: number;
+  filesChanged: number;
 
   // Context (Phase 2+)
-  contextUsed?: number
-  contextMax?: number
+  contextUsed?: number;
+  contextMax?: number;
 }
 ```
 
@@ -82,64 +82,67 @@ interface AgentInfo {
 // src/renderer/src/hooks/useAgents.ts
 
 // Module-level listener count (StrictMode pattern from useProcesses.ts)
-let listenerCount = 0
+let listenerCount = 0;
 
 export function useAgents() {
-  const store = useAgentStore()
+  const store = useAgentStore();
 
   useEffect(() => {
-    listenerCount++
-    if (listenerCount > 1) return () => { listenerCount-- }
+    listenerCount++;
+    if (listenerCount > 1)
+      return () => {
+        listenerCount--;
+      };
 
     // Register IPC listeners
     const listeners = {
       'agent:launched': (_e, data) => {
-        store.addAgent(data.agent)
+        store.addAgent(data.agent);
       },
       'agent:status-changed': (_e, data) => {
-        store.updateAgent(data.sessionId, { state: data.state })
+        store.updateAgent(data.sessionId, { state: data.state });
       },
       'agent:output': (_e, data) => {
         // Parse assistant message into AgentMessages
-        const messages = parseAssistantMessage(data.message)
+        const messages = parseAssistantMessage(data.message);
         for (const msg of messages) {
-          store.appendMessage(data.sessionId, msg)
+          store.appendMessage(data.sessionId, msg);
         }
       },
       'agent:permission-request': (_e, data) => {
-        store.addPermissionRequest(data.sessionId, data.request)
+        store.addPermissionRequest(data.sessionId, data.request);
       },
       'agent:result': (_e, data) => {
         store.updateAgent(data.sessionId, {
           tokensUsed: data.result.usage.output_tokens + data.result.usage.input_tokens,
           costUsd: data.result.total_cost_usd,
           state: data.result.is_error ? 'error' : 'idle',
-        })
+        });
       },
       'agent:stream': (_e, data) => {
         if (data.event.event === 'content_block_delta') {
-          const text = data.event.data.text || data.event.data.thinking || ''
-          store.appendStreamChunk(data.sessionId, text)
+          const text = data.event.data.text || data.event.data.thinking || '';
+          store.appendStreamChunk(data.sessionId, text);
         }
       },
-    }
+    };
 
     for (const [channel, handler] of Object.entries(listeners)) {
-      window.electron.ipcRenderer.on(channel, handler)
+      window.electron.ipcRenderer.on(channel, handler);
     }
 
     // Initial load
-    window.electron.agent.list().then(agents => store.setAgents(agents))
-    window.electron.agent.getHistory().then(h => store.setSessionHistory(h))
-    window.electron.agent.getSharedContext().then(c => store.setSharedContext(c))
+    window.electron.agent.list().then(agents => store.setAgents(agents));
+    window.electron.agent.getHistory().then(h => store.setSessionHistory(h));
+    window.electron.agent.getSharedContext().then(c => store.setSharedContext(c));
 
     return () => {
-      listenerCount--
+      listenerCount--;
       for (const channel of Object.keys(listeners)) {
-        window.electron.ipcRenderer.removeAllListeners(channel)
+        window.electron.ipcRenderer.removeAllListeners(channel);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return {
     agents: store.agents,
@@ -161,7 +164,7 @@ export function useAgents() {
 
     setActiveAgent: store.setActiveAgent,
     setViewMode: store.setViewMode,
-  }
+  };
 }
 ```
 
