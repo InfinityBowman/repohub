@@ -6,6 +6,7 @@ interface AgentState {
   activeAgentId: string | null;
   messages: Record<string, AgentMessage[]>;
   streaming: Record<string, string>;
+  streamingThinking: Record<string, string>;
   showLaunchPanel: boolean;
   sessionHistory: ClaudeSessionSummary[];
   viewingHistorySessionId: string | null;
@@ -18,6 +19,8 @@ interface AgentState {
   setMessages: (sessionId: string, messages: AgentMessage[]) => void;
   appendStreamChunk: (sessionId: string, delta: string) => void;
   clearStream: (sessionId: string) => void;
+  appendStreamThinkingChunk: (sessionId: string, delta: string) => void;
+  clearStreamThinking: (sessionId: string) => void;
   setShowLaunchPanel: (show: boolean) => void;
   setSessionHistory: (sessions: ClaudeSessionSummary[]) => void;
   setViewingHistorySessionId: (id: string | null) => void;
@@ -28,6 +31,7 @@ export const useAgentStore = create<AgentState>(set => ({
   activeAgentId: null,
   messages: {},
   streaming: {},
+  streamingThinking: {},
   showLaunchPanel: false,
   sessionHistory: [],
   viewingHistorySessionId: null,
@@ -47,10 +51,12 @@ export const useAgentStore = create<AgentState>(set => ({
       const { [id]: _, ...rest } = state.agents;
       const { [id]: _msgs, ...restMsgs } = state.messages;
       const { [id]: _stream, ...restStream } = state.streaming;
+      const { [id]: _thinkStream, ...restThinkStream } = state.streamingThinking;
       return {
         agents: rest,
         messages: restMsgs,
         streaming: restStream,
+        streamingThinking: restThinkStream,
         activeAgentId: state.activeAgentId === id ? null : state.activeAgentId,
       };
     }),
@@ -81,6 +87,19 @@ export const useAgentStore = create<AgentState>(set => ({
   clearStream: sessionId =>
     set(state => ({
       streaming: { ...state.streaming, [sessionId]: '' },
+    })),
+
+  appendStreamThinkingChunk: (sessionId, delta) =>
+    set(state => ({
+      streamingThinking: {
+        ...state.streamingThinking,
+        [sessionId]: (state.streamingThinking[sessionId] || '') + delta,
+      },
+    })),
+
+  clearStreamThinking: sessionId =>
+    set(state => ({
+      streamingThinking: { ...state.streamingThinking, [sessionId]: '' },
     })),
 
   setShowLaunchPanel: show => set({ showLaunchPanel: show }),

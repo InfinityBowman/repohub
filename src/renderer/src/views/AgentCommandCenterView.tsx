@@ -52,6 +52,15 @@ function formatDuration(seconds: number): string {
   return `${hours}h ${remainingMinutes}m`;
 }
 
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className='flex shrink-0 items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400'>
+      <AlertCircle className='h-4 w-4 shrink-0' />
+      {message}
+    </div>
+  );
+}
+
 function SessionRow({
   session,
   onView,
@@ -122,6 +131,7 @@ export function AgentCommandCenterView() {
     activeAgentId,
     messages,
     streaming,
+    streamingThinking,
     showLaunchPanel,
     sessionHistory,
     viewingHistorySessionId,
@@ -148,6 +158,7 @@ export function AgentCommandCenterView() {
   const activeAgent = activeAgentId ? agents[activeAgentId] : null;
   const activeMessages = activeAgentId ? messages[activeAgentId] || [] : [];
   const activeStreaming = activeAgentId ? streaming[activeAgentId] || '' : '';
+  const activeStreamingThinking = activeAgentId ? streamingThinking[activeAgentId] || '' : '';
 
   const viewKey = viewingHistorySessionId ? `history:${viewingHistorySessionId}` : null;
   const viewingMessages = viewKey ? messages[viewKey] || [] : [];
@@ -339,7 +350,7 @@ export function AgentCommandCenterView() {
       <div className='flex h-full flex-col gap-2 overflow-hidden'>
         {header}
         <InfoBar agent={activeAgent} onStop={handleStop} />
-        <AgentTerminal messages={activeMessages} streamingText={activeStreaming} />
+        <AgentTerminal messages={activeMessages} streamingText={activeStreaming} streamingThinking={activeStreamingThinking} />
         <MessageInput agentState={activeAgent.state} onSend={handleSendMessage} />
       </div>
     );
@@ -380,12 +391,7 @@ export function AgentCommandCenterView() {
             </Button>
           )}
         </div>
-        {resumeError && (
-          <div className='flex shrink-0 items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400'>
-            <AlertCircle className='h-4 w-4 shrink-0' />
-            {resumeError}
-          </div>
-        )}
+        {resumeError && <ErrorBanner message={resumeError} />}
         <AgentTerminal messages={viewingMessages} streamingText='' />
       </div>
     );
@@ -400,12 +406,7 @@ export function AgentCommandCenterView() {
       {header}
 
       {/* Resume error */}
-      {resumeError && (
-        <div className='flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400'>
-          <AlertCircle className='h-4 w-4 shrink-0' />
-          {resumeError}
-        </div>
-      )}
+      {resumeError && <ErrorBanner message={resumeError} />}
 
       {/* Repo selector + refresh */}
       {repositories.length > 0 && (

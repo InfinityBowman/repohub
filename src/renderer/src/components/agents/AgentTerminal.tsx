@@ -11,6 +11,9 @@ import {
   Terminal,
   FileCode,
   FilePlus,
+  Brain,
+  ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import { CodeBlock } from '@/components/ui/code-block';
 import { DiffViewer, NewContentViewer } from '@/components/ui/diff-viewer';
@@ -150,28 +153,64 @@ const POPOVER_CODE_CLASSES =
 
 // --- Tool use + result grouping helper ---
 
-interface MessageGroup {
-  type: 'single' | 'tool_pair';
+interface MessageGroupSingle {
+  type: 'single';
   messages: AgentMessage[];
 }
+
+interface MessageGroupToolPair {
+  type: 'tool_pair';
+  messages: AgentMessage[];
+}
+
+interface MessageGroupToolBatch {
+  type: 'tool_batch';
+  toolName: string;
+  count: number;
+  pairs: AgentMessage[][];
+}
+
+type MessageGroup = MessageGroupSingle | MessageGroupToolPair | MessageGroupToolBatch;
 
 function groupMessages(messages: AgentMessage[]): MessageGroup[] {
   const groups: MessageGroup[] = [];
   let i = 0;
+
   while (i < messages.length) {
     const msg = messages[i];
-    if (
-      msg.type === 'tool_use' &&
-      i + 1 < messages.length &&
-      messages[i + 1].type === 'tool_result'
-    ) {
-      groups.push({ type: 'tool_pair', messages: [msg, messages[i + 1]] });
+
+    // Check for tool_use + tool_result pair
+    if (msg.type === 'tool_use' && i + 1 < messages.length && messages[i + 1].type === 'tool_result') {
+      const toolName = msg.toolName || '';
+      const pairs: AgentMessage[][] = [[msg, messages[i + 1]]];
       i += 2;
+
+      // Collect consecutive pairs with same tool name (skip if toolName is empty)
+      while (
+        toolName &&
+        i + 1 < messages.length &&
+        messages[i].type === 'tool_use' &&
+        messages[i + 1].type === 'tool_result' &&
+        messages[i].toolName === toolName
+      ) {
+        pairs.push([messages[i], messages[i + 1]]);
+        i += 2;
+      }
+
+      // Batch if 3+, otherwise emit individual tool_pairs
+      if (pairs.length >= 3) {
+        groups.push({ type: 'tool_batch', toolName, count: pairs.length, pairs });
+      } else {
+        for (const pair of pairs) {
+          groups.push({ type: 'tool_pair', messages: pair });
+        }
+      }
     } else {
       groups.push({ type: 'single', messages: [msg] });
-      i += 1;
+      i++;
     }
   }
+
   return groups;
 }
 
@@ -363,10 +402,75 @@ function ResultMessage({ message }: { message: AgentMessage }) {
   );
 }
 
+function ThinkingMessage({ message }: { message: AgentMessage }) {
+  const [expanded, setExpanded] = useState(false);
+  const firstLine = message.content.split('\n')[0] || '';
+  const preview = firstLine.length > 120 ? firstLine.slice(0, 120) + '...' : firstLine;
+
+  return (
+    <div className='py-1'>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className='flex w-full items-center gap-2 text-left transition-colors hover:text-purple-300'
+      >
+        <Brain className='h-3.5 w-3.5 shrink-0 text-purple-400/60' />
+        {expanded ?
+          <ChevronDown className='h-3 w-3 shrink-0 text-purple-400/40' />
+        : <ChevronRight className='h-3 w-3 shrink-0 text-purple-400/40' />}
+        <span className='text-muted-foreground truncate text-xs italic'>{preview}</span>
+      </button>
+      {expanded && (
+        <div className='mt-1 ml-8 rounded border border-purple-400/10 bg-purple-500/5 px-3 py-2'>
+          <p className='text-xs whitespace-pre-wrap text-purple-200/70 italic'>
+            {message.content}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolBatchGroup({ group }: { group: MessageGroupToolBatch }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className='ml-1 border-l border-yellow-400/15 pl-3'>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className='flex w-full items-center gap-2 py-1 text-left transition-colors hover:text-yellow-200'
+      >
+        <Wrench className='h-3.5 w-3.5 shrink-0 text-yellow-400/70' />
+        {expanded ?
+          <ChevronDown className='h-3 w-3 shrink-0 text-yellow-400/50' />
+        : <ChevronRight className='h-3 w-3 shrink-0 text-yellow-400/50' />}
+        <span className='inline-flex shrink-0 items-center rounded-md bg-yellow-400/10 px-1.5 py-0.5 text-xs font-medium text-yellow-300'>
+          {group.toolName}
+        </span>
+        <span className='text-muted-foreground text-xs'>
+          ({group.count} calls)
+        </span>
+      </button>
+      {expanded && (
+        <div className='mt-1 space-y-0.5'>
+          {group.pairs.map(pair => (
+            <div key={pair[0].id}>
+              {pair.map(msg => (
+                <MessageBlock key={msg.id} message={msg} />
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MessageBlock({ message }: { message: AgentMessage }) {
   switch (message.type) {
     case 'user':
       return <UserMessage message={message} />;
+    case 'thinking':
+      return <ThinkingMessage message={message} />;
     case 'assistant_text':
       return <AssistantTextMessage message={message} />;
     case 'tool_use':
@@ -389,14 +493,15 @@ function MessageBlock({ message }: { message: AgentMessage }) {
 interface AgentTerminalProps {
   messages: AgentMessage[];
   streamingText: string;
+  streamingThinking?: string;
 }
 
-export function AgentTerminal({ messages, streamingText }: AgentTerminalProps) {
+export function AgentTerminal({ messages, streamingText, streamingThinking }: AgentTerminalProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingText]);
+  }, [messages, streamingText, streamingThinking]);
 
   const groups = useMemo(() => groupMessages(messages), [messages]);
 
@@ -404,6 +509,9 @@ export function AgentTerminal({ messages, streamingText }: AgentTerminalProps) {
     <div className='min-h-0 flex-1 overflow-y-auto'>
       <div className='space-y-1 px-4 py-3'>
         {groups.map(group => {
+          if (group.type === 'tool_batch') {
+            return <ToolBatchGroup key={group.pairs[0][0].id} group={group} />;
+          }
           if (group.type === 'tool_pair') {
             return (
               <div key={group.messages[0].id} className='ml-1 border-l border-yellow-400/15 pl-3'>
@@ -415,6 +523,17 @@ export function AgentTerminal({ messages, streamingText }: AgentTerminalProps) {
           }
           return <MessageBlock key={group.messages[0].id} message={group.messages[0]} />;
         })}
+
+        {/* Streaming thinking */}
+        {streamingThinking && (
+          <div className='flex items-start gap-2 py-1'>
+            <Brain className='mt-0.5 h-3.5 w-3.5 shrink-0 animate-pulse text-purple-400/60' />
+            <span className='text-muted-foreground text-xs whitespace-pre-wrap italic'>
+              {streamingThinking}
+              <span className='inline-block animate-pulse text-purple-400'>|</span>
+            </span>
+          </div>
+        )}
 
         {/* Streaming text */}
         {streamingText && (

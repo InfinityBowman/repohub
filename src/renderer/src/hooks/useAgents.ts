@@ -46,14 +46,24 @@ export function useAgentListeners() {
         }
       });
 
+      const unsubStreamThinking = window.electron.on.agentStreamThinking(data => {
+        if (data.delta === '') {
+          useAgentStore.getState().clearStreamThinking(data.sessionId);
+        } else {
+          useAgentStore.getState().appendStreamThinkingChunk(data.sessionId, data.delta);
+        }
+      });
+
       const unsubError = window.electron.on.agentError(data => {
         const agent = useAgentStore.getState().agents[data.sessionId];
         if (agent) {
           useAgentStore.getState().updateAgent({ ...agent, state: 'error' });
         }
+        useAgentStore.getState().clearStream(data.sessionId);
+        useAgentStore.getState().clearStreamThinking(data.sessionId);
       });
 
-      cleanupFns = [unsubLaunched, unsubStatus, unsubOutput, unsubResult, unsubStream, unsubError];
+      cleanupFns = [unsubLaunched, unsubStatus, unsubOutput, unsubResult, unsubStream, unsubStreamThinking, unsubError];
     }
 
     return () => {
@@ -71,6 +81,7 @@ export function useAgents() {
   const activeAgentId = useAgentStore(s => s.activeAgentId);
   const messages = useAgentStore(s => s.messages);
   const streaming = useAgentStore(s => s.streaming);
+  const streamingThinking = useAgentStore(s => s.streamingThinking);
   const showLaunchPanel = useAgentStore(s => s.showLaunchPanel);
   const sessionHistory = useAgentStore(s => s.sessionHistory);
   const viewingHistorySessionId = useAgentStore(s => s.viewingHistorySessionId);
@@ -139,6 +150,7 @@ export function useAgents() {
     activeAgentId,
     messages,
     streaming,
+    streamingThinking,
     showLaunchPanel,
     sessionHistory,
     viewingHistorySessionId,

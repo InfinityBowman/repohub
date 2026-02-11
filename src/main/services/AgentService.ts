@@ -25,34 +25,15 @@ export class AgentService extends EventEmitter {
 
   async launchAgent(config: AgentLaunchConfig): Promise<{ sessionId: string }> {
     await this.validateRepoPath(config.repoPath);
-    const sessionId = randomUUID();
     const role = BUILT_IN_ROLES.find(r => r.id === config.roleId);
     if (!role) throw new Error(`Unknown role: ${config.roleId}`);
 
     const permissionMode = this.resolvePermissionMode(config);
-
-    const session: AgentSession = {
-      id: sessionId,
-      config,
-      state: 'starting',
-      messages: [],
-      cost: { inputTokens: 0, outputTokens: 0, totalCost: 0 },
-      startedAt: Date.now(),
-    };
-
-    this.sessions.set(sessionId, session);
-    this.stdoutBuffers.set(sessionId, '');
+    const { sessionId, session } = this.initSession(config);
 
     const args = [
       '-p',
-      '--output-format',
-      'stream-json',
-      '--input-format',
-      'stream-json',
-      '--verbose',
-      '--include-partial-messages',
-      '--permission-mode',
-      permissionMode,
+      ...this.baseStreamArgs(permissionMode),
       '--system-prompt',
       role.systemPrompt,
     ];
@@ -110,37 +91,13 @@ export class AgentService extends EventEmitter {
     config: AgentLaunchConfig,
   ): Promise<{ sessionId: string }> {
     await this.validateRepoPath(config.repoPath);
-    const sessionId = randomUUID();
     const role = BUILT_IN_ROLES.find(r => r.id === config.roleId);
     if (!role) throw new Error(`Unknown role: ${config.roleId}`);
 
     const permissionMode = this.resolvePermissionMode(config);
+    const { sessionId, session } = this.initSession(config, cliSessionId);
 
-    const session: AgentSession = {
-      id: sessionId,
-      config,
-      state: 'starting',
-      messages: [],
-      cost: { inputTokens: 0, outputTokens: 0, totalCost: 0 },
-      startedAt: Date.now(),
-      cliSessionId,
-    };
-
-    this.sessions.set(sessionId, session);
-    this.stdoutBuffers.set(sessionId, '');
-
-    const args = [
-      '--resume',
-      cliSessionId,
-      '--output-format',
-      'stream-json',
-      '--input-format',
-      'stream-json',
-      '--verbose',
-      '--include-partial-messages',
-      '--permission-mode',
-      permissionMode,
-    ];
+    const args = ['--resume', cliSessionId, ...this.baseStreamArgs(permissionMode)];
 
     try {
       this.spawnAndAttach(sessionId, session, args);
@@ -204,6 +161,40 @@ export class AgentService extends EventEmitter {
     this.cleanupTimers.clear();
   }
 
+  // --- Session helpers ---
+
+  private initSession(
+    config: AgentLaunchConfig,
+    cliSessionId?: string,
+  ): { sessionId: string; session: AgentSession } {
+    const sessionId = randomUUID();
+    const session: AgentSession = {
+      id: sessionId,
+      config,
+      state: 'starting',
+      messages: [],
+      cost: { inputTokens: 0, outputTokens: 0, totalCost: 0, contextTokens: 0 },
+      startedAt: Date.now(),
+      ...(cliSessionId && { cliSessionId }),
+    };
+    this.sessions.set(sessionId, session);
+    this.stdoutBuffers.set(sessionId, '');
+    return { sessionId, session };
+  }
+
+  private baseStreamArgs(permissionMode: PermissionMode): string[] {
+    return [
+      '--output-format',
+      'stream-json',
+      '--input-format',
+      'stream-json',
+      '--verbose',
+      '--include-partial-messages',
+      '--permission-mode',
+      permissionMode,
+    ];
+  }
+
   // --- Process management ---
 
   private async validateRepoPath(repoPath: string): Promise<void> {
@@ -257,6 +248,8 @@ export class AgentService extends EventEmitter {
       if (s && s.state !== 'completed') {
         s.state = 'completed';
         s.completedAt = Date.now();
+        this.emit('agent:stream', { sessionId, delta: '' });
+        this.emit('agent:stream-thinking', { sessionId, delta: '' });
         this.emitStatusChanged(sessionId);
         this.scheduleSessionCleanup(sessionId);
       }
@@ -268,6 +261,8 @@ export class AgentService extends EventEmitter {
       const s = this.sessions.get(sessionId);
       if (s) {
         s.state = 'error';
+        this.emit('agent:stream', { sessionId, delta: '' });
+        this.emit('agent:stream-thinking', { sessionId, delta: '' });
         this.addMessage(sessionId, 'error', `Failed to start claude CLI: ${err.message}`);
         this.emitStatusChanged(sessionId);
       }
@@ -302,6 +297,7 @@ export class AgentService extends EventEmitter {
       // Session init: {"type":"system","session_id":"...","model":"...","tools":[...],...}
       case 'system': {
         session.cliSessionId = msg.session_id;
+        if (msg.model) session.model = msg.model;
         const tools = msg.tools ? ` tools: ${msg.tools.join(', ')}` : '';
         this.addMessage(
           sessionId,
@@ -319,7 +315,10 @@ export class AgentService extends EventEmitter {
         const content = msg.message?.content;
         if (content && Array.isArray(content)) {
           for (const block of content) {
-            if (block.type === 'text') {
+            if (block.type === 'thinking') {
+              this.emit('agent:stream-thinking', { sessionId, delta: '' });
+              this.addMessage(sessionId, 'thinking', block.thinking);
+            } else if (block.type === 'text') {
               // Clear streaming text since we now have the full message
               this.emit('agent:stream', { sessionId, delta: '' });
               this.addMessage(sessionId, 'assistant_text', block.text);
@@ -337,6 +336,10 @@ export class AgentService extends EventEmitter {
         if (usage) {
           session.cost.inputTokens += usage.input_tokens || 0;
           session.cost.outputTokens += usage.output_tokens || 0;
+          // input_tokens represents the current context size (not cumulative)
+          if (usage.input_tokens) {
+            session.cost.contextTokens = usage.input_tokens;
+          }
         }
         break;
       }
@@ -366,11 +369,18 @@ export class AgentService extends EventEmitter {
       // Streaming events: {"type":"stream_event","event":{"type":"content_block_delta","delta":{"text":"..."}}}
       case 'stream_event': {
         const event = msg.event;
-        if (event?.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-          this.emit('agent:stream', {
-            sessionId,
-            delta: event.delta.text,
-          });
+        if (event?.type === 'content_block_delta') {
+          if (event.delta?.type === 'text_delta') {
+            this.emit('agent:stream', {
+              sessionId,
+              delta: event.delta.text,
+            });
+          } else if (event.delta?.type === 'thinking_delta') {
+            this.emit('agent:stream-thinking', {
+              sessionId,
+              delta: event.delta.thinking,
+            });
+          }
         }
         break;
       }
@@ -469,6 +479,7 @@ export class AgentService extends EventEmitter {
       state: session.state,
       pid: session.pid,
       cliSessionId: session.cliSessionId,
+      model: session.model,
       cost: { ...session.cost },
       startedAt: session.startedAt,
       completedAt: session.completedAt,

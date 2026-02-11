@@ -66,8 +66,9 @@ export interface AgentSession {
   state: AgentState;
   pid?: number;
   cliSessionId?: string;
+  model?: string;
   messages: AgentMessage[];
-  cost: { inputTokens: number; outputTokens: number; totalCost: number };
+  cost: { inputTokens: number; outputTokens: number; totalCost: number; contextTokens: number };
   startedAt: number;
   completedAt?: number;
 }
@@ -75,6 +76,7 @@ export interface AgentSession {
 export type AgentMessageType =
   | 'user'
   | 'assistant_text'
+  | 'thinking'
   | 'tool_use'
   | 'tool_result'
   | 'system'
@@ -105,7 +107,8 @@ export interface AgentSessionInfo {
   state: AgentState;
   pid?: number;
   cliSessionId?: string;
-  cost: { inputTokens: number; outputTokens: number; totalCost: number };
+  model?: string;
+  cost: { inputTokens: number; outputTokens: number; totalCost: number; contextTokens: number };
   startedAt: number;
   completedAt?: number;
   messageCount: number;

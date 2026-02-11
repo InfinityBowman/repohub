@@ -276,6 +276,7 @@ export interface AgentLaunchConfig {
 export type AgentMessageType =
   | 'user'
   | 'assistant_text'
+  | 'thinking'
   | 'tool_use'
   | 'tool_result'
   | 'system'
@@ -298,7 +299,8 @@ export interface AgentSessionInfo {
   state: AgentState;
   pid?: number;
   cliSessionId?: string;
-  cost: { inputTokens: number; outputTokens: number; totalCost: number };
+  model?: string;
+  cost: { inputTokens: number; outputTokens: number; totalCost: number; contextTokens: number };
   startedAt: number;
   completedAt?: number;
   messageCount: number;
@@ -506,6 +508,7 @@ declare global {
           }) => void,
         ) => () => void;
         agentStream: (callback: (data: { sessionId: string; delta: string }) => void) => () => void;
+        agentStreamThinking: (callback: (data: { sessionId: string; delta: string }) => void) => () => void;
         agentError: (callback: (data: { sessionId: string; error: string }) => void) => () => void;
         searchStatusChanged: (callback: (status: IndexStatus) => void) => () => void;
         searchModelProgress: (callback: (progress: ModelProgress) => void) => () => void;

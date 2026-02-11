@@ -253,6 +253,8 @@ export class ClaudeSessionReader {
           for (const block of content) {
             if (block.type === 'text' && block.text?.trim()) {
               messages.push(makeMsg('assistant_text', block.text));
+            } else if (block.type === 'thinking' && block.thinking?.trim()) {
+              messages.push(makeMsg('thinking', block.thinking));
             } else if (block.type === 'tool_use') {
               messages.push(
                 makeMsg('tool_use', block.name || 'Tool', {
@@ -261,7 +263,6 @@ export class ClaudeSessionReader {
                 }),
               );
             }
-            // Skip 'thinking' blocks — internal to the model
           }
         }
         break;

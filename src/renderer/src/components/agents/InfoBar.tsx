@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Square, Code, Eye, Search, DollarSign, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { AgentSessionInfo, AgentState } from '@/types';
+
+const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
+  'claude-opus-4-6': 200000,
+  'claude-sonnet-4-5': 200000,
+  'claude-haiku-4-5': 200000,
+};
 
 const ROLE_ICONS: Record<string, typeof Code> = {
   coder: Code,
@@ -49,6 +57,15 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
 
   const isActive = agent.state !== 'completed' && agent.state !== 'error';
 
+  const contextInfo = useMemo(() => {
+    const tokens = agent.cost.contextTokens;
+    if (!tokens || tokens <= 0) return null;
+    const modelKey = agent.model || '';
+    const maxTokens = MODEL_CONTEXT_WINDOWS[modelKey] || 200000;
+    const pct = Math.min(100, (tokens / maxTokens) * 100);
+    return { tokens, maxTokens, pct };
+  }, [agent.cost.contextTokens, agent.model]);
+
   return (
     <div className='flex shrink-0 items-center gap-2'>
       <Tooltip>
@@ -88,6 +105,27 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
           <TooltipContent>
             {agent.cost.inputTokens.toLocaleString()} input /{' '}
             {agent.cost.outputTokens.toLocaleString()} output tokens
+          </TooltipContent>
+        </Tooltip>
+      )}
+
+      {contextInfo && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className='w-20'>
+              <Progress
+                value={contextInfo.pct}
+                className={cn(
+                  'h-1.5 bg-muted',
+                  contextInfo.pct < 50 && '[&>[data-slot=progress-indicator]]:bg-green-500',
+                  contextInfo.pct >= 50 && contextInfo.pct < 80 && '[&>[data-slot=progress-indicator]]:bg-yellow-500',
+                  contextInfo.pct >= 80 && '[&>[data-slot=progress-indicator]]:bg-red-500',
+                )}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            Context: {contextInfo.tokens.toLocaleString()} / {contextInfo.maxTokens.toLocaleString()} tokens ({Math.round(contextInfo.pct)}%)
           </TooltipContent>
         </Tooltip>
       )}

@@ -198,6 +198,11 @@ const electronAPI = {
       ipcRenderer.on('agent:stream', handler);
       return () => ipcRenderer.removeListener('agent:stream', handler);
     },
+    agentStreamThinking: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:stream-thinking', handler);
+      return () => ipcRenderer.removeListener('agent:stream-thinking', handler);
+    },
     agentError: (callback: (data: any) => void) => {
       const handler = (_: any, data: any) => callback(data);
       ipcRenderer.on('agent:error', handler);

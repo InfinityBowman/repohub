@@ -63,6 +63,7 @@ export function registerAgentHandlers(
     'agent:output',
     'agent:result',
     'agent:stream',
+    'agent:stream-thinking',
     'agent:error',
   ];
 
