@@ -24,27 +24,12 @@ export function registerAgentHandlers(
     },
   );
 
-  ipcMain.handle(
-    'agent:respond-permission',
-    async (
-      _event,
-      { sessionId, requestId, allow }: { sessionId: string; requestId: string; allow: boolean },
-    ) => {
-      agentService.respondPermission(sessionId, requestId, allow);
-      return { success: true };
-    },
-  );
-
   ipcMain.handle('agent:list', async () => {
     return agentService.getAllAgents();
   });
 
   ipcMain.handle('agent:get-messages', async (_event, sessionId: string) => {
     return agentService.getMessages(sessionId);
-  });
-
-  ipcMain.handle('agent:get-permissions', async (_event, sessionId: string) => {
-    return agentService.getPendingPermissions(sessionId);
   });
 
   // Session history: list sessions from Claude's native JSONL files
@@ -76,7 +61,6 @@ export function registerAgentHandlers(
     'agent:launched',
     'agent:status-changed',
     'agent:output',
-    'agent:permission-request',
     'agent:result',
     'agent:stream',
     'agent:error',

@@ -3,6 +3,7 @@ export type AgentState =
   | 'connected'
   | 'working'
   | 'idle'
+  | 'stopping'
   | 'waiting_permission'
   | 'error'
   | 'completed';
@@ -66,7 +67,6 @@ export interface AgentSession {
   pid?: number;
   cliSessionId?: string;
   messages: AgentMessage[];
-  pendingPermissions: PermissionRequest[];
   cost: { inputTokens: number; outputTokens: number; totalCost: number };
   startedAt: number;
   completedAt?: number;
@@ -109,7 +109,6 @@ export interface AgentSessionInfo {
   startedAt: number;
   completedAt?: number;
   messageCount: number;
-  pendingPermissionCount: number;
 }
 
 // Summary of a Claude CLI session read from ~/.claude/projects/

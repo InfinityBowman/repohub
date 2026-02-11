@@ -1,27 +1,30 @@
 import { EventEmitter } from 'events';
 import { spawn, ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
+import { stat as fsStat } from 'fs/promises';
 import type {
   AgentLaunchConfig,
   AgentSession,
   AgentMessage,
   AgentMessageType,
   AgentSessionInfo,
-  PermissionRequest,
   PermissionMode,
 } from '../types/agent.types';
 import { BUILT_IN_ROLES } from '../types/agent.types';
 
 const SIGKILL_DELAY_MS = 5000;
 const TOOL_RESULT_MAX_DISPLAY = 2000;
+const SESSION_CLEANUP_DELAY_MS = 30 * 60 * 1000; // 30 minutes
 
 export class AgentService extends EventEmitter {
   private sessions = new Map<string, AgentSession>();
   private processes = new Map<string, ChildProcess>();
   private stdoutBuffers = new Map<string, string>();
+  private cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private messageCounter = 0;
 
   async launchAgent(config: AgentLaunchConfig): Promise<{ sessionId: string }> {
+    await this.validateRepoPath(config.repoPath);
     const sessionId = randomUUID();
     const role = BUILT_IN_ROLES.find(r => r.id === config.roleId);
     if (!role) throw new Error(`Unknown role: ${config.roleId}`);
@@ -33,7 +36,6 @@ export class AgentService extends EventEmitter {
       config,
       state: 'starting',
       messages: [],
-      pendingPermissions: [],
       cost: { inputTokens: 0, outputTokens: 0, totalCost: 0 },
       startedAt: Date.now(),
     };
@@ -87,23 +89,27 @@ export class AgentService extends EventEmitter {
 
     const child = this.processes.get(sessionId);
     if (child) {
+      session.state = 'stopping';
+      this.emitStatusChanged(sessionId);
       child.kill('SIGTERM');
       setTimeout(() => {
         if (this.processes.has(sessionId)) {
           child.kill('SIGKILL');
         }
       }, SIGKILL_DELAY_MS);
+    } else {
+      session.state = 'completed';
+      session.completedAt = Date.now();
+      this.emitStatusChanged(sessionId);
+      this.scheduleSessionCleanup(sessionId);
     }
-
-    session.state = 'completed';
-    session.completedAt = Date.now();
-    this.emitStatusChanged(sessionId);
   }
 
   async resumeSession(
     cliSessionId: string,
     config: AgentLaunchConfig,
   ): Promise<{ sessionId: string }> {
+    await this.validateRepoPath(config.repoPath);
     const sessionId = randomUUID();
     const role = BUILT_IN_ROLES.find(r => r.id === config.roleId);
     if (!role) throw new Error(`Unknown role: ${config.roleId}`);
@@ -115,7 +121,6 @@ export class AgentService extends EventEmitter {
       config,
       state: 'starting',
       messages: [],
-      pendingPermissions: [],
       cost: { inputTokens: 0, outputTokens: 0, totalCost: 0 },
       startedAt: Date.now(),
       cliSessionId,
@@ -140,8 +145,7 @@ export class AgentService extends EventEmitter {
     try {
       this.spawnAndAttach(sessionId, session, args);
 
-      session.state = 'working';
-      this.addMessage(sessionId, 'system', `Resuming session ${cliSessionId.slice(0, 8)}...`);
+      session.state = 'idle';
       this.emit('agent:launched', this.toSessionInfo(session));
 
       return { sessionId };
@@ -178,13 +182,6 @@ export class AgentService extends EventEmitter {
     this.emitStatusChanged(sessionId);
   }
 
-  respondPermission(_sessionId: string, _requestId: string, _allow: boolean): void {
-    // Permission handling in print mode uses --permission-mode flag at launch.
-    // Interactive permission approval via stdin is not supported in basic stream-json mode.
-    // For supervised mode, use --permission-mode acceptEdits (auto-approves edits).
-    // For autonomous mode, use --permission-mode bypassPermissions.
-  }
-
   getAllAgents(): AgentSessionInfo[] {
     return Array.from(this.sessions.values()).map(s => this.toSessionInfo(s));
   }
@@ -194,21 +191,42 @@ export class AgentService extends EventEmitter {
     return session ? session.messages : [];
   }
 
-  getPendingPermissions(sessionId: string): PermissionRequest[] {
-    const session = this.sessions.get(sessionId);
-    return session ? session.pendingPermissions : [];
-  }
-
   shutdown(): void {
     for (const [id, child] of this.processes) {
       child.kill('SIGKILL');
       this.processes.delete(id);
     }
+    for (const timer of this.cleanupTimers.values()) {
+      clearTimeout(timer);
+    }
     this.sessions.clear();
     this.stdoutBuffers.clear();
+    this.cleanupTimers.clear();
   }
 
   // --- Process management ---
+
+  private async validateRepoPath(repoPath: string): Promise<void> {
+    try {
+      const stats = await fsStat(repoPath);
+      if (!stats.isDirectory()) {
+        throw new Error(`Not a directory: ${repoPath}`);
+      }
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`Path does not exist: ${repoPath}`);
+      }
+      throw err;
+    }
+  }
+
+  private scheduleSessionCleanup(sessionId: string): void {
+    const timer = setTimeout(() => {
+      this.sessions.delete(sessionId);
+      this.cleanupTimers.delete(sessionId);
+    }, SESSION_CLEANUP_DELAY_MS);
+    this.cleanupTimers.set(sessionId, timer);
+  }
 
   private spawnAndAttach(sessionId: string, session: AgentSession, args: string[]): ChildProcess {
     const child = spawn('claude', args, {
@@ -232,7 +250,7 @@ export class AgentService extends EventEmitter {
       }
     });
 
-    child.on('exit', (code, signal) => {
+    child.on('exit', () => {
       this.processes.delete(sessionId);
       this.stdoutBuffers.delete(sessionId);
       const s = this.sessions.get(sessionId);
@@ -240,6 +258,7 @@ export class AgentService extends EventEmitter {
         s.state = 'completed';
         s.completedAt = Date.now();
         this.emitStatusChanged(sessionId);
+        this.scheduleSessionCleanup(sessionId);
       }
     });
 
@@ -454,7 +473,6 @@ export class AgentService extends EventEmitter {
       startedAt: session.startedAt,
       completedAt: session.completedAt,
       messageCount: session.messages.length,
-      pendingPermissionCount: session.pendingPermissions.length,
     };
   }
 }

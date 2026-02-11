@@ -115,11 +115,8 @@ const electronAPI = {
     stop: (sessionId: string) => ipcRenderer.invoke('agent:stop', sessionId),
     sendMessage: (sessionId: string, content: string) =>
       ipcRenderer.invoke('agent:send-message', { sessionId, content }),
-    respondPermission: (sessionId: string, requestId: string, allow: boolean) =>
-      ipcRenderer.invoke('agent:respond-permission', { sessionId, requestId, allow }),
     list: () => ipcRenderer.invoke('agent:list'),
     getMessages: (sessionId: string) => ipcRenderer.invoke('agent:get-messages', sessionId),
-    getPermissions: (sessionId: string) => ipcRenderer.invoke('agent:get-permissions', sessionId),
     listSessions: (repoPath: string) => ipcRenderer.invoke('agent:list-sessions', repoPath),
     readSession: (repoPath: string, sessionId: string) =>
       ipcRenderer.invoke('agent:read-session', { repoPath, sessionId }),
@@ -190,11 +187,6 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data);
       ipcRenderer.on('agent:output', handler);
       return () => ipcRenderer.removeListener('agent:output', handler);
-    },
-    agentPermissionRequest: (callback: (data: any) => void) => {
-      const handler = (_: any, data: any) => callback(data);
-      ipcRenderer.on('agent:permission-request', handler);
-      return () => ipcRenderer.removeListener('agent:permission-request', handler);
     },
     agentResult: (callback: (data: any) => void) => {
       const handler = (_: any, data: any) => callback(data);

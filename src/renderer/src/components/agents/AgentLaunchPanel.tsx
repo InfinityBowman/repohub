@@ -38,7 +38,7 @@ const ROLES = [
 ];
 
 interface AgentLaunchPanelProps {
-  onLaunch: (config: AgentLaunchConfig) => void;
+  onLaunch: (config: AgentLaunchConfig) => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -64,7 +64,7 @@ export function AgentLaunchPanel({ onLaunch, onCancel }: AgentLaunchPanelProps) 
     if (!canLaunch || !selectedRepo) return;
     setLaunching(true);
     try {
-      onLaunch({
+      await onLaunch({
         repoId: selectedRepo.id,
         repoPath: selectedRepo.path,
         repoName: selectedRepo.name,

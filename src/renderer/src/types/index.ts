@@ -248,6 +248,7 @@ export type AgentState =
   | 'connected'
   | 'working'
   | 'idle'
+  | 'stopping'
   | 'waiting_permission'
   | 'error'
   | 'completed';
@@ -291,13 +292,6 @@ export interface AgentMessage {
   isCollapsed?: boolean;
 }
 
-export interface PermissionRequest {
-  requestId: string;
-  toolName: string;
-  input: string;
-  description: string;
-}
-
 export interface AgentSessionInfo {
   id: string;
   config: AgentLaunchConfig;
@@ -308,7 +302,6 @@ export interface AgentSessionInfo {
   startedAt: number;
   completedAt?: number;
   messageCount: number;
-  pendingPermissionCount: number;
 }
 
 export interface ClaudeSessionSummary {
@@ -466,14 +459,8 @@ declare global {
         launch: (config: AgentLaunchConfig) => Promise<{ sessionId: string }>;
         stop: (sessionId: string) => Promise<{ success: boolean }>;
         sendMessage: (sessionId: string, content: string) => Promise<{ success: boolean }>;
-        respondPermission: (
-          sessionId: string,
-          requestId: string,
-          allow: boolean,
-        ) => Promise<{ success: boolean }>;
         list: () => Promise<AgentSessionInfo[]>;
         getMessages: (sessionId: string) => Promise<AgentMessage[]>;
-        getPermissions: (sessionId: string) => Promise<PermissionRequest[]>;
         listSessions: (repoPath: string) => Promise<ClaudeSessionSummary[]>;
         readSession: (repoPath: string, sessionId: string) => Promise<AgentMessage[]>;
         resumeSession: (
@@ -511,9 +498,6 @@ declare global {
         agentStatusChanged: (callback: (data: AgentSessionInfo) => void) => () => void;
         agentOutput: (
           callback: (data: { sessionId: string; message: AgentMessage }) => void,
-        ) => () => void;
-        agentPermissionRequest: (
-          callback: (data: { sessionId: string; permission: PermissionRequest }) => void,
         ) => () => void;
         agentResult: (
           callback: (data: {

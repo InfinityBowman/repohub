@@ -17,6 +17,7 @@ const STATE_LABELS: Record<AgentState, { label: string; color: string }> = {
   connected: { label: 'Connected', color: 'bg-blue-500/20 text-blue-400' },
   working: { label: 'Working', color: 'bg-green-500/20 text-green-400' },
   idle: { label: 'Idle', color: 'bg-gray-500/20 text-gray-400' },
+  stopping: { label: 'Stopping', color: 'bg-orange-500/20 text-orange-400' },
   waiting_permission: { label: 'Awaiting Permission', color: 'bg-amber-500/20 text-amber-400' },
   error: { label: 'Error', color: 'bg-red-500/20 text-red-400' },
   completed: { label: 'Completed', color: 'bg-gray-500/20 text-gray-400' },

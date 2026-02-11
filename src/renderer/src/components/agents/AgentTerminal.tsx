@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   Wrench,
   AlertCircle,
@@ -16,8 +16,7 @@ import { CodeBlock } from '@/components/ui/code-block';
 import { DiffViewer, NewContentViewer } from '@/components/ui/diff-viewer';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { PermissionRequestInline } from './PermissionRequestInline';
-import type { AgentMessage, PermissionRequest } from '@/types';
+import type { AgentMessage } from '@/types';
 
 // --- Helpers ---
 
@@ -390,23 +389,16 @@ function MessageBlock({ message }: { message: AgentMessage }) {
 interface AgentTerminalProps {
   messages: AgentMessage[];
   streamingText: string;
-  permissions?: PermissionRequest[];
-  onRespondPermission?: (requestId: string, allow: boolean) => void;
 }
 
-export function AgentTerminal({
-  messages,
-  streamingText,
-  permissions,
-  onRespondPermission,
-}: AgentTerminalProps) {
+export function AgentTerminal({ messages, streamingText }: AgentTerminalProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingText, permissions]);
+  }, [messages, streamingText]);
 
-  const groups = groupMessages(messages);
+  const groups = useMemo(() => groupMessages(messages), [messages]);
 
   return (
     <div className='flex-1 overflow-y-auto'>
@@ -434,19 +426,6 @@ export function AgentTerminal({
                 <span className='inline-block animate-pulse text-blue-400'>|</span>
               </span>
             </div>
-          </div>
-        )}
-
-        {/* Inline permission requests */}
-        {permissions && permissions.length > 0 && onRespondPermission && (
-          <div className='mt-2 flex flex-col gap-2'>
-            {permissions.map(p => (
-              <PermissionRequestInline
-                key={p.requestId}
-                permission={p}
-                onRespond={onRespondPermission}
-              />
-            ))}
           </div>
         )}
 

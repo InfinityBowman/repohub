@@ -63,6 +63,11 @@ export class ClaudeSessionReader {
 
   /** Read full session messages, converted to our AgentMessage format. */
   async readSessionMessages(projectPath: string, sessionId: string): Promise<AgentMessage[]> {
+    // Validate sessionId to prevent path traversal
+    if (!/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+      return [];
+    }
+
     const encoded = this.encodeProjectPath(projectPath);
     const fp = join(this.claudeDir, encoded, `${sessionId}.jsonl`);
 

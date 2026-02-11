@@ -1,13 +1,12 @@
 import { useState, useCallback, useRef, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { AgentState } from '@/types';
 
 const PLACEHOLDERS: Partial<Record<AgentState, string>> = {
   starting: 'Agent is starting...',
   connected: 'Agent is connecting...',
   working: 'Agent is working...',
+  stopping: 'Agent is stopping...',
   waiting_permission: 'Respond to permission request above...',
   error: 'Agent encountered an error',
   completed: 'Send a follow-up message...',
@@ -58,44 +57,38 @@ export function MessageInput({ agentState, onSend }: MessageInputProps) {
   const showFocusRing = focused && canSend;
 
   return (
-    <div>
-      <div
-        className={`bg-card flex items-end gap-2 rounded-lg border p-2 transition-all ${
-          showFocusRing ? 'border-blue-500/40 ring-1 ring-blue-500/30' : 'border-border'
-        }`}
-      >
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onInput={handleInput}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholder={placeholder}
-          disabled={!canSend}
-          rows={1}
-          className='text-foreground placeholder:text-muted-foreground min-h-9 flex-1 resize-none border-none bg-transparent px-2 py-1.5 text-sm outline-none disabled:opacity-50'
-        />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size='sm'
-              className='h-8 w-8 shrink-0 p-0'
-              disabled={!canSend || !value.trim()}
-              onClick={handleSend}
-            >
-              <Send className='h-4 w-4' />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Send message</TooltipContent>
-        </Tooltip>
+    <div
+      className={`bg-card flex items-end gap-2 rounded-lg border px-3 py-2 transition-colors ${
+        showFocusRing ? 'border-blue-500/40 ring-1 ring-blue-500/20' : 'border-border'
+      }`}
+    >
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onInput={handleInput}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder={placeholder}
+        disabled={!canSend}
+        rows={1}
+        className='text-foreground placeholder:text-muted-foreground min-h-8 flex-1 resize-none border-none bg-transparent py-1 text-sm leading-6 outline-none disabled:opacity-50'
+      />
+      <div className='flex shrink-0 items-center gap-2'>
+        <span
+          className={`text-muted-foreground/50 text-[10px] transition-opacity ${focused && canSend ? 'opacity-100' : 'opacity-0'}`}
+        >
+          Enter to send
+        </span>
+        <button
+          disabled={!canSend || !value.trim()}
+          onClick={handleSend}
+          className='mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-blue-400 disabled:pointer-events-none disabled:opacity-30'
+        >
+          <Send className='h-3.5 w-3.5' />
+        </button>
       </div>
-      {focused && canSend && (
-        <p className='text-muted-foreground mt-1 px-2 text-[10px]'>
-          Enter to send · Shift+Enter for newline
-        </p>
-      )}
     </div>
   );
 }

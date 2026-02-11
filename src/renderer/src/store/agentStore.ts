@@ -1,16 +1,10 @@
 import { create } from 'zustand';
-import type {
-  AgentSessionInfo,
-  AgentMessage,
-  PermissionRequest,
-  ClaudeSessionSummary,
-} from '@/types';
+import type { AgentSessionInfo, AgentMessage, ClaudeSessionSummary } from '@/types';
 
 interface AgentState {
   agents: Record<string, AgentSessionInfo>;
   activeAgentId: string | null;
   messages: Record<string, AgentMessage[]>;
-  pendingPermissions: Record<string, PermissionRequest[]>;
   streaming: Record<string, string>;
   showLaunchPanel: boolean;
   sessionHistory: ClaudeSessionSummary[];
@@ -22,9 +16,6 @@ interface AgentState {
   setActiveAgent: (id: string | null) => void;
   appendMessage: (sessionId: string, message: AgentMessage) => void;
   setMessages: (sessionId: string, messages: AgentMessage[]) => void;
-  addPermissionRequest: (sessionId: string, permission: PermissionRequest) => void;
-  removePermissionRequest: (sessionId: string, requestId: string) => void;
-  setPermissions: (sessionId: string, permissions: PermissionRequest[]) => void;
   appendStreamChunk: (sessionId: string, delta: string) => void;
   clearStream: (sessionId: string) => void;
   setShowLaunchPanel: (show: boolean) => void;
@@ -36,7 +27,6 @@ export const useAgentStore = create<AgentState>(set => ({
   agents: {},
   activeAgentId: null,
   messages: {},
-  pendingPermissions: {},
   streaming: {},
   showLaunchPanel: false,
   sessionHistory: [],
@@ -56,12 +46,10 @@ export const useAgentStore = create<AgentState>(set => ({
     set(state => {
       const { [id]: _, ...rest } = state.agents;
       const { [id]: _msgs, ...restMsgs } = state.messages;
-      const { [id]: _perms, ...restPerms } = state.pendingPermissions;
       const { [id]: _stream, ...restStream } = state.streaming;
       return {
         agents: rest,
         messages: restMsgs,
-        pendingPermissions: restPerms,
         streaming: restStream,
         activeAgentId: state.activeAgentId === id ? null : state.activeAgentId,
       };
@@ -80,29 +68,6 @@ export const useAgentStore = create<AgentState>(set => ({
   setMessages: (sessionId, messages) =>
     set(state => ({
       messages: { ...state.messages, [sessionId]: messages },
-    })),
-
-  addPermissionRequest: (sessionId, permission) =>
-    set(state => ({
-      pendingPermissions: {
-        ...state.pendingPermissions,
-        [sessionId]: [...(state.pendingPermissions[sessionId] || []), permission],
-      },
-    })),
-
-  removePermissionRequest: (sessionId, requestId) =>
-    set(state => ({
-      pendingPermissions: {
-        ...state.pendingPermissions,
-        [sessionId]: (state.pendingPermissions[sessionId] || []).filter(
-          p => p.requestId !== requestId,
-        ),
-      },
-    })),
-
-  setPermissions: (sessionId, permissions) =>
-    set(state => ({
-      pendingPermissions: { ...state.pendingPermissions, [sessionId]: permissions },
     })),
 
   appendStreamChunk: (sessionId, delta) =>

@@ -31,10 +31,6 @@ export function useAgentListeners() {
         useAgentStore.getState().appendMessage(data.sessionId, data.message);
       });
 
-      const unsubPermission = window.electron.on.agentPermissionRequest(data => {
-        useAgentStore.getState().addPermissionRequest(data.sessionId, data.permission);
-      });
-
       const unsubResult = window.electron.on.agentResult(data => {
         const agent = useAgentStore.getState().agents[data.sessionId];
         if (agent) {
@@ -57,15 +53,7 @@ export function useAgentListeners() {
         }
       });
 
-      cleanupFns = [
-        unsubLaunched,
-        unsubStatus,
-        unsubOutput,
-        unsubPermission,
-        unsubResult,
-        unsubStream,
-        unsubError,
-      ];
+      cleanupFns = [unsubLaunched, unsubStatus, unsubOutput, unsubResult, unsubStream, unsubError];
     }
 
     return () => {
@@ -79,7 +67,16 @@ export function useAgentListeners() {
 }
 
 export function useAgents() {
-  const store = useAgentStore();
+  const agents = useAgentStore(s => s.agents);
+  const activeAgentId = useAgentStore(s => s.activeAgentId);
+  const messages = useAgentStore(s => s.messages);
+  const streaming = useAgentStore(s => s.streaming);
+  const showLaunchPanel = useAgentStore(s => s.showLaunchPanel);
+  const sessionHistory = useAgentStore(s => s.sessionHistory);
+  const viewingHistorySessionId = useAgentStore(s => s.viewingHistorySessionId);
+  const setActiveAgent = useAgentStore(s => s.setActiveAgent);
+  const setShowLaunchPanel = useAgentStore(s => s.setShowLaunchPanel);
+  const setViewingHistorySessionId = useAgentStore(s => s.setViewingHistorySessionId);
 
   const launch = useCallback(async (config: AgentLaunchConfig) => {
     const result = await window.electron.agent.launch(config);
@@ -96,14 +93,6 @@ export function useAgents() {
   const sendMessage = useCallback(async (sessionId: string, content: string) => {
     return window.electron.agent.sendMessage(sessionId, content);
   }, []);
-
-  const respondPermission = useCallback(
-    async (sessionId: string, requestId: string, allow: boolean) => {
-      useAgentStore.getState().removePermissionRequest(sessionId, requestId);
-      return window.electron.agent.respondPermission(sessionId, requestId, allow);
-    },
-    [],
-  );
 
   const loadSessionHistory = useCallback(async (repoPath: string) => {
     try {
@@ -129,7 +118,16 @@ export function useAgents() {
   }, []);
 
   const resumeSession = useCallback(async (cliSessionId: string, config: AgentLaunchConfig) => {
+    // Load historical messages before spawning so the UI shows the full conversation
+    const historyMessages = await window.electron.agent.readSession(config.repoPath, cliSessionId);
+
     const result = await window.electron.agent.resumeSession(cliSessionId, config.repoPath, config);
+
+    // Prepopulate the agent's message store with session history
+    if (historyMessages.length > 0) {
+      useAgentStore.getState().setMessages(result.sessionId, historyMessages);
+    }
+
     useAgentStore.getState().setActiveAgent(result.sessionId);
     useAgentStore.getState().setShowLaunchPanel(false);
     useAgentStore.getState().setViewingHistorySessionId(null);
@@ -137,21 +135,19 @@ export function useAgents() {
   }, []);
 
   return {
-    agents: store.agents,
-    activeAgentId: store.activeAgentId,
-    messages: store.messages,
-    pendingPermissions: store.pendingPermissions,
-    streaming: store.streaming,
-    showLaunchPanel: store.showLaunchPanel,
-    sessionHistory: store.sessionHistory,
-    viewingHistorySessionId: store.viewingHistorySessionId,
-    setActiveAgent: store.setActiveAgent,
-    setShowLaunchPanel: store.setShowLaunchPanel,
-    setViewingHistorySessionId: store.setViewingHistorySessionId,
+    agents,
+    activeAgentId,
+    messages,
+    streaming,
+    showLaunchPanel,
+    sessionHistory,
+    viewingHistorySessionId,
+    setActiveAgent,
+    setShowLaunchPanel,
+    setViewingHistorySessionId,
     launch,
     stop,
     sendMessage,
-    respondPermission,
     loadSessionHistory,
     viewSession,
     resumeSession,

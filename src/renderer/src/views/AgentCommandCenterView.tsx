@@ -27,6 +27,7 @@ import { InfoBar } from '@/components/agents/InfoBar';
 import { MessageInput } from '@/components/agents/MessageInput';
 import type { AgentLaunchConfig, ClaudeSessionSummary } from '@/types';
 
+
 function timeAgo(isoDate: string): string {
   const seconds = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
   if (seconds < 60) return 'just now';
@@ -310,7 +311,6 @@ export function AgentCommandCenterView() {
     agents,
     activeAgentId,
     messages,
-    pendingPermissions,
     streaming,
     showLaunchPanel,
     viewingHistorySessionId,
@@ -320,13 +320,11 @@ export function AgentCommandCenterView() {
     launch,
     stop,
     sendMessage,
-    respondPermission,
   } = useAgents();
 
   const agentList = Object.values(agents);
   const activeAgent = activeAgentId ? agents[activeAgentId] : null;
   const activeMessages = activeAgentId ? messages[activeAgentId] || [] : [];
-  const activePermissions = activeAgentId ? pendingPermissions[activeAgentId] || [] : [];
   const activeStreaming = activeAgentId ? streaming[activeAgentId] || '' : '';
 
   const handleLaunch = useCallback(
@@ -349,13 +347,6 @@ export function AgentCommandCenterView() {
       if (activeAgentId) sendMessage(activeAgentId, content);
     },
     [activeAgentId, sendMessage],
-  );
-
-  const handleRespondPermission = useCallback(
-    (requestId: string, allow: boolean) => {
-      if (activeAgentId) respondPermission(activeAgentId, requestId, allow);
-    },
-    [activeAgentId, respondPermission],
   );
 
   // Launch panel open
@@ -453,8 +444,6 @@ export function AgentCommandCenterView() {
           <AgentTerminal
             messages={activeMessages}
             streamingText={activeStreaming}
-            permissions={activePermissions}
-            onRespondPermission={handleRespondPermission}
           />
 
           {/* Input */}
