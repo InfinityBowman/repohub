@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { SearchResult } from '@/types';
 
 const LANGUAGE_COLORS: Record<string, string> = {
@@ -98,8 +98,7 @@ function ResultCard({
               <ExternalLink className='h-3 w-3 shrink-0' />
             </button>
           </div>
-          <TooltipProvider>
-            <Tooltip>
+          <Tooltip>
               <TooltipTrigger>
                 <div className='flex shrink-0 items-center gap-1'>
                   <ScoreBar score={scorePercent} />
@@ -110,7 +109,6 @@ function ResultCard({
               </TooltipTrigger>
               <TooltipContent>Similarity: {scorePercent}%</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
         </div>
 
         <div className='relative'>

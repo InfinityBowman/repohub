@@ -3,7 +3,7 @@ import { useGitHub } from '@/hooks/useGitHub';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { PRInfo, PRState, CIStatus } from '@/types';
 
 const stateStyles: Record<PRState, string> = {
@@ -57,8 +57,7 @@ function PRCard({ pr }: { pr: PRInfo }) {
           <Badge variant='outline' className={ciStyles[pr.ciStatus].className}>
             {ciStyles[pr.ciStatus].label}
           </Badge>
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
+          <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant='ghost'
@@ -70,7 +69,6 @@ function PRCard({ pr }: { pr: PRInfo }) {
               </TooltipTrigger>
               <TooltipContent>Open on GitHub</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
         </div>
       </div>
     </Card>
@@ -126,8 +124,7 @@ export function GitHubView() {
     <div className='flex flex-col gap-4'>
       <div className='flex items-center justify-between'>
         <h2 className='text-xl font-semibold'>Pull Requests</h2>
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
+        <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant='outline'
@@ -141,7 +138,6 @@ export function GitHubView() {
             </TooltipTrigger>
             <TooltipContent>Refresh pull requests</TooltipContent>
           </Tooltip>
-        </TooltipProvider>
       </div>
 
       <div className='flex flex-col gap-2'>

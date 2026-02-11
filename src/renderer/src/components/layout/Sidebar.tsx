@@ -1,11 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { FolderGit2, Network, Settings, GitPullRequest, Search } from 'lucide-react';
+import { FolderGit2, Network, Settings, GitPullRequest, Search, Package, Bot } from 'lucide-react';
 import { useConfig } from '@/hooks/useConfig';
 
 const navItems = [
   { to: '/', icon: FolderGit2, label: 'Repositories' },
   { to: '/github', icon: GitPullRequest, label: 'Pull Requests' },
   { to: '/search', icon: Search, label: 'Search' },
+  { to: '/agents', icon: Bot, label: 'Agents' },
+  { to: '/packages', icon: Package, label: 'Packages' },
   { to: '/ports', icon: Network, label: 'Ports' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];

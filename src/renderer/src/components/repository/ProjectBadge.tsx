@@ -1,6 +1,6 @@
 import type { ProjectType } from '@/types';
 import { Boxes } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { LanguageIcon } from '../icons/LanguageIcon';
 
 const typeLabels: Record<ProjectType, string> = {
@@ -17,8 +17,7 @@ const typeLabels: Record<ProjectType, string> = {
 export function ProjectBadge({ type }: { type: ProjectType }) {
   if (type === 'unknown') return null;
   return (
-    <TooltipProvider delayDuration={300}>
-      <Tooltip>
+    <Tooltip>
         <TooltipTrigger asChild>
           <span className='inline-flex shrink-0'>
             {type === 'monorepo' ?
@@ -28,6 +27,5 @@ export function ProjectBadge({ type }: { type: ProjectType }) {
         </TooltipTrigger>
         <TooltipContent>{typeLabels[type]}</TooltipContent>
       </Tooltip>
-    </TooltipProvider>
   );
 }

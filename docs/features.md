@@ -253,6 +253,110 @@ JavaScript, TypeScript, TSX, Python, Rust, Go, Java, Swift. Unsupported file typ
 
 ---
 
+## Package Intelligence
+
+Explore npm packages without leaving RepoHub. Search, view stats, and read READMEs — all inline.
+
+### How to Access
+
+Click **Packages** in the sidebar (between Search and Ports), or use the Cmd+K command palette.
+
+### Package Search
+
+Type in the search bar to search the npm registry. Results appear in a left panel with package name, version, description, and publisher. Search is debounced (300ms) to avoid excessive API calls.
+
+### Package Detail
+
+Click a search result to view full package details in the right panel:
+
+- **Header** — package name, version, description, TypeScript support badge, license badge, zero-deps badge (if applicable)
+- **Stats pills** — weekly downloads, unpacked size, last publish date, file count, dependency count
+- **External links** — open on npm, GitHub, or homepage; copy `pnpm add <pkg>` to clipboard
+- **README tab** — full README content from the npm registry
+- **Source tab** — clone & explore the package's GitHub repo source (see [Clone & Explore](#clone--explore) below)
+- **AI Summary tab** — placeholder for future Claude-powered package analysis
+
+### Clone & Explore
+
+Browse the source code of any npm package with a GitHub repository — without leaving RepoHub.
+
+#### How It Works
+
+1. Click the **Clone** button in the package header, or switch to the **Source** tab
+2. Click **Clone Repository** to shallow-clone the GitHub repo (`git clone --depth 1`)
+3. A file tree appears on the left; click files to view syntax-highlighted source on the right
+4. Expand/collapse directories (lazy-loaded on demand)
+5. Click the trash icon in the explorer header to delete the clone
+
+#### Technical Details
+
+- **Storage** — clones persist at `~/Library/Application Support/repohub/package-clones/<name>/`
+- **Metadata** — tracked in a separate `electron-store` instance (`package-clones`)
+- **Security** — URL validation (HTTPS GitHub only), path traversal checks on all file operations, 1MB file size limit
+- **Clone timeout** — 30 seconds
+- **Syntax highlighting** — uses shiki via the existing `CodeBlock` component
+- **Language detection** — file extension mapping for 30+ languages
+
+### TypeScript Detection
+
+Packages are checked for TypeScript support:
+
+- **Built-in** — package has `types` or `typings` field, or main entry is `.d.ts`
+- **No types** — no type declarations detected
+
+### Caching
+
+- Package metadata and download counts are cached for 1 hour
+- Cache is cleaned every 30 minutes to prevent memory growth
+- Stale data is served while fresh data loads
+
+### Data Sources
+
+| Data                | Source           | API                                                |
+| ------------------- | ---------------- | -------------------------------------------------- |
+| Package search      | npm registry     | `https://registry.npmjs.org/-/v1/search`           |
+| Package metadata    | npm registry     | `https://registry.npmjs.org/{package}`             |
+| Weekly downloads    | npm API          | `https://api.npmjs.org/downloads/point/last-week/` |
+| README              | npm registry     | Included in packument                              |
+
+### Error Handling
+
+- Network timeouts after 10 seconds with user-friendly error messages
+- Rate limiting (HTTP 429) detected and reported
+- Download count failures silently default to 0
+- Invalid repository URLs are safely filtered out
+
+### GitHub Trending
+
+The Packages view includes a "Trending" mode toggle alongside the npm search. Switch to Trending to discover hot new GitHub repositories.
+
+#### How It Works
+
+- Uses `gh api search/repositories` to find recently created repos with high star counts
+- **Period filter** — "This week" (created in last 7 days) or "This month" (last 30 days)
+- **Language filter** — All, TypeScript, JavaScript, Python, Rust, Go
+- Results are sorted by star count (descending), limited to 25 per query
+
+#### Trending Repo Detail
+
+Click a trending repo to view its detail panel:
+
+- **Header** — owner avatar, full name (owner/repo), description, language badge, license badge
+- **Stats pills** — Stars (yellow), Forks (blue), Issues (orange), Created (green), Updated (purple)
+- **Topics** — displayed as badge chips
+- **"View on GitHub"** button — opens the repo on GitHub
+
+#### Caching
+
+- Trending results are cached for 15 minutes per language+period combination
+- Switching filters serves cached data when available
+
+#### Requirements
+
+Requires `gh` CLI installed and authenticated (same as the GitHub PR integration).
+
+---
+
 ## Port Monitoring
 
 The Ports tab shows all TCP ports currently listening on localhost.
@@ -266,3 +370,68 @@ For each port:
 - **Kill** button to terminate the process (sends SIGTERM, then SIGKILL after 3s if still alive)
 
 Port scanning runs on a configurable interval (default: every 5 seconds). It uses `lsof -iTCP -sTCP:LISTEN` under the hood. The port list also refreshes automatically when navigating to the Ports tab.
+
+## Agent Command Center
+
+The Agents tab (`/agents`) lets users launch, monitor, and interact with Claude Code CLI agents directly within RepoHub.
+
+### Architecture
+
+Uses Claude Code's `--sdk-url` WebSocket flag to get structured NDJSON messages instead of raw terminal output. A local WebSocket server (`AgentWebSocketServer`) runs on a random localhost port and communicates bidirectionally with the Claude CLI process.
+
+**Communication flow:** AgentService spawns `claude` CLI with `--sdk-url ws://127.0.0.1:{port}/ws/cli/{sessionId}` → CLI connects via WebSocket → structured NDJSON messages are routed through `AgentService.routeCLIMessage()` → events forwarded to renderer via IPC → Zustand store → React components.
+
+### Agent Roles
+
+Three built-in roles:
+
+| Role | Permission Mode | Description |
+|------|----------------|-------------|
+| **Coder** | `default` (supervised) or `bypassPermissions` (autonomous) | Full coding agent. Reads, writes, and executes code. |
+| **Reviewer** | `plan` | Read-only code reviewer. Analyzes quality, finds bugs. |
+| **Researcher** | `plan` | Read-only research agent. Explores codebase, answers questions. |
+
+### Launching an Agent
+
+1. Navigate to the Agents tab
+2. Click "Launch Agent"
+3. Select a repository from the searchable list
+4. Choose a role (Coder, Reviewer, or Researcher)
+5. Describe the task in the text area
+6. Optionally enable "Autonomous mode" (auto-approves all tool calls)
+7. Click Launch
+
+### Agent Terminal
+
+Displays structured messages with visual differentiation:
+
+- **User messages** — purple prefix
+- **Assistant text** — blue prefix with Bot icon
+- **Tool use** — yellow prefix, tool name with collapsible input details
+- **Tool results** — dimmed, collapsible
+- **Errors** — red with alert icon
+- **Final result** — green with summary
+- **Streaming** — live typing indicator with blinking cursor
+
+### Permission Handling
+
+In supervised mode, when the agent requests permission to use a tool:
+
+- An amber-bordered card appears inline showing the tool name and input preview
+- Click "Allow" (green) or "Deny" (red) to respond
+- The agent resumes after your response
+- In autonomous mode, all permissions are auto-approved
+
+### Follow-up Messages
+
+After the agent completes a task (enters `idle` state), you can send follow-up messages via the input bar at the bottom. Enter to send, Shift+Enter for newline.
+
+### Agent States
+
+`starting` → `connected` → `working` → `idle` (can receive follow-up) → `completed`
+
+The `waiting_permission` state occurs when the agent needs tool approval in supervised mode.
+
+### Cost Tracking
+
+Token usage and estimated cost are displayed in the info bar (based on approximate Sonnet pricing: $3/Mtok input, $15/Mtok output).

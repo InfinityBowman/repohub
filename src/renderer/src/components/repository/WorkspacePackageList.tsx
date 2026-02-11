@@ -4,7 +4,7 @@ import type { Repository, WorkspacePackage } from '@/types';
 import { useProcesses } from '@/hooks/useProcesses';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { TerminalOutput } from '../process/TerminalOutput';
 
 function PackageItem({ repo, pkg }: { repo: Repository; pkg: WorkspacePackage }) {
@@ -54,7 +54,6 @@ function PackageItem({ repo, pkg }: { repo: Repository; pkg: WorkspacePackage })
           )}
         </div>
         <div className='flex items-center gap-0.5'>
-          <TooltipProvider delayDuration={300}>
             {running ?
               <>
                 <Tooltip>
@@ -96,7 +95,6 @@ function PackageItem({ repo, pkg }: { repo: Repository; pkg: WorkspacePackage })
                 </TooltipContent>
               </Tooltip>
             }
-          </TooltipProvider>
         </div>
       </div>
       {(running || showTerminal) && terminalData[compositeKey] && (
@@ -116,8 +114,7 @@ export function WorkspacePackageList({ repo }: { repo: Repository }) {
       <div className='text-muted-foreground flex items-center gap-2 text-xs'>
         <span>{repo.workspace.packages.length} packages</span>
         {repo.workspace.hasTurbo && (
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
+          <Tooltip>
               <TooltipTrigger asChild>
                 <Badge
                   variant='outline'
@@ -128,7 +125,6 @@ export function WorkspacePackageList({ repo }: { repo: Repository }) {
               </TooltipTrigger>
               <TooltipContent>Uses Turborepo for optimized builds</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
         )}
         <span>{repo.workspace.packageManager}</span>
       </div>

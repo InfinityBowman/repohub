@@ -23,6 +23,9 @@ import { GitHubService } from './services/GitHubService';
 import { GitBranchService } from './services/GitBranchService';
 import { ScaffoldService } from './services/ScaffoldService';
 import { CodeSearchService } from './services/CodeSearchService';
+import { PackageIntelligenceService } from './services/PackageIntelligenceService';
+import { PackageCloneService } from './services/PackageCloneService';
+import { AgentService } from './services/AgentService';
 
 // Initialize services
 const configService = new ConfigService();
@@ -35,6 +38,9 @@ const githubService = new GitHubService(repositoryService);
 const gitBranchService = new GitBranchService();
 const scaffoldService = new ScaffoldService(configService);
 const codeSearchService = new CodeSearchService(configService, repositoryService);
+const packageService = new PackageIntelligenceService();
+const packageCloneService = new PackageCloneService();
+const agentService = new AgentService();
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -48,6 +54,9 @@ app.whenReady().then(() => {
     gitBranchService,
     scaffoldService,
     codeSearchService,
+    packageService,
+    packageCloneService,
+    agentService,
   });
 
   // Create window
@@ -106,4 +115,6 @@ app.on('before-quit', () => {
   portService.stopMonitoring();
   repositoryService.stopWatching();
   codeSearchService.shutdown();
+  packageService.shutdown();
+  agentService.shutdown();
 });

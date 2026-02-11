@@ -1,7 +1,7 @@
 import type React from 'react';
 import { GitPullRequest } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { PRInfo, PRState, CIStatus } from '@/types';
 
 const stateStyles: Record<PRState, string> = {
@@ -32,8 +32,7 @@ export function PRBadge({ pr }: { pr: PRInfo }) {
   };
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <Tooltip>
+    <Tooltip>
         <TooltipTrigger asChild>
           <Badge
             variant='outline'
@@ -48,6 +47,5 @@ export function PRBadge({ pr }: { pr: PRInfo }) {
           PR #{pr.number}: {pr.title} (CI: {ciLabels[pr.ciStatus]}) — Click to open on GitHub
         </TooltipContent>
       </Tooltip>
-    </TooltipProvider>
   );
 }

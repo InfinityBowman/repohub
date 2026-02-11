@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { GitBranch, Trash2, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { BranchInfo } from '@/types';
 
 export function BranchCleanup({ repoId }: { repoId: string }) {
@@ -79,8 +79,7 @@ export function BranchCleanup({ repoId }: { repoId: string }) {
           )}
         </div>
         <div className='flex items-center gap-1'>
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
+          <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant='ghost' size='icon-xs' onClick={fetchBranches}>
                   <RefreshCw className='h-3.5 w-3.5' />
@@ -88,7 +87,6 @@ export function BranchCleanup({ repoId }: { repoId: string }) {
               </TooltipTrigger>
               <TooltipContent>Refresh branches</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
           {mergedBranches.length > 0 && (
             <Button
               variant='destructive'
@@ -147,8 +145,7 @@ export function BranchCleanup({ repoId }: { repoId: string }) {
                   <span className='text-muted-foreground text-xs'>{branch.lastCommit}</span>
                 </div>
                 {isMergedDeletable && (
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
+                  <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant='ghost'
@@ -164,7 +161,6 @@ export function BranchCleanup({ repoId }: { repoId: string }) {
                       </TooltipTrigger>
                       <TooltipContent>Delete branch</TooltipContent>
                     </Tooltip>
-                  </TooltipProvider>
                 )}
               </div>
             );

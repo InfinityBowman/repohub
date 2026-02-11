@@ -7,6 +7,9 @@ import { registerGitHubHandlers } from './github.handler';
 import { registerGitHandlers } from './git.handler';
 import { registerScaffoldHandlers } from './scaffold.handler';
 import { registerCodeSearchHandlers } from './codesearch.handler';
+import { registerPackageHandlers } from './packages.handler';
+import { registerPackageCloneHandlers } from './package-clone.handler';
+import { registerAgentHandlers } from './agent.handler';
 import type { RepositoryService } from '../services/RepositoryService';
 import type { ProcessService } from '../services/ProcessService';
 import type { PortService } from '../services/PortService';
@@ -16,6 +19,9 @@ import type { GitHubService } from '../services/GitHubService';
 import type { GitBranchService } from '../services/GitBranchService';
 import type { ScaffoldService } from '../services/ScaffoldService';
 import type { CodeSearchService } from '../services/CodeSearchService';
+import type { PackageIntelligenceService } from '../services/PackageIntelligenceService';
+import type { PackageCloneService } from '../services/PackageCloneService';
+import type { AgentService } from '../services/AgentService';
 
 export function registerAllHandlers(services: {
   repositoryService: RepositoryService;
@@ -27,6 +33,9 @@ export function registerAllHandlers(services: {
   gitBranchService: GitBranchService;
   scaffoldService: ScaffoldService;
   codeSearchService: CodeSearchService;
+  packageService: PackageIntelligenceService;
+  packageCloneService: PackageCloneService;
+  agentService: AgentService;
 }): void {
   registerRepositoryHandlers(services.repositoryService);
   registerProcessHandlers(services.processService);
@@ -37,4 +46,7 @@ export function registerAllHandlers(services: {
   registerGitHandlers(services.repositoryService, services.gitBranchService);
   registerScaffoldHandlers(services.scaffoldService);
   registerCodeSearchHandlers(services.codeSearchService);
+  registerPackageHandlers(services.packageService);
+  registerPackageCloneHandlers(services.packageCloneService);
+  registerAgentHandlers(services.agentService);
 }

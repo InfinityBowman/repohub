@@ -9,7 +9,7 @@ import { useConfig } from '@/hooks/useConfig';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProjectBadge } from './ProjectBadge';
 import { HealthBadge } from './HealthBadge';
 import { PRBadge } from '../github/PRBadge';
@@ -81,7 +81,6 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 <HealthBadge repoId={repo.id} />
               )}
               {repo.projectType === 'monorepo' && repo.workspace && (
-                <TooltipProvider delayDuration={300}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge
@@ -95,7 +94,6 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                       {repo.workspace.packages.length} workspace packages
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
               )}
               {repo.gitBranch && (
                 <Badge
@@ -125,7 +123,6 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
         </div>
 
         <div className='no-drag flex items-center gap-1'>
-          <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant='ghost' size='icon-sm' onClick={handleOpenVSCode}>
@@ -199,7 +196,6 @@ export function RepositoryCard({ repo }: { repo: Repository }) {
                 </TooltipContent>
               </Tooltip>
             }
-          </TooltipProvider>
         </div>
       </div>
     </Card>

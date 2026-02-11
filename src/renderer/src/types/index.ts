@@ -113,6 +113,25 @@ export interface GitHubStatus {
   error?: string;
 }
 
+export type TrendingPeriod = 'week' | 'month';
+
+export interface TrendingRepo {
+  fullName: string;
+  name: string;
+  owner: { login: string; avatarUrl: string };
+  description: string;
+  stargazersCount: number;
+  forksCount: number;
+  language: string | null;
+  topics: string[];
+  license: string | null;
+  htmlUrl: string;
+  homepage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  openIssuesCount: number;
+}
+
 export interface ScaffoldTemplate {
   name: string;
   path: string;
@@ -205,6 +224,129 @@ export interface ModelProgress {
   total: number;
 }
 
+export interface CloneStatus {
+  cloned: boolean;
+  path?: string;
+  clonedAt?: number;
+}
+
+export interface FileNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  size?: number;
+}
+
+export interface CloneResult {
+  success: boolean;
+  error?: string;
+}
+
+// Agent types
+export type AgentState =
+  | 'starting'
+  | 'connected'
+  | 'working'
+  | 'idle'
+  | 'waiting_permission'
+  | 'error'
+  | 'completed';
+
+export type PermissionMode = 'default' | 'acceptEdits' | 'plan' | 'bypassPermissions';
+
+export interface AgentRole {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  systemPrompt: string;
+  defaultPermissionMode: PermissionMode;
+}
+
+export interface AgentLaunchConfig {
+  repoId: string;
+  repoPath: string;
+  repoName: string;
+  roleId: string;
+  task: string;
+  autonomous: boolean;
+}
+
+export type AgentMessageType =
+  | 'user'
+  | 'assistant_text'
+  | 'tool_use'
+  | 'tool_result'
+  | 'system'
+  | 'error'
+  | 'result';
+
+export interface AgentMessage {
+  id: string;
+  type: AgentMessageType;
+  timestamp: number;
+  content: string;
+  toolName?: string;
+  toolInput?: string;
+  isCollapsed?: boolean;
+}
+
+export interface PermissionRequest {
+  requestId: string;
+  toolName: string;
+  input: string;
+  description: string;
+}
+
+export interface AgentSessionInfo {
+  id: string;
+  config: AgentLaunchConfig;
+  state: AgentState;
+  pid?: number;
+  cost: { inputTokens: number; outputTokens: number; totalCost: number };
+  startedAt: number;
+  completedAt?: number;
+  messageCount: number;
+  pendingPermissionCount: number;
+}
+
+export type TypeScriptSupport = 'built-in' | 'types' | 'none';
+
+export interface PackageSearchResult {
+  name: string;
+  version: string;
+  description: string;
+  keywords: string[];
+  publisher: string;
+  date: string;
+  links: {
+    npm?: string;
+    homepage?: string;
+    repository?: string;
+  };
+  score: number;
+}
+
+export interface PackageDetail {
+  name: string;
+  version: string;
+  description: string;
+  license: string;
+  typescript: TypeScriptSupport;
+  unpackedSize: number;
+  fileCount: number;
+  weeklyDownloads: number;
+  lastPublish: string;
+  dependencies: number;
+  readme: string;
+  links: {
+    npm: string;
+    homepage?: string;
+    repository?: string;
+  };
+  maintainers: string[];
+}
+
 declare global {
   interface Window {
     electron: {
@@ -278,6 +420,8 @@ declare global {
         getAllUserPRs: () => Promise<PRInfo[]>;
         refresh: () => Promise<void>;
         createPR: (repoId: string) => Promise<{ success: boolean; error?: string }>;
+        searchTrending: (language?: string, period?: string) => Promise<TrendingRepo[]>;
+        getTrendingReadme: (fullName: string) => Promise<string>;
       };
       scaffold: {
         getTemplates: () => Promise<ScaffoldTemplate[]>;
@@ -295,6 +439,30 @@ declare global {
         write: (data: string) => Promise<void>;
         resize: (cols: number, rows: number) => Promise<void>;
         cancel: () => Promise<void>;
+      };
+      packages: {
+        search: (query: string, limit?: number) => Promise<PackageSearchResult[]>;
+        getDetails: (packageName: string) => Promise<PackageDetail>;
+      };
+      packageClone: {
+        clone: (packageName: string, repoUrl: string) => Promise<CloneResult>;
+        getStatus: (packageName: string) => Promise<CloneStatus>;
+        listFiles: (packageName: string, relativePath?: string) => Promise<FileNode[]>;
+        readFile: (packageName: string, relativePath: string) => Promise<string>;
+        deleteClone: (packageName: string) => Promise<CloneResult>;
+      };
+      agent: {
+        launch: (config: AgentLaunchConfig) => Promise<{ sessionId: string }>;
+        stop: (sessionId: string) => Promise<{ success: boolean }>;
+        sendMessage: (sessionId: string, content: string) => Promise<{ success: boolean }>;
+        respondPermission: (
+          sessionId: string,
+          requestId: string,
+          allow: boolean,
+        ) => Promise<{ success: boolean }>;
+        list: () => Promise<AgentSessionInfo[]>;
+        getMessages: (sessionId: string) => Promise<AgentMessage[]>;
+        getPermissions: (sessionId: string) => Promise<PermissionRequest[]>;
       };
       search: {
         query: (options: SearchOptions) => Promise<SearchResult[]>;
@@ -320,6 +488,26 @@ declare global {
         ) => () => void;
         scaffoldDone: (
           callback: (data: { exitCode: number; projectName: string }) => void,
+        ) => () => void;
+        agentLaunched: (callback: (data: AgentSessionInfo) => void) => () => void;
+        agentStatusChanged: (callback: (data: AgentSessionInfo) => void) => () => void;
+        agentOutput: (
+          callback: (data: { sessionId: string; message: AgentMessage }) => void,
+        ) => () => void;
+        agentPermissionRequest: (
+          callback: (data: { sessionId: string; permission: PermissionRequest }) => void,
+        ) => () => void;
+        agentResult: (
+          callback: (data: {
+            sessionId: string;
+            cost: { inputTokens: number; outputTokens: number; totalCost: number };
+          }) => void,
+        ) => () => void;
+        agentStream: (
+          callback: (data: { sessionId: string; delta: string }) => void,
+        ) => () => void;
+        agentError: (
+          callback: (data: { sessionId: string; error: string }) => void,
         ) => () => void;
         searchStatusChanged: (callback: (status: IndexStatus) => void) => () => void;
         searchModelProgress: (callback: (progress: ModelProgress) => void) => () => void;

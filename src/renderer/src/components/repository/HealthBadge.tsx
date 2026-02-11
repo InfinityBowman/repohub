@@ -1,6 +1,6 @@
 import { Shield, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHealth } from '@/hooks/useHealth';
 import { HealthDetailPopover } from './HealthDetailPopover';
 import type { HealthStatus } from '@/types';
@@ -26,8 +26,7 @@ export function HealthBadge({ repoId }: { repoId: string }) {
 
   if (checking) {
     return (
-      <TooltipProvider delayDuration={300}>
-        <Tooltip>
+      <Tooltip>
           <TooltipTrigger asChild>
             <Badge
               variant='outline'
@@ -38,14 +37,12 @@ export function HealthBadge({ repoId }: { repoId: string }) {
           </TooltipTrigger>
           <TooltipContent>Checking dependencies…</TooltipContent>
         </Tooltip>
-      </TooltipProvider>
     );
   }
 
   if (!health) {
     return (
-      <TooltipProvider delayDuration={300}>
-        <Tooltip>
+      <Tooltip>
           <TooltipTrigger asChild>
             <Badge
               variant='outline'
@@ -60,13 +57,11 @@ export function HealthBadge({ repoId }: { repoId: string }) {
           </TooltipTrigger>
           <TooltipContent>Check dependency health</TooltipContent>
         </Tooltip>
-      </TooltipProvider>
     );
   }
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <Tooltip>
+    <Tooltip>
         <TooltipTrigger asChild>
           <HealthDetailPopover repoId={repoId} health={health}>
             <Badge
@@ -80,6 +75,5 @@ export function HealthBadge({ repoId }: { repoId: string }) {
         </TooltipTrigger>
         <TooltipContent>{statusTooltip[health.status]}</TooltipContent>
       </Tooltip>
-    </TooltipProvider>
   );
 }

@@ -17,7 +17,7 @@ RepoHub is a native macOS desktop app (Electron) that serves as a project manage
 
 Detailed docs live in `docs/`:
 
-- `docs/features.md` — All features: dashboard, repo detail view, monorepo, dependency health, GitHub integration, branch cleanup, semantic code search, port monitoring
+- `docs/features.md` — All features: dashboard, repo detail view, monorepo, dependency health, GitHub integration, branch cleanup, semantic code search, package intelligence, port monitoring
 - `docs/configuration.md` — Config options, settings UI, file location, command overrides
 - `docs/architecture.md` — Three-process model, IPC flow, async design, PATH fix, security
 - `docs/development.md` — Commands, prerequisites, project structure, how to add components/IPC channels
@@ -64,7 +64,10 @@ React hooks → `window.electron.*` (preload bridge) → IPC handlers (`src/main
 - **CodeSearchService** — Semantic code search: tree-sitter parsing, ONNX embeddings, vectra vector store, file watching
 - **CodeParser** — Tree-sitter WASM-based code parsing into semantic chunks (functions, classes, methods)
 - **ProjectDetector** — Heuristic detection: Node.js, Python, Rust, Go, Java, Swift, Monorepo
+- **PackageIntelligenceService** — npm registry search and package details (HTTP fetch, 1hr cache, no shell commands)
 - **WorkspaceDetector** — pnpm workspace parsing for monorepo packages
+- **AgentWebSocketServer** — Local WebSocket server for Claude Code CLI SDK communication (random localhost port)
+- **AgentService** — Agent lifecycle: spawn `claude` CLI with `--sdk-url`, route NDJSON messages, manage sessions/permissions/cost
 
 ### Important: All Shell Commands Are Async
 
@@ -78,7 +81,7 @@ macOS packaged apps get a minimal PATH. `src/main/index.ts` prepends `/opt/homeb
 
 - **State**: Zustand stores in `store/` (repositoryStore, processStore, portStore)
 - **IPC wrappers**: Custom hooks in `hooks/` (useRepositories, useProcesses, usePorts, useConfig, useHealth, useGitHub); git branch ops via `window.electron.git.*` directly
-- **Routing**: react-router-dom with hash-based routing (6 routes: /, /repo/:id, /github, /search, /ports, /settings)
+- **Routing**: react-router-dom with hash-based routing (8 routes: /, /repo/:id, /github, /search, /agents, /packages, /ports, /settings)
 - **UI**: shadcn/ui components in `components/ui/`, Tailwind CSS v4, Lucide icons
 - **Terminal**: xterm.js with fit addon and clickable URL detection
 - **Tooltips**: All interactive badges and buttons have tooltips via shadcn/ui Tooltip
@@ -108,6 +111,7 @@ Output goes to `out/main/`, `out/preload/`, `out/renderer/`.
 - **Radix UI**: Import from `"radix-ui"` (unified package), not `@radix-ui/react-*`
 - **shadcn/ui components**: Located in `src/renderer/src/components/ui/`
 - **StrictMode handling**: Use module-level listener count pattern (see `useProcesses.ts`) to prevent double-mount issues
+- **No hardcoded colors**: Never use hex color values (e.g., `#82aaff`, `bg-[#292d3e]`) in components. Use Tailwind theme classes (`text-foreground`, `bg-card`, `border-border`) for UI chrome and Tailwind palette colors (`text-blue-400`, `text-green-400`) for accents. Exception: external brand colors (e.g., GitHub language colors) may use inline hex.
 
 ## Security Model
 

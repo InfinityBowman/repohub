@@ -24,7 +24,7 @@ import { useGitHub } from '@/hooks/useGitHub';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProjectBadge } from '@/components/repository/ProjectBadge';
 import { HealthBadge } from '@/components/repository/HealthBadge';
 import { PRBadge } from '@/components/github/PRBadge';
@@ -178,7 +178,6 @@ export function RepositoryDetailView() {
           </div>
 
           <div className='flex items-center gap-1'>
-            <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -281,7 +280,6 @@ export function RepositoryDetailView() {
                   </Tooltip>
                 </>
               }
-            </TooltipProvider>
           </div>
         </div>
       </div>

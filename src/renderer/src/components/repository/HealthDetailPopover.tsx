@@ -4,7 +4,7 @@ import type { DependencyHealth } from '@/types';
 import { useHealth } from '@/hooks/useHealth';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 function formatTime(ts: number): string {
   const d = new Date(ts);
@@ -30,8 +30,7 @@ export function HealthDetailPopover({
         <div className='flex flex-col gap-3'>
           <div className='flex items-center justify-between'>
             <h4 className='text-sm font-medium'>Dependency Health</h4>
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
+            <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant='ghost'
@@ -44,7 +43,6 @@ export function HealthDetailPopover({
                 </TooltipTrigger>
                 <TooltipContent>Re-check dependencies</TooltipContent>
               </Tooltip>
-            </TooltipProvider>
           </div>
 
           {health.vulnerabilities.total > 0 && (

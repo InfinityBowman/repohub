@@ -77,6 +77,10 @@ const electronAPI = {
     getAllUserPRs: () => ipcRenderer.invoke('github:get-all-user-prs'),
     refresh: () => ipcRenderer.invoke('github:refresh'),
     createPR: (repoId: string) => ipcRenderer.invoke('github:create-pr', repoId),
+    searchTrending: (language?: string, period?: string) =>
+      ipcRenderer.invoke('github:trending', language, period),
+    getTrendingReadme: (fullName: string) =>
+      ipcRenderer.invoke('github:trending-readme', fullName),
   },
 
   scaffold: {
@@ -91,6 +95,38 @@ const electronAPI = {
     write: (data: string) => ipcRenderer.invoke('scaffold:write', data),
     resize: (cols: number, rows: number) => ipcRenderer.invoke('scaffold:resize', cols, rows),
     cancel: () => ipcRenderer.invoke('scaffold:cancel'),
+  },
+
+  packages: {
+    search: (query: string, limit?: number) =>
+      ipcRenderer.invoke('packages:search', query, limit),
+    getDetails: (packageName: string) =>
+      ipcRenderer.invoke('packages:get-details', packageName),
+  },
+
+  packageClone: {
+    clone: (packageName: string, repoUrl: string) =>
+      ipcRenderer.invoke('package-clone:clone', packageName, repoUrl),
+    getStatus: (packageName: string) =>
+      ipcRenderer.invoke('package-clone:status', packageName),
+    listFiles: (packageName: string, relativePath?: string) =>
+      ipcRenderer.invoke('package-clone:list-files', packageName, relativePath || ''),
+    readFile: (packageName: string, relativePath: string) =>
+      ipcRenderer.invoke('package-clone:read-file', packageName, relativePath),
+    deleteClone: (packageName: string) =>
+      ipcRenderer.invoke('package-clone:delete', packageName),
+  },
+
+  agent: {
+    launch: (config: any) => ipcRenderer.invoke('agent:launch', config),
+    stop: (sessionId: string) => ipcRenderer.invoke('agent:stop', sessionId),
+    sendMessage: (sessionId: string, content: string) =>
+      ipcRenderer.invoke('agent:send-message', { sessionId, content }),
+    respondPermission: (sessionId: string, requestId: string, allow: boolean) =>
+      ipcRenderer.invoke('agent:respond-permission', { sessionId, requestId, allow }),
+    list: () => ipcRenderer.invoke('agent:list'),
+    getMessages: (sessionId: string) => ipcRenderer.invoke('agent:get-messages', sessionId),
+    getPermissions: (sessionId: string) => ipcRenderer.invoke('agent:get-permissions', sessionId),
   },
 
   search: {
@@ -141,6 +177,41 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data);
       ipcRenderer.on('scaffold:done', handler);
       return () => ipcRenderer.removeListener('scaffold:done', handler);
+    },
+    agentLaunched: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:launched', handler);
+      return () => ipcRenderer.removeListener('agent:launched', handler);
+    },
+    agentStatusChanged: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:status-changed', handler);
+      return () => ipcRenderer.removeListener('agent:status-changed', handler);
+    },
+    agentOutput: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:output', handler);
+      return () => ipcRenderer.removeListener('agent:output', handler);
+    },
+    agentPermissionRequest: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:permission-request', handler);
+      return () => ipcRenderer.removeListener('agent:permission-request', handler);
+    },
+    agentResult: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:result', handler);
+      return () => ipcRenderer.removeListener('agent:result', handler);
+    },
+    agentStream: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:stream', handler);
+      return () => ipcRenderer.removeListener('agent:stream', handler);
+    },
+    agentError: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('agent:error', handler);
+      return () => ipcRenderer.removeListener('agent:error', handler);
     },
     searchStatusChanged: (callback: (status: any) => void) => {
       const handler = (_: any, data: any) => callback(data);

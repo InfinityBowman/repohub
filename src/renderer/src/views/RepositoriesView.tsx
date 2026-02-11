@@ -17,7 +17,7 @@ import { VSCodeIcon } from '@/components/icons/VSCodeIcon';
 import { GhosttyIcon } from '@/components/icons/GhosttyIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScaffoldDialog } from '@/components/scaffold/ScaffoldDialog';
 
 interface TreeNode {
@@ -81,7 +81,6 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
           <span className='font-medium'>{node.name}</span>
         </button>
         {hovered && (
-          <TooltipProvider delayDuration={300}>
             <div className='flex items-center gap-0.5'>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -114,7 +113,6 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
                 <TooltipContent>Open in Ghostty</TooltipContent>
               </Tooltip>
             </div>
-          </TooltipProvider>
         )}
       </div>
       {open && (
@@ -154,8 +152,7 @@ export function RepositoriesView() {
             <Plus className='h-4 w-4' />
             New Project
           </Button>
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
+          <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant='outline'
@@ -173,7 +170,6 @@ export function RepositoriesView() {
               </TooltipTrigger>
               <TooltipContent>Check dependency health for all Node.js projects</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
           <Button variant='outline' size='sm' onClick={scan} disabled={loading}>
             <RefreshCw className={loading ? 'animate-spin' : ''} />
             {loading ? 'Scanning...' : 'Rescan'}

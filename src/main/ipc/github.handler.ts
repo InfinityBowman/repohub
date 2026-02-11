@@ -22,6 +22,14 @@ export function registerGitHubHandlers(githubService: GitHubService): void {
     return githubService.createPR(repoId);
   });
 
+  ipcMain.handle('github:trending', async (_event, language?: string, period?: string) => {
+    return githubService.searchTrendingRepos(language, (period as 'week' | 'month') || 'week');
+  });
+
+  ipcMain.handle('github:trending-readme', async (_event, fullName: string) => {
+    return githubService.getTrendingRepoReadme(fullName);
+  });
+
   githubService.on('github:changed', data => {
     const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {

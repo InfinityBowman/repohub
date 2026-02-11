@@ -2,11 +2,20 @@ import { EventEmitter } from 'events';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import type { RepositoryService } from './RepositoryService';
-import type { PRInfo, GitHubStatus, PRState, CIStatus, ReviewStatus } from '../types/github.types';
+import type {
+  PRInfo,
+  GitHubStatus,
+  PRState,
+  CIStatus,
+  ReviewStatus,
+  TrendingRepo,
+  TrendingPeriod,
+} from '../types/github.types';
 
 const execAsync = promisify(exec);
 
 const COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes
+const TRENDING_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 export class GitHubService extends EventEmitter {
   private repositoryService: RepositoryService;
@@ -14,6 +23,7 @@ export class GitHubService extends EventEmitter {
   private allUserPRs: PRInfo[] = [];
   private lastFetch = 0;
   private _status: GitHubStatus | null = null;
+  private trendingCache = new Map<string, { data: TrendingRepo[]; timestamp: number }>();
 
   constructor(repositoryService: RepositoryService) {
     super();
@@ -240,6 +250,81 @@ export class GitHubService extends EventEmitter {
       repoId,
       repoName,
     };
+  }
+
+  async searchTrendingRepos(
+    language?: string,
+    period: TrendingPeriod = 'week',
+  ): Promise<TrendingRepo[]> {
+    const status = await this.checkAvailability();
+    if (!status.available || !status.authenticated) return [];
+
+    const cacheKey = `${language || 'all'}:${period}`;
+    const cached = this.trendingCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < TRENDING_TTL_MS) {
+      return cached.data;
+    }
+
+    const daysAgo = period === 'week' ? 7 : 30;
+    const dateThreshold = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+
+    let query = `created:>${dateThreshold} stars:>50`;
+    if (language) {
+      query += ` language:${language}`;
+    }
+
+    try {
+      const { stdout } = await execAsync(
+        `gh api search/repositories -X GET -f q='${query}' -f sort=stars -f order=desc -f per_page=25`,
+        { timeout: 10000 },
+      );
+
+      const result = JSON.parse(stdout);
+      const repos: TrendingRepo[] = (result.items || []).map((item: any) => ({
+        fullName: item.full_name,
+        name: item.name,
+        owner: {
+          login: item.owner?.login || '',
+          avatarUrl: item.owner?.avatar_url || '',
+        },
+        description: item.description || '',
+        stargazersCount: item.stargazers_count || 0,
+        forksCount: item.forks_count || 0,
+        language: item.language || null,
+        topics: item.topics || [],
+        license: item.license?.spdx_id || null,
+        htmlUrl: item.html_url,
+        homepage: item.homepage || null,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        openIssuesCount: item.open_issues_count || 0,
+      }));
+
+      this.trendingCache.set(cacheKey, { data: repos, timestamp: Date.now() });
+      return repos;
+    } catch {
+      return [];
+    }
+  }
+
+  async getTrendingRepoReadme(fullName: string): Promise<string> {
+    const status = await this.checkAvailability();
+    if (!status.available || !status.authenticated) return '';
+
+    try {
+      const { stdout } = await execAsync(
+        `gh api repos/${fullName}/readme --jq .content`,
+        { timeout: 10000 },
+      );
+
+      const base64Content = stdout.trim();
+      if (!base64Content) return '';
+      return Buffer.from(base64Content, 'base64').toString('utf-8');
+    } catch {
+      return '';
+    }
   }
 
   private emitChanged(): void {
