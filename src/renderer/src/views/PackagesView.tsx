@@ -409,7 +409,7 @@ export function PackagesView() {
     selectRepo,
   } = useTrending();
 
-  const [mode, setMode] = useState<ViewMode>('search');
+  const [mode, setMode] = useState<ViewMode>('trending');
   const [inputValue, setInputValue] = useState('');
   const [tab, setTab] = useState<'preview' | 'source' | 'ai'>('preview');
   const searchRef = useRef<HTMLInputElement>(null);
@@ -1099,30 +1099,9 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
         </div>
       )}
 
-      {/* Action buttons */}
-      <div className='relative shrink-0 px-8 pb-2'>
-        <div className='flex items-center gap-2'>
-          <Button
-            size='sm'
-            className='gap-2 bg-blue-400/15 text-blue-400 hover:bg-blue-400/25'
-            onClick={() => openUrl(repo.htmlUrl)}
-          >
-            <ExternalLink className='h-3.5 w-3.5' />
-            View on GitHub
-          </Button>
-          {repo.homepage && (
-            <Button
-              size='sm'
-              variant='outline'
-              className='gap-2 text-xs'
-              onClick={() => openUrl(repo.homepage!)}
-            >
-              <BookOpen className='h-3.5 w-3.5' />
-              Website
-            </Button>
-          )}
-        </div>
-        <div className='via-border/25 mt-3 h-px bg-gradient-to-r from-transparent to-transparent' />
+      {/* Divider before README */}
+      <div className='shrink-0 px-8'>
+        <div className='via-border/25 h-px bg-gradient-to-r from-transparent to-transparent' />
       </div>
 
       {/* README */}
