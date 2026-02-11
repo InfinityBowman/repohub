@@ -180,7 +180,11 @@ function groupMessages(messages: AgentMessage[]): MessageGroup[] {
     const msg = messages[i];
 
     // Check for tool_use + tool_result pair
-    if (msg.type === 'tool_use' && i + 1 < messages.length && messages[i + 1].type === 'tool_result') {
+    if (
+      msg.type === 'tool_use' &&
+      i + 1 < messages.length &&
+      messages[i + 1].type === 'tool_result'
+    ) {
       const toolName = msg.toolName || '';
       const pairs: AgentMessage[][] = [[msg, messages[i + 1]]];
       i += 2;
@@ -421,9 +425,7 @@ function ThinkingMessage({ message }: { message: AgentMessage }) {
       </button>
       {expanded && (
         <div className='mt-1 ml-8 rounded border border-purple-400/10 bg-purple-500/5 px-3 py-2'>
-          <p className='text-xs whitespace-pre-wrap text-purple-200/70 italic'>
-            {message.content}
-          </p>
+          <p className='text-xs whitespace-pre-wrap text-purple-200/70 italic'>{message.content}</p>
         </div>
       )}
     </div>
@@ -446,9 +448,7 @@ function ToolBatchGroup({ group }: { group: MessageGroupToolBatch }) {
         <span className='inline-flex shrink-0 items-center rounded-md bg-yellow-400/10 px-1.5 py-0.5 text-xs font-medium text-yellow-300'>
           {group.toolName}
         </span>
-        <span className='text-muted-foreground text-xs'>
-          ({group.count} calls)
-        </span>
+        <span className='text-muted-foreground text-xs'>({group.count} calls)</span>
       </button>
       {expanded && (
         <div className='mt-1 space-y-0.5'>

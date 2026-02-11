@@ -74,9 +74,8 @@ export class AgentService extends EventEmitter {
       this.emitStatusChanged(sessionId);
       child.kill('SIGTERM');
       setTimeout(() => {
-        if (this.processes.has(sessionId)) {
-          child.kill('SIGKILL');
-        }
+        const proc = this.processes.get(sessionId);
+        if (proc) proc.kill('SIGKILL');
       }, SIGKILL_DELAY_MS);
     } else {
       session.state = 'completed';
@@ -212,6 +211,9 @@ export class AgentService extends EventEmitter {
   }
 
   private scheduleSessionCleanup(sessionId: string): void {
+    const existing = this.cleanupTimers.get(sessionId);
+    if (existing) clearTimeout(existing);
+
     const timer = setTimeout(() => {
       this.sessions.delete(sessionId);
       this.cleanupTimers.delete(sessionId);

@@ -63,7 +63,15 @@ export function useAgentListeners() {
         useAgentStore.getState().clearStreamThinking(data.sessionId);
       });
 
-      cleanupFns = [unsubLaunched, unsubStatus, unsubOutput, unsubResult, unsubStream, unsubStreamThinking, unsubError];
+      cleanupFns = [
+        unsubLaunched,
+        unsubStatus,
+        unsubOutput,
+        unsubResult,
+        unsubStream,
+        unsubStreamThinking,
+        unsubError,
+      ];
     }
 
     return () => {
@@ -91,9 +99,11 @@ export function useAgents() {
 
   const launch = useCallback(async (config: AgentLaunchConfig) => {
     const result = await window.electron.agent.launch(config);
-    useAgentStore.getState().setActiveAgent(result.sessionId);
-    useAgentStore.getState().setShowLaunchPanel(false);
-    useAgentStore.getState().setViewingHistorySessionId(null);
+    useAgentStore.setState({
+      activeAgentId: result.sessionId,
+      showLaunchPanel: false,
+      viewingHistorySessionId: null,
+    });
     return result;
   }, []);
 
@@ -121,8 +131,7 @@ export function useAgents() {
       // Store messages under the history session ID and mark as viewing
       const viewKey = `history:${sessionId}`;
       useAgentStore.getState().setMessages(viewKey, messages);
-      useAgentStore.getState().setViewingHistorySessionId(sessionId);
-      useAgentStore.getState().setActiveAgent(null);
+      useAgentStore.setState({ viewingHistorySessionId: sessionId, activeAgentId: null });
     } catch (err) {
       console.error('Failed to load session:', err);
     }
@@ -132,16 +141,18 @@ export function useAgents() {
     // Load historical messages before spawning so the UI shows the full conversation
     const historyMessages = await window.electron.agent.readSession(config.repoPath, cliSessionId);
 
-    const result = await window.electron.agent.resumeSession(cliSessionId, config.repoPath, config);
+    const result = await window.electron.agent.resumeSession(cliSessionId, config);
 
     // Prepopulate the agent's message store with session history
     if (historyMessages.length > 0) {
       useAgentStore.getState().setMessages(result.sessionId, historyMessages);
     }
 
-    useAgentStore.getState().setActiveAgent(result.sessionId);
-    useAgentStore.getState().setShowLaunchPanel(false);
-    useAgentStore.getState().setViewingHistorySessionId(null);
+    useAgentStore.setState({
+      activeAgentId: result.sessionId,
+      showLaunchPanel: false,
+      viewingHistorySessionId: null,
+    });
     return result;
   }, []);
 

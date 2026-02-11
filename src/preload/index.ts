@@ -120,7 +120,7 @@ const electronAPI = {
     listSessions: (repoPath: string) => ipcRenderer.invoke('agent:list-sessions', repoPath),
     readSession: (repoPath: string, sessionId: string) =>
       ipcRenderer.invoke('agent:read-session', { repoPath, sessionId }),
-    resumeSession: (cliSessionId: string, repoPath: string, config: any) =>
+    resumeSession: (cliSessionId: string, config: any) =>
       ipcRenderer.invoke('agent:resume-session', { cliSessionId, config }),
   },
 

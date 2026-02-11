@@ -84,7 +84,7 @@ export function MessageInput({ agentState, onSend }: MessageInputProps) {
         <button
           disabled={!canSend || !value.trim()}
           onClick={handleSend}
-          className='mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-blue-400 disabled:pointer-events-none disabled:opacity-30'
+          className='text-muted-foreground mb-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors hover:text-blue-400 disabled:pointer-events-none disabled:opacity-30'
         >
           <Send className='h-3.5 w-3.5' />
         </button>

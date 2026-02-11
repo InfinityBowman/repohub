@@ -84,9 +84,9 @@ function SessionRow({
         }
       }}
       className={`group flex w-full cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-        isActive
-          ? 'border-primary/40 bg-primary/5'
-          : 'border-border hover:border-border/80 hover:bg-secondary/30'
+        isActive ?
+          'border-primary/40 bg-primary/5'
+        : 'border-border hover:border-border/80 hover:bg-secondary/30'
       }`}
     >
       <MessageSquare className='mt-0.5 h-4 w-4 shrink-0 text-blue-400' />
@@ -162,8 +162,9 @@ export function AgentCommandCenterView() {
 
   const viewKey = viewingHistorySessionId ? `history:${viewingHistorySessionId}` : null;
   const viewingMessages = viewKey ? messages[viewKey] || [] : [];
-  const viewingSession = viewingHistorySessionId
-    ? sessionHistory.find(s => s.sessionId === viewingHistorySessionId)
+  const viewingSession =
+    viewingHistorySessionId ?
+      sessionHistory.find(s => s.sessionId === viewingHistorySessionId)
     : null;
 
   const selectedRepo = repositories.find(r => r.path === selectedRepoPath);
@@ -255,7 +256,7 @@ export function AgentCommandCenterView() {
   // --- Tabs ---
 
   const tabs =
-    agentList.length > 0 ? (
+    agentList.length > 0 ?
       <div className='flex items-center gap-1'>
         {agentList.map(a => (
           <div key={a.id} className='flex items-center'>
@@ -266,16 +267,16 @@ export function AgentCommandCenterView() {
               }}
               title={a.config.task || a.config.repoName}
               className={`max-w-[160px] truncate rounded px-2 py-0.5 text-xs transition-colors ${
-                a.id === activeAgentId && !viewingHistorySessionId
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
+                a.id === activeAgentId && !viewingHistorySessionId ?
+                  'bg-primary/20 text-primary'
+                : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {a.config.task
-                ? a.config.task.length > 25
-                  ? a.config.task.slice(0, 25) + '...'
-                  : a.config.task
-                : a.config.repoName}
+              {a.config.task ?
+                a.config.task.length > 25 ?
+                  a.config.task.slice(0, 25) + '...'
+                : a.config.task
+              : a.config.repoName}
               {a.state === 'working' && (
                 <span className='ml-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-green-400' />
               )}
@@ -296,16 +297,16 @@ export function AgentCommandCenterView() {
         <button
           onClick={goToList}
           className={`rounded px-2 py-0.5 text-xs transition-colors ${
-            !activeAgentId && !viewingHistorySessionId
-              ? 'bg-primary/20 text-primary'
-              : 'text-muted-foreground hover:text-foreground'
+            !activeAgentId && !viewingHistorySessionId ?
+              'bg-primary/20 text-primary'
+            : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <History className='mr-1 inline h-3 w-3' />
           History
         </button>
       </div>
-    ) : null;
+    : null;
 
   // --- Header (always the same) ---
 
@@ -315,16 +316,15 @@ export function AgentCommandCenterView() {
         <h2 className='text-xl font-semibold'>Agents</h2>
         {!showLaunchPanel && tabs}
       </div>
-      {showLaunchPanel ? (
+      {showLaunchPanel ?
         <Button size='sm' variant='ghost' onClick={() => setShowLaunchPanel(false)}>
           Cancel
         </Button>
-      ) : (
-        <Button size='sm' variant='outline' onClick={() => setShowLaunchPanel(true)}>
+      : <Button size='sm' variant='outline' onClick={() => setShowLaunchPanel(true)}>
           <Plus className='h-4 w-4' />
           New Agent
         </Button>
-      )}
+      }
     </div>
   );
 
@@ -350,7 +350,11 @@ export function AgentCommandCenterView() {
       <div className='flex h-full flex-col gap-2 overflow-hidden'>
         {header}
         <InfoBar agent={activeAgent} onStop={handleStop} />
-        <AgentTerminal messages={activeMessages} streamingText={activeStreaming} streamingThinking={activeStreamingThinking} />
+        <AgentTerminal
+          messages={activeMessages}
+          streamingText={activeStreaming}
+          streamingThinking={activeStreamingThinking}
+        />
         <MessageInput agentState={activeAgent.state} onSend={handleSendMessage} />
       </div>
     );
@@ -382,11 +386,9 @@ export function AgentCommandCenterView() {
               disabled={resuming === viewingSession.sessionId}
               onClick={() => handleResume(viewingSession)}
             >
-              {resuming === viewingSession.sessionId ? (
+              {resuming === viewingSession.sessionId ?
                 <Loader2 className='h-3.5 w-3.5 animate-spin' />
-              ) : (
-                <Play className='h-3.5 w-3.5' />
-              )}
+              : <Play className='h-3.5 w-3.5' />}
               Resume
             </Button>
           )}
@@ -443,11 +445,11 @@ export function AgentCommandCenterView() {
       )}
 
       {/* Session list */}
-      {loading ? (
+      {loading ?
         <div className='flex items-center justify-center py-8'>
           <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
         </div>
-      ) : sessionHistory.length > 0 ? (
+      : sessionHistory.length > 0 ?
         <div className='flex flex-col gap-1.5'>
           {sessionHistory.map(session => (
             <SessionRow
@@ -459,19 +461,18 @@ export function AgentCommandCenterView() {
             />
           ))}
         </div>
-      ) : (
-        <div className='flex flex-col items-center gap-3 py-8 text-center'>
+      : <div className='flex flex-col items-center gap-3 py-8 text-center'>
           <Bot className='text-muted-foreground h-8 w-8' />
           <div>
             <p className='text-sm font-medium'>No sessions found</p>
             <p className='text-muted-foreground text-xs'>
-              {selectedRepoPath
-                ? 'No Claude Code sessions exist for this repository yet.'
-                : 'Select a repository to browse session history.'}
+              {selectedRepoPath ?
+                'No Claude Code sessions exist for this repository yet.'
+              : 'Select a repository to browse session history.'}
             </p>
           </div>
         </div>
-      )}
+      }
     </div>
   );
 }

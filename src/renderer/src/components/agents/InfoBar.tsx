@@ -116,16 +116,19 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
               <Progress
                 value={contextInfo.pct}
                 className={cn(
-                  'h-1.5 bg-muted',
+                  'bg-muted h-1.5',
                   contextInfo.pct < 50 && '[&>[data-slot=progress-indicator]]:bg-green-500',
-                  contextInfo.pct >= 50 && contextInfo.pct < 80 && '[&>[data-slot=progress-indicator]]:bg-yellow-500',
+                  contextInfo.pct >= 50 &&
+                    contextInfo.pct < 80 &&
+                    '[&>[data-slot=progress-indicator]]:bg-yellow-500',
                   contextInfo.pct >= 80 && '[&>[data-slot=progress-indicator]]:bg-red-500',
                 )}
               />
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            Context: {contextInfo.tokens.toLocaleString()} / {contextInfo.maxTokens.toLocaleString()} tokens ({Math.round(contextInfo.pct)}%)
+            Context: {contextInfo.tokens.toLocaleString()} /{' '}
+            {contextInfo.maxTokens.toLocaleString()} tokens ({Math.round(contextInfo.pct)}%)
           </TooltipContent>
         </Tooltip>
       )}
@@ -135,7 +138,7 @@ export function InfoBar({ agent, onStop }: InfoBarProps) {
           <TooltipTrigger asChild>
             <button
               onClick={onStop}
-              className='text-muted-foreground hover:text-red-400 rounded p-1 transition-colors'
+              className='text-muted-foreground rounded p-1 transition-colors hover:text-red-400'
             >
               <Square className='h-3.5 w-3.5' />
             </button>
