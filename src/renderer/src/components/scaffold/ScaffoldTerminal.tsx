@@ -112,7 +112,7 @@ export function ScaffoldTerminal({ onDone, disabled }: ScaffoldTerminalProps) {
   return (
     <div
       ref={containerRef}
-      className='border-border h-80 w-full overflow-hidden rounded-md border bg-[#0a0a0a] p-2'
+      className='border-border h-80 w-full overflow-hidden rounded-md border bg-black p-2'
     />
   );
 }

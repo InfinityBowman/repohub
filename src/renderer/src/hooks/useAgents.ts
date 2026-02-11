@@ -85,6 +85,7 @@ export function useAgents() {
     const result = await window.electron.agent.launch(config);
     useAgentStore.getState().setActiveAgent(result.sessionId);
     useAgentStore.getState().setShowLaunchPanel(false);
+    useAgentStore.getState().setViewingHistorySessionId(null);
     return result;
   }, []);
 
@@ -104,6 +105,44 @@ export function useAgents() {
     [],
   );
 
+  const loadSessionHistory = useCallback(async (repoPath: string) => {
+    try {
+      const sessions = await window.electron.agent.listSessions(repoPath);
+      useAgentStore.getState().setSessionHistory(sessions);
+    } catch (err) {
+      console.error('Failed to load session history:', err);
+      useAgentStore.getState().setSessionHistory([]);
+    }
+  }, []);
+
+  const viewSession = useCallback(async (repoPath: string, sessionId: string) => {
+    try {
+      const messages = await window.electron.agent.readSession(repoPath, sessionId);
+      // Store messages under the history session ID and mark as viewing
+      const viewKey = `history:${sessionId}`;
+      useAgentStore.getState().setMessages(viewKey, messages);
+      useAgentStore.getState().setViewingHistorySessionId(sessionId);
+      useAgentStore.getState().setActiveAgent(null);
+    } catch (err) {
+      console.error('Failed to load session:', err);
+    }
+  }, []);
+
+  const resumeSession = useCallback(
+    async (cliSessionId: string, config: AgentLaunchConfig) => {
+      const result = await window.electron.agent.resumeSession(
+        cliSessionId,
+        config.repoPath,
+        config,
+      );
+      useAgentStore.getState().setActiveAgent(result.sessionId);
+      useAgentStore.getState().setShowLaunchPanel(false);
+      useAgentStore.getState().setViewingHistorySessionId(null);
+      return result;
+    },
+    [],
+  );
+
   return {
     agents: store.agents,
     activeAgentId: store.activeAgentId,
@@ -111,11 +150,17 @@ export function useAgents() {
     pendingPermissions: store.pendingPermissions,
     streaming: store.streaming,
     showLaunchPanel: store.showLaunchPanel,
+    sessionHistory: store.sessionHistory,
+    viewingHistorySessionId: store.viewingHistorySessionId,
     setActiveAgent: store.setActiveAgent,
     setShowLaunchPanel: store.setShowLaunchPanel,
+    setViewingHistorySessionId: store.setViewingHistorySessionId,
     launch,
     stop,
     sendMessage,
     respondPermission,
+    loadSessionHistory,
+    viewSession,
+    resumeSession,
   };
 }

@@ -102,9 +102,21 @@ export interface AgentSessionInfo {
   config: AgentLaunchConfig;
   state: AgentState;
   pid?: number;
+  cliSessionId?: string;
   cost: { inputTokens: number; outputTokens: number; totalCost: number };
   startedAt: number;
   completedAt?: number;
   messageCount: number;
   pendingPermissionCount: number;
+}
+
+// Summary of a Claude CLI session read from ~/.claude/projects/
+export interface ClaudeSessionSummary {
+  sessionId: string;
+  task: string;
+  messageCount: number;
+  costUsd: number;
+  startedAt: string;
+  modifiedAt: string;
+  durationSeconds: number;
 }

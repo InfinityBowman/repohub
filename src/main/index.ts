@@ -26,6 +26,7 @@ import { CodeSearchService } from './services/CodeSearchService';
 import { PackageIntelligenceService } from './services/PackageIntelligenceService';
 import { PackageCloneService } from './services/PackageCloneService';
 import { AgentService } from './services/AgentService';
+import { ClaudeSessionReader } from './services/ClaudeSessionReader';
 
 // Initialize services
 const configService = new ConfigService();
@@ -41,6 +42,7 @@ const codeSearchService = new CodeSearchService(configService, repositoryService
 const packageService = new PackageIntelligenceService();
 const packageCloneService = new PackageCloneService();
 const agentService = new AgentService();
+const claudeSessionReader = new ClaudeSessionReader();
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -57,6 +59,7 @@ app.whenReady().then(() => {
     packageService,
     packageCloneService,
     agentService,
+    claudeSessionReader,
   });
 
   // Create window

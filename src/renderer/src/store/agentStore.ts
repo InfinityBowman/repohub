@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import type { AgentSessionInfo, AgentMessage, PermissionRequest } from '@/types';
+import type {
+  AgentSessionInfo,
+  AgentMessage,
+  PermissionRequest,
+  ClaudeSessionSummary,
+} from '@/types';
 
 interface AgentState {
   agents: Record<string, AgentSessionInfo>;
@@ -8,6 +13,8 @@ interface AgentState {
   pendingPermissions: Record<string, PermissionRequest[]>;
   streaming: Record<string, string>;
   showLaunchPanel: boolean;
+  sessionHistory: ClaudeSessionSummary[];
+  viewingHistorySessionId: string | null;
 
   addAgent: (agent: AgentSessionInfo) => void;
   updateAgent: (agent: AgentSessionInfo) => void;
@@ -21,6 +28,8 @@ interface AgentState {
   appendStreamChunk: (sessionId: string, delta: string) => void;
   clearStream: (sessionId: string) => void;
   setShowLaunchPanel: (show: boolean) => void;
+  setSessionHistory: (sessions: ClaudeSessionSummary[]) => void;
+  setViewingHistorySessionId: (id: string | null) => void;
 }
 
 export const useAgentStore = create<AgentState>(set => ({
@@ -30,6 +39,8 @@ export const useAgentStore = create<AgentState>(set => ({
   pendingPermissions: {},
   streaming: {},
   showLaunchPanel: false,
+  sessionHistory: [],
+  viewingHistorySessionId: null,
 
   addAgent: agent =>
     set(state => ({
@@ -108,4 +119,8 @@ export const useAgentStore = create<AgentState>(set => ({
     })),
 
   setShowLaunchPanel: show => set({ showLaunchPanel: show }),
+
+  setSessionHistory: sessions => set({ sessionHistory: sessions }),
+
+  setViewingHistorySessionId: id => set({ viewingHistorySessionId: id }),
 }));

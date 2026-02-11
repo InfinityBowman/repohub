@@ -22,6 +22,7 @@ import type { CodeSearchService } from '../services/CodeSearchService';
 import type { PackageIntelligenceService } from '../services/PackageIntelligenceService';
 import type { PackageCloneService } from '../services/PackageCloneService';
 import type { AgentService } from '../services/AgentService';
+import type { ClaudeSessionReader } from '../services/ClaudeSessionReader';
 
 export function registerAllHandlers(services: {
   repositoryService: RepositoryService;
@@ -36,6 +37,7 @@ export function registerAllHandlers(services: {
   packageService: PackageIntelligenceService;
   packageCloneService: PackageCloneService;
   agentService: AgentService;
+  claudeSessionReader: ClaudeSessionReader;
 }): void {
   registerRepositoryHandlers(services.repositoryService);
   registerProcessHandlers(services.processService);
@@ -48,5 +50,5 @@ export function registerAllHandlers(services: {
   registerCodeSearchHandlers(services.codeSearchService);
   registerPackageHandlers(services.packageService);
   registerPackageCloneHandlers(services.packageCloneService);
-  registerAgentHandlers(services.agentService);
+  registerAgentHandlers(services.agentService, services.claudeSessionReader);
 }

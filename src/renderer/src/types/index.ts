@@ -303,11 +303,22 @@ export interface AgentSessionInfo {
   config: AgentLaunchConfig;
   state: AgentState;
   pid?: number;
+  cliSessionId?: string;
   cost: { inputTokens: number; outputTokens: number; totalCost: number };
   startedAt: number;
   completedAt?: number;
   messageCount: number;
   pendingPermissionCount: number;
+}
+
+export interface ClaudeSessionSummary {
+  sessionId: string;
+  task: string;
+  messageCount: number;
+  costUsd: number;
+  startedAt: string;
+  modifiedAt: string;
+  durationSeconds: number;
 }
 
 export type TypeScriptSupport = 'built-in' | 'types' | 'none';
@@ -463,6 +474,13 @@ declare global {
         list: () => Promise<AgentSessionInfo[]>;
         getMessages: (sessionId: string) => Promise<AgentMessage[]>;
         getPermissions: (sessionId: string) => Promise<PermissionRequest[]>;
+        listSessions: (repoPath: string) => Promise<ClaudeSessionSummary[]>;
+        readSession: (repoPath: string, sessionId: string) => Promise<AgentMessage[]>;
+        resumeSession: (
+          cliSessionId: string,
+          repoPath: string,
+          config: AgentLaunchConfig,
+        ) => Promise<{ sessionId: string }>;
       };
       search: {
         query: (options: SearchOptions) => Promise<SearchResult[]>;

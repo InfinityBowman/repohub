@@ -22,7 +22,7 @@ export function CodeBlock({ code, lang = 'json', theme = 'default' }: CodeBlockP
 
   if (!html) {
     return (
-      <pre className='border-border text-muted-foreground max-h-96 overflow-auto rounded-md border bg-[#0a0a0a] p-4 font-mono text-xs'>
+      <pre className='border-border text-muted-foreground max-h-96 overflow-auto rounded-md border bg-black p-4 font-mono text-xs'>
         {code}
       </pre>
     );

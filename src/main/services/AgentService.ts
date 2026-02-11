@@ -49,57 +49,13 @@ export class AgentService extends EventEmitter {
     ];
 
     try {
-      const child = spawn('claude', args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: config.repoPath,
-        env: { ...process.env },
-        detached: false,
-      });
-
-      session.pid = child.pid;
-      this.processes.set(sessionId, child);
-
-      // Parse NDJSON from stdout
-      child.stdout?.on('data', (data: Buffer) => {
-        this.handleStdout(sessionId, data);
-      });
-
-      // Capture stderr for debugging
-      child.stderr?.on('data', (data: Buffer) => {
-        const text = data.toString();
-        if (text.trim()) {
-          console.log(`[Agent ${sessionId.slice(0, 8)}] stderr:`, text.trim());
-        }
-      });
-
-      child.on('exit', (code, signal) => {
-        console.log(`[Agent ${sessionId.slice(0, 8)}] Process exited: code=${code} signal=${signal}`);
-        this.processes.delete(sessionId);
-        this.stdoutBuffers.delete(sessionId);
-        const s = this.sessions.get(sessionId);
-        if (s && s.state !== 'completed') {
-          s.state = 'completed';
-          s.completedAt = Date.now();
-          this.emitStatusChanged(sessionId);
-        }
-      });
-
-      child.on('error', err => {
-        console.error(`[Agent ${sessionId.slice(0, 8)}] Spawn error:`, err.message);
-        this.processes.delete(sessionId);
-        const s = this.sessions.get(sessionId);
-        if (s) {
-          s.state = 'error';
-          this.addMessage(sessionId, 'error', `Failed to start claude CLI: ${err.message}`);
-          this.emitStatusChanged(sessionId);
-        }
-      });
+      const child = this.spawnAndAttach(sessionId, session, args);
 
       session.state = 'working';
       this.addMessage(sessionId, 'user', config.task);
       this.emit('agent:launched', this.toSessionInfo(session));
 
-      // Send initial task via stdin NDJSON (positional prompt is ignored with --input-format stream-json)
+      // Send initial task via stdin NDJSON
       const initMsg = JSON.stringify({
         type: 'user',
         message: { role: 'user', content: config.task },
@@ -134,6 +90,55 @@ export class AgentService extends EventEmitter {
     session.state = 'completed';
     session.completedAt = Date.now();
     this.emitStatusChanged(sessionId);
+  }
+
+  async resumeSession(
+    cliSessionId: string,
+    config: AgentLaunchConfig,
+  ): Promise<{ sessionId: string }> {
+    const sessionId = randomUUID();
+    const role = BUILT_IN_ROLES.find(r => r.id === config.roleId);
+    if (!role) throw new Error(`Unknown role: ${config.roleId}`);
+
+    const permissionMode = this.resolvePermissionMode(config);
+
+    const session: AgentSession = {
+      id: sessionId,
+      config,
+      state: 'starting',
+      messages: [],
+      pendingPermissions: [],
+      cost: { inputTokens: 0, outputTokens: 0, totalCost: 0 },
+      startedAt: Date.now(),
+      cliSessionId,
+    };
+
+    this.sessions.set(sessionId, session);
+    this.stdoutBuffers.set(sessionId, '');
+
+    const args = [
+      '--resume', cliSessionId,
+      '--output-format', 'stream-json',
+      '--input-format', 'stream-json',
+      '--verbose',
+      '--include-partial-messages',
+      '--permission-mode', permissionMode,
+    ];
+
+    try {
+      this.spawnAndAttach(sessionId, session, args);
+
+      session.state = 'working';
+      this.addMessage(sessionId, 'system', `Resuming session ${cliSessionId.slice(0, 8)}...`);
+      this.emit('agent:launched', this.toSessionInfo(session));
+
+      return { sessionId };
+    } catch (err: any) {
+      session.state = 'error';
+      this.addMessage(sessionId, 'error', err.message);
+      this.emitStatusChanged(sessionId);
+      throw err;
+    }
   }
 
   sendMessage(sessionId: string, content: string): void {
@@ -194,6 +199,55 @@ export class AgentService extends EventEmitter {
     this.stdoutBuffers.clear();
   }
 
+  // --- Process management ---
+
+  private spawnAndAttach(sessionId: string, session: AgentSession, args: string[]): ChildProcess {
+    const child = spawn('claude', args, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: session.config.repoPath,
+      env: { ...process.env },
+      detached: false,
+    });
+
+    session.pid = child.pid;
+    this.processes.set(sessionId, child);
+
+    child.stdout?.on('data', (data: Buffer) => {
+      this.handleStdout(sessionId, data);
+    });
+
+    child.stderr?.on('data', (data: Buffer) => {
+      const text = data.toString().trim();
+      if (text) {
+        console.warn(`[Agent ${sessionId.slice(0, 8)}] stderr:`, text);
+      }
+    });
+
+    child.on('exit', (code, signal) => {
+      this.processes.delete(sessionId);
+      this.stdoutBuffers.delete(sessionId);
+      const s = this.sessions.get(sessionId);
+      if (s && s.state !== 'completed') {
+        s.state = 'completed';
+        s.completedAt = Date.now();
+        this.emitStatusChanged(sessionId);
+      }
+    });
+
+    child.on('error', err => {
+      console.error(`[Agent ${sessionId.slice(0, 8)}] Spawn error:`, err.message);
+      this.processes.delete(sessionId);
+      const s = this.sessions.get(sessionId);
+      if (s) {
+        s.state = 'error';
+        this.addMessage(sessionId, 'error', `Failed to start claude CLI: ${err.message}`);
+        this.emitStatusChanged(sessionId);
+      }
+    });
+
+    return child;
+  }
+
   // --- stdout NDJSON parsing ---
 
   private handleStdout(sessionId: string, data: Buffer): void {
@@ -215,8 +269,6 @@ export class AgentService extends EventEmitter {
   private routeCLIMessage(sessionId: string, msg: any): void {
     const session = this.sessions.get(sessionId);
     if (!session) return;
-
-    console.log(`[Agent ${sessionId.slice(0, 8)}] msg type=${msg.type}`);
 
     switch (msg.type) {
       // Session init: {"type":"system","session_id":"...","model":"...","tools":[...],...}
@@ -323,9 +375,8 @@ export class AgentService extends EventEmitter {
         break;
       }
 
-      default: {
-        console.log(`[Agent ${sessionId.slice(0, 8)}] Unhandled msg:`, JSON.stringify(msg).slice(0, 300));
-      }
+      default:
+        break;
     }
   }
 
@@ -380,6 +431,7 @@ export class AgentService extends EventEmitter {
       config: session.config,
       state: session.state,
       pid: session.pid,
+      cliSessionId: session.cliSessionId,
       cost: { ...session.cost },
       startedAt: session.startedAt,
       completedAt: session.completedAt,

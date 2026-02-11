@@ -127,6 +127,11 @@ const electronAPI = {
     list: () => ipcRenderer.invoke('agent:list'),
     getMessages: (sessionId: string) => ipcRenderer.invoke('agent:get-messages', sessionId),
     getPermissions: (sessionId: string) => ipcRenderer.invoke('agent:get-permissions', sessionId),
+    listSessions: (repoPath: string) => ipcRenderer.invoke('agent:list-sessions', repoPath),
+    readSession: (repoPath: string, sessionId: string) =>
+      ipcRenderer.invoke('agent:read-session', { repoPath, sessionId }),
+    resumeSession: (cliSessionId: string, repoPath: string, config: any) =>
+      ipcRenderer.invoke('agent:resume-session', { cliSessionId, config }),
   },
 
   search: {
