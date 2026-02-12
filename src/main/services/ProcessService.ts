@@ -47,7 +47,7 @@ export class ProcessService extends EventEmitter {
     }
 
     try {
-      const shell = process.env.SHELL || '/bin/zsh';
+      const shell = this.configService.get().defaultShell || process.env.SHELL || '/bin/zsh';
       const ptyProcess = pty.spawn(shell, ['-c', command], {
         name: 'xterm-256color',
         cols: 120,
@@ -193,7 +193,7 @@ export class ProcessService extends EventEmitter {
     }
 
     try {
-      const shell = process.env.SHELL || '/bin/zsh';
+      const shell = this.configService.get().defaultShell || process.env.SHELL || '/bin/zsh';
       const ptyProcess = pty.spawn(shell, [], {
         name: 'xterm-256color',
         cols: 120,
@@ -300,7 +300,7 @@ export class ProcessService extends EventEmitter {
     const command = this.buildPackageCommand(repo, packageName, scriptName);
 
     try {
-      const shell = process.env.SHELL || '/bin/zsh';
+      const shell = this.configService.get().defaultShell || process.env.SHELL || '/bin/zsh';
       const ptyProcess = pty.spawn(shell, ['-c', command], {
         name: 'xterm-256color',
         cols: 120,

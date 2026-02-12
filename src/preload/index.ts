@@ -132,6 +132,12 @@ const electronAPI = {
     install: (sourceId: string, skillPath: string, targetDir: string) =>
       ipcRenderer.invoke('skills:install', sourceId, skillPath, targetDir),
     pickDirectory: () => ipcRenderer.invoke('skills:pick-directory'),
+    searchDirectory: (query: string, limit?: number) =>
+      ipcRenderer.invoke('skills:search-directory', query, limit),
+    getDirectoryDetail: (source: string, skillId: string) =>
+      ipcRenderer.invoke('skills:directory-detail', source, skillId),
+    installDirectory: (source: string, skillId: string, targetDir: string) =>
+      ipcRenderer.invoke('skills:directory-install', source, skillId, targetDir),
   },
 
   search: {

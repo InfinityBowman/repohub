@@ -9,60 +9,65 @@
 
 RepoHub has **14 config keys** in `AppConfig` but only **8 are exposed in the Settings UI**. Across 14+ services there are **60+ hardcoded values** (timeouts, limits, thresholds, intervals) that have no configuration path at all. Several existing settings have bugs or gaps in how they're applied. This audit catalogs everything and recommends what should change.
 
+### Completed Fixes (2026-02-11)
+
+- **Fixed** portScanInterval bug — PortService now has `updateInterval()`, called from config handler on save
+- **Removed** dead `autoStartMonitoring` config key entirely
+- **Added** `protectedBranches` setting — configurable in Settings, GitBranchService reads from config
+- **Added** `accentColor` setting — preset swatches + native color picker, live preview via CSS variables
+- **Added** `uiFontSize` setting — slider (12–18px), live preview via root font-size
+- **Added** `repoScanDepth` setting — RepositoryService reads from config instead of hardcoded `5`
+- **Added** `defaultShell` setting — ProcessService reads from config for all PTY spawns
+- **Added** `githubPRCooldown` setting — GitHubService reads from config (seconds → ms conversion)
+- **Redesigned** Settings UI — 7-tab layout (General, Repositories, Code Search, GitHub, Terminals, Ports, Scaffolding) with flat rows, tag lists, and stacked directory inputs
+
 ---
 
 ## Current Settings
 
-### AppConfig Keys (14 total)
+### AppConfig Keys (19 total)
 
-| #   | Key                         | Type                       | Default             | Has UI?  | Notes                                            |
-| --- | --------------------------- | -------------------------- | ------------------- | -------- | ------------------------------------------------ |
-| 1   | `version`                   | `number`                   | `1`                 | No       | Internal schema version. No UI needed.           |
-| 2   | `scanDirectory`             | `string`                   | `~/Documents/Repos` | **Yes**  | Text input in Settings.                          |
-| 3   | `ignorePatterns`            | `string[]`                 | 3 patterns          | **Yes**  | Tag list with add/remove.                        |
-| 4   | `portScanInterval`          | `number`                   | `5000` ms           | **Yes**  | Number input (seconds).                          |
-| 5   | `commandOverrides`          | `Record<string, string>`   | `{}`                | Indirect | Edited per-repo in detail view, not in Settings. |
-| 6   | `autoStartMonitoring`       | `boolean`                  | `true`              | **No**   | No UI toggle exists.                             |
-| 7   | `projectTemplatesDir`       | `string`                   | `""`                | **Yes**  | Text input in Settings.                          |
-| 8   | `scaffoldRecipes`           | `ScaffoldRecipe[]`         | `[]`                | Indirect | Managed via ScaffoldDialog, not in Settings.     |
-| 9   | `hiddenDefaultRecipes`      | `string[]`                 | `[]`                | Indirect | Managed via ScaffoldDialog.                      |
-| 10  | `setupTemplateDir`          | `string`                   | `""`                | **Yes**  | Text input in Settings.                          |
-| 11  | `codeSearchEnabled`         | `boolean`                  | `true`              | **Yes**  | Checkbox in Settings.                            |
-| 12  | `codeSearchExcludePatterns` | `string[]`                 | 41 patterns         | **Yes**  | Tag list with add/remove.                        |
-| 13  | `codeSearchMaxFileSize`     | `number`                   | `1048576` (1MB)     | **Yes**  | Number input (KB).                               |
-| 14  | `theme`                     | `'default' \| 'palenight'` | `'palenight'`       | **Yes**  | Toggle buttons.                                  |
+| #   | Key                         | Type                       | Default                       | Has UI?  | Notes                                            |
+| --- | --------------------------- | -------------------------- | ----------------------------- | -------- | ------------------------------------------------ |
+| 1   | `version`                   | `number`                   | `1`                           | No       | Internal schema version. No UI needed.           |
+| 2   | `scanDirectory`             | `string`                   | `~/Documents/Repos`           | **Yes**  | Text input in Settings (Repositories tab).       |
+| 3   | `ignorePatterns`            | `string[]`                 | 3 patterns                    | **Yes**  | Tag list in Settings (Repositories tab).         |
+| 4   | `portScanInterval`          | `number`                   | `5000` ms                     | **Yes**  | Number input in Settings (Ports tab).            |
+| 5   | `commandOverrides`          | `Record<string, string>`   | `{}`                          | Indirect | Edited per-repo in detail view, not in Settings. |
+| 6   | `projectTemplatesDir`       | `string`                   | `""`                          | **Yes**  | Text input in Settings (Scaffolding tab).        |
+| 7   | `scaffoldRecipes`           | `ScaffoldRecipe[]`         | `[]`                          | Indirect | Managed via ScaffoldDialog, not in Settings.     |
+| 8   | `hiddenDefaultRecipes`      | `string[]`                 | `[]`                          | Indirect | Managed via ScaffoldDialog.                      |
+| 9   | `setupTemplateDir`          | `string`                   | `""`                          | **Yes**  | Text input in Settings (Scaffolding tab).        |
+| 10  | `codeSearchEnabled`         | `boolean`                  | `true`                        | **Yes**  | Switch in Settings (Code Search tab).            |
+| 11  | `codeSearchExcludePatterns` | `string[]`                 | 5 patterns                    | **Yes**  | Tag list in Settings (Code Search tab).          |
+| 12  | `codeSearchMaxFileSize`     | `number`                   | `1048576` (1MB)               | **Yes**  | Number input in Settings (Code Search tab).      |
+| 13  | `theme`                     | `'default' \| 'palenight'` | `'palenight'`                 | **Yes**  | Toggle buttons in Settings (General tab).        |
+| 14  | `colorOverrides`            | `Record<string, string>`   | `{}` (theme defaults)         | **Yes**  | Per-role color pickers in Settings (General).    |
+| 15  | `uiFontSize`                | `number`                   | `14`                          | **Yes**  | Slider (12–18px) in Settings (General tab).      |
+| 16  | `protectedBranches`         | `string[]`                 | `['main','master','develop']` | **Yes**  | Tag list in Settings (Repositories tab).         |
+| 17  | `repoScanDepth`             | `number`                   | `5`                           | **Yes**  | Number input in Settings (Repositories tab).     |
+| 18  | `defaultShell`              | `string`                   | `''` (env fallback)           | **Yes**  | Text input in Settings (Terminals tab).          |
+| 19  | `githubPRCooldown`          | `number`                   | `120` (seconds)               | **Yes**  | Number input in Settings (GitHub tab).           |
 
 ### Settings UI Summary (SettingsView.tsx)
 
-8 settings across 6 cards: Theme, Scan Directory, Ignore Patterns, Project Templates Dir, Setup Template Dir, Code Search (3 settings), Port Scan Interval.
+19 config keys across 7 tabs: General (theme, accent color, font size), Repositories (scan dir, ignore patterns, scan depth, protected branches), Code Search (enabled, exclude patterns, max file size), GitHub (PR cooldown), Terminals (default shell), Ports (scan interval), Scaffolding (templates dir, setup template dir).
 
 ---
 
 ## Issues Found
 
-### Bug: portScanInterval Not Applied After Change
+### ~~Bug: portScanInterval Not Applied After Change~~ — FIXED
 
-**Severity: Medium**
-**Location:** `src/main/index.ts:35`
+~~**Severity: Medium**~~
 
-The `PortService` receives `portScanInterval` as a constructor argument at app startup:
+PortService now has `updateInterval()` method. The config handler calls it when `portScanInterval` changes.
 
-```typescript
-const portService = new PortService(processService, configService.get().portScanInterval);
-```
+### ~~Bug: autoStartMonitoring Has No UI and No Effect~~ — FIXED
 
-Changing this value in Settings has **no effect** until the app is restarted. The PortService should either re-read config or listen for config change events.
+~~**Severity: Low**~~
 
-### Bug: autoStartMonitoring Has No UI and No Effect
-
-**Severity: Low**
-**Location:** `src/main/types/config.types.ts:9`
-
-The `autoStartMonitoring` config key exists and defaults to `true`, but:
-
-- No UI toggle in Settings
-- No code path checks this value — port monitoring always starts
-- Dead config key that should either get a UI toggle + implementation, or be removed
+Dead config key removed from `AppConfig` and `DEFAULT_CONFIG` entirely. Port monitoring always starts.
 
 ### Issue: Duplicated AppConfig Type
 
@@ -86,12 +91,12 @@ When config is updated via IPC, no event is emitted to notify main-process servi
 
 These settings control user-visible behavior and have obvious sensible defaults.
 
-| Setting             | Current Hardcoded Value         | Where Used                | Rationale                                                                                         |
-| ------------------- | ------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------- |
-| `protectedBranches` | `['main', 'master', 'develop']` | `GitBranchService.ts:7`   | Users may have other branches they never want deleted (e.g., `release`, `staging`, `production`). |
-| `githubPRCooldown`  | `120000` (2 min)                | `GitHubService.ts:17`     | Power users may want faster refresh; rate-limited users may want slower.                          |
-| `maxLogFileSize`    | `100000` (100KB)                | `LogService.ts:5`         | Users with verbose output may want larger logs.                                                   |
-| `repoScanDepth`     | `5`                             | `RepositoryService.ts:61` | Users with deeply nested project structures may need more depth.                                  |
+| Setting             | Current Hardcoded Value         | Where Used             | Status       | Rationale                                                                                         |
+| ------------------- | ------------------------------- | ---------------------- | ------------ | ------------------------------------------------------------------------------------------------- |
+| `protectedBranches` | `['main', 'master', 'develop']` | `GitBranchService.ts`  | **DONE**     | Users may have other branches they never want deleted (e.g., `release`, `staging`, `production`). |
+| `githubPRCooldown`  | `120000` (2 min)                | `GitHubService.ts`     | **DONE**     | Power users may want faster refresh; rate-limited users may want slower.                          |
+| `maxLogFileSize`    | `100000` (100KB)                | `LogService.ts:5`      | Not yet done | Users with verbose output may want larger logs.                                                   |
+| `repoScanDepth`     | `5`                             | `RepositoryService.ts` | **DONE**     | Users with deeply nested project structures may need more depth.                                  |
 
 ### Priority 2: Power-User Tuning
 
@@ -153,39 +158,51 @@ These are correctly hardcoded and would create confusion or risk if configurable
 
 ## Recommended Action Plan
 
-### Immediate Fixes
+### Immediate Fixes — COMPLETED
 
-1. **Fix portScanInterval bug** — Make PortService re-read config or accept updates via method call
-2. **Resolve autoStartMonitoring** — Either add a UI toggle + implementation, or remove the dead config key
-3. **Add `protectedBranches` setting** — Most impactful missing setting; add to config + Settings UI with tag list
+1. ~~**Fix portScanInterval bug**~~ — PortService `updateInterval()` method, config handler propagation
+2. ~~**Resolve autoStartMonitoring**~~ — Removed dead config key entirely
+3. ~~**Add `protectedBranches` setting**~~ — Config + Settings UI tag list + GitBranchService integration
 
-### Short-Term Additions (Settings UI)
+### Short-Term Additions — COMPLETED
 
-4. Add `githubPRCooldown` to Settings (number input, seconds)
-5. Add `maxLogFileSize` to Settings (number input, KB)
-6. Add `repoScanDepth` to Settings (number input)
-7. Group GitHub-related settings into a "GitHub" card in Settings
+4. ~~Add `githubPRCooldown` to Settings~~ — Number input (seconds) in GitHub tab
+5. Add `maxLogFileSize` to Settings (number input, KB) — **NOT YET DONE**
+6. ~~Add `repoScanDepth` to Settings~~ — Number input in Repositories tab
+7. ~~Group GitHub-related settings into a "GitHub" tab~~ — Settings redesigned with 7 tabs
 
-### Medium-Term
+### Additional Completed Items
 
-8. Add a "Performance" or "Advanced" section in Settings for timeout/threshold tuning
+- Added `colorOverrides` with per-role color pickers for accent, background, surface, sidebar, border, text (General tab)
+- Added `uiFontSize` with slider 12–18px (General tab)
+- Added `defaultShell` text input (Terminals tab)
+- Redesigned Settings UI into 7-tab layout with flat rows and tag lists
+
+### Medium-Term (Remaining)
+
+8. Add a "Performance" or "Advanced" section for timeout/threshold tuning
 9. Fix the duplicated `AppConfig` type (shared types package or single source of truth)
 10. Add config change event propagation from config handler to main-process services
 
 ---
 
-## Settings UI Organization (Proposed)
+## Settings UI Organization — IMPLEMENTED
 
-Current layout is a flat list of cards. Proposed grouping:
+7-tab layout with custom sidebar navigation, flat row layout, and tag lists:
 
-| Section             | Settings                                                        |
-| ------------------- | --------------------------------------------------------------- |
-| **Appearance**      | Theme                                                           |
-| **Repositories**    | Scan Directory, Ignore Patterns, Scan Depth, Protected Branches |
-| **Terminals**       | (Default Shell — future)                                        |
-| **Code Search**     | Enabled, Exclude Patterns, Max File Size, Min Similarity        |
-| **GitHub**          | PR Cooldown, PR Limit                                           |
-| **Port Monitoring** | Scan Interval, Auto Start                                       |
-| **Scaffolding**     | Templates Dir, Setup Template Dir                               |
-| **Logging**         | Max Log File Size                                               |
-| **Advanced**        | Git Timeout, GH CLI Timeout, Health Check Timeout               |
+| Tab              | Settings                                                           |
+| ---------------- | ------------------------------------------------------------------ |
+| **General**      | Theme toggle, Accent color (swatches + picker), Font size (slider) |
+| **Repositories** | Scan Directory, Ignore Patterns, Scan Depth, Protected Branches    |
+| **Code Search**  | Enabled (switch), Exclude Patterns, Max File Size                  |
+| **GitHub**       | PR Cooldown (seconds)                                              |
+| **Terminals**    | Default Shell                                                      |
+| **Ports**        | Scan Interval (seconds)                                            |
+| **Scaffolding**  | Templates Dir, Setup Template Dir                                  |
+
+### Future tabs to consider
+
+| Tab          | Settings                                          |
+| ------------ | ------------------------------------------------- |
+| **Logging**  | Max Log File Size                                 |
+| **Advanced** | Git Timeout, GH CLI Timeout, Health Check Timeout |

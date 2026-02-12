@@ -26,7 +26,7 @@ export function Sidebar() {
   const isRepoDetail = location.pathname.startsWith('/repo/');
 
   return (
-    <aside className='border-border bg-sidebar-background flex h-full w-56 flex-col border-r pt-12'>
+    <aside className='border-border bg-sidebar flex h-full w-56 flex-col border-r pt-12'>
       <div className='px-4 pb-4'>
         <h1 className='text-primary text-lg font-semibold'>RepoHub</h1>
       </div>

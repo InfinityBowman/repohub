@@ -27,4 +27,22 @@ export function registerSkillsHandlers(skillsService: SkillsService): void {
     });
     return result.canceled ? null : result.filePaths[0];
   });
+
+  ipcMain.handle('skills:search-directory', async (_event, query: string, limit?: number) => {
+    return skillsService.searchDirectory(query, limit);
+  });
+
+  ipcMain.handle(
+    'skills:directory-detail',
+    async (_event, source: string, skillId: string) => {
+      return skillsService.getDirectorySkillDetail(source, skillId);
+    },
+  );
+
+  ipcMain.handle(
+    'skills:directory-install',
+    async (_event, source: string, skillId: string, targetDir: string) => {
+      return skillsService.installDirectorySkill(source, skillId, targetDir);
+    },
+  );
 }

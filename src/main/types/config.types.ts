@@ -15,6 +15,11 @@ export interface AppConfig {
   codeSearchMaxFileSize: number;
   theme: 'default' | 'palenight';
   protectedBranches: string[];
+  colorOverrides: Record<string, string>;
+  uiFontSize: number;
+  repoScanDepth: number;
+  defaultShell: string;
+  githubPRCooldown: number;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -81,4 +86,9 @@ export const DEFAULT_CONFIG: AppConfig = {
   codeSearchMaxFileSize: 1_048_576,
   theme: 'palenight',
   protectedBranches: ['main', 'master', 'develop'],
+  colorOverrides: {},
+  uiFontSize: 14,
+  repoScanDepth: 5,
+  defaultShell: '',
+  githubPRCooldown: 120,
 };

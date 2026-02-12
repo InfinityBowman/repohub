@@ -178,6 +178,11 @@ export interface AppConfig {
   codeSearchMaxFileSize: number;
   theme: 'default' | 'palenight';
   protectedBranches: string[];
+  colorOverrides: Record<string, string>;
+  uiFontSize: number;
+  repoScanDepth: number;
+  defaultShell: string;
+  githubPRCooldown: number;
 }
 
 export interface CodeChunk {
@@ -360,6 +365,7 @@ export interface SkillSource {
   repo: string;
   label: string;
   branch: string;
+  skillsDir: string;
 }
 
 export interface SkillSummary {
@@ -375,6 +381,15 @@ export interface SkillDetail extends SkillSummary {
   content: string;
   files: string[];
   rawFrontmatter: Record<string, any>;
+  /** Content of all text files in the skill directory, keyed by relative path */
+  allTextContent?: Record<string, string>;
+}
+
+export interface DirectorySkill {
+  source: string;
+  skillId: string;
+  name: string;
+  installs: number;
 }
 
 declare global {
@@ -505,6 +520,13 @@ declare global {
           targetDir: string,
         ) => Promise<{ success: boolean; error?: string }>;
         pickDirectory: () => Promise<string | null>;
+        searchDirectory: (query: string, limit?: number) => Promise<DirectorySkill[]>;
+        getDirectoryDetail: (source: string, skillId: string) => Promise<SkillDetail>;
+        installDirectory: (
+          source: string,
+          skillId: string,
+          targetDir: string,
+        ) => Promise<{ success: boolean; error?: string }>;
       };
       search: {
         query: (options: SearchOptions) => Promise<SearchResult[]>;

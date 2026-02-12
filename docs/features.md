@@ -440,49 +440,39 @@ Token usage and estimated cost are displayed in the info bar (based on approxima
 
 ## Skills Browser
 
-Browse and install agent skills from curated GitHub repositories. Skills follow the Agent Skills Spec: a `SKILL.md` file with YAML frontmatter (name, description, version, tags) plus markdown body, optionally with `scripts/`, `references/`, `assets/` directories.
+Search and install agent skills from the [skills.sh](https://skills.sh) ecosystem (54,000+ skills). Skills follow the Agent Skills Spec: a `SKILL.md` file with YAML frontmatter (name, description, version, tags) plus markdown body, optionally with `scripts/`, `references/`, `assets/` directories.
 
 ### How to Access
 
 Click **Skills** in the sidebar (between Agents and Packages).
 
-### Curated Sources
+### Searching Skills
 
-Three curated skill repositories are available:
-
-| Source       | Repository                   |
-| ------------ | ---------------------------- |
-| Anthropic    | `anthropics/skills`          |
-| OpenAI       | `openai/codex-universal`     |
-| Vercel       | `vercel-labs/agent-skills`   |
-
-Switch between sources using the chip buttons at the top of the left panel.
-
-### Browsing Skills
-
-- Select a source to load its available skills
-- Use the filter input to search by name, description, or tag
-- Click a skill card to view its full details in the right panel
+- Type in the search bar to search across the entire skills.sh ecosystem
+- Results show skill name, source repository, and install count
+- Toggle between "Popular" (sorted by installs) and "Relevant" (search relevance) ordering
+- Search is debounced (300ms) to avoid excessive API calls
 
 ### Skill Detail
 
-The right panel shows:
+Click a skill to view its details in the right panel:
 
 - **Header** — skill name, version, source badge, tag badges
 - **Files** — list of all files in the skill directory (SKILL.md, scripts/, etc.)
-- **Content** — rendered SKILL.md markdown body
+- **Content** — rendered SKILL.md markdown body (fetched from GitHub raw content)
 
 ### Installing Skills
 
 Click the **Install** button to install a skill:
 
 1. A native macOS directory picker opens — choose where to install
-2. All files from the skill directory are downloaded and written to `<chosen-dir>/<skill-name>/`
+2. The source repo is shallow-cloned and the skill directory is copied to `<chosen-dir>/<skill-name>/`
 3. A success indicator appears when complete
 
 ### Technical Details
 
-- Uses `gh api` (GitHub CLI) to fetch repo contents — avoids unauthenticated rate limits
+- Search uses the `skills.sh/api/search` REST API (10-min cache)
+- Skill detail fetches `SKILL.md` from GitHub raw content (1-hour cache)
+- Install clones the source repo to `~/Library/Application Support/repohub/skills-reference/` and copies the skill directory
 - YAML frontmatter parsed with `gray-matter`
-- Results cached for 1 hour with 30-minute cleanup
-- Requires `gh` CLI installed and authenticated
+- All HTTP requests have 10-second timeouts

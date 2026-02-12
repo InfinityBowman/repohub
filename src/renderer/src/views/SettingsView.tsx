@@ -5,12 +5,14 @@ import {
   X,
   Search,
   Palette,
-  Moon,
   Check,
   GitBranch,
   Radio,
   Hammer,
   Settings,
+  Github,
+  Terminal,
+  RotateCcw,
   type LucideIcon,
 } from 'lucide-react';
 import { useConfig } from '@/hooks/useConfig';
@@ -20,7 +22,6 @@ import { Switch } from '@/components/ui/switch';
 
 /* ─── Primitives ──────────────────────────────────────────────────── */
 
-/** A horizontal row: label+description left, control right */
 function Row({
   label,
   description,
@@ -45,7 +46,6 @@ function Row({
   );
 }
 
-/** Compact inline number + unit */
 function NumInput({
   value,
   onChange,
@@ -74,7 +74,6 @@ function NumInput({
   );
 }
 
-/** Editable tag cloud with add input */
 function TagList({
   items,
   setItems,
@@ -138,7 +137,6 @@ function TagList({
   );
 }
 
-/** Section heading inside a tab panel */
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div className='text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 pt-2 pb-1'>
@@ -147,10 +145,20 @@ function SectionLabel({ children }: { children: ReactNode }) {
   );
 }
 
-/** Thin divider between rows */
 function Divider() {
   return <div className='border-t border-border/50' />;
 }
+
+/* ─── Color customization roles ──────────────────────────────────── */
+
+const COLOR_ROLES = [
+  { key: 'accent', label: 'Accent', description: 'Buttons, links, focus rings, active indicators' },
+  { key: 'background', label: 'Background', description: 'Main app background' },
+  { key: 'surface', label: 'Surface', description: 'Cards, panels, and popover backgrounds' },
+  { key: 'sidebar', label: 'Sidebar', description: 'Navigation sidebar background' },
+  { key: 'border', label: 'Border', description: 'Borders, dividers, and input outlines' },
+  { key: 'text', label: 'Text', description: 'Primary text and headings' },
+] as const;
 
 /* ─── Nav data ────────────────────────────────────────────────────── */
 
@@ -158,13 +166,14 @@ const sections = [
   { id: 'general', label: 'General', icon: Settings },
   { id: 'repositories', label: 'Repositories', icon: GitBranch },
   { id: 'search', label: 'Code Search', icon: Search },
+  { id: 'github', label: 'GitHub', icon: Github },
+  { id: 'terminals', label: 'Terminals', icon: Terminal },
   { id: 'ports', label: 'Ports', icon: Radio },
   { id: 'scaffolding', label: 'Scaffolding', icon: Hammer },
 ] as const;
 
 type SectionId = (typeof sections)[number]['id'];
 
-/** Sidebar nav pill */
 function NavItem({
   icon: Icon,
   label,
@@ -207,6 +216,9 @@ export function SettingsView() {
   const [codeSearchExcludePatterns, setCodeSearchExcludePatterns] = useState<string[]>([]);
   const [codeSearchMaxFileSize, setCodeSearchMaxFileSize] = useState(1024);
   const [portScanInterval, setPortScanInterval] = useState(5);
+  const [repoScanDepth, setRepoScanDepth] = useState(5);
+  const [defaultShell, setDefaultShell] = useState('');
+  const [githubPRCooldown, setGithubPRCooldown] = useState(120);
   const [saved, setSaved] = useState(false);
 
   // Sync from config
@@ -222,6 +234,9 @@ export function SettingsView() {
     setCodeSearchExcludePatterns([...(config.codeSearchExcludePatterns || [])]);
     setCodeSearchMaxFileSize(Math.round((config.codeSearchMaxFileSize || 1_048_576) / 1024));
     setPortScanInterval(Math.round((config.portScanInterval || 5000) / 1000));
+    setRepoScanDepth(config.repoScanDepth ?? 5);
+    setDefaultShell(config.defaultShell ?? '');
+    setGithubPRCooldown(config.githubPRCooldown ?? 120);
   }
 
   const handleSave = useCallback(async () => {
@@ -235,6 +250,9 @@ export function SettingsView() {
       codeSearchExcludePatterns,
       codeSearchMaxFileSize: codeSearchMaxFileSize * 1024,
       portScanInterval: portScanInterval * 1000,
+      repoScanDepth,
+      defaultShell,
+      githubPRCooldown,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -248,6 +266,9 @@ export function SettingsView() {
     codeSearchExcludePatterns,
     codeSearchMaxFileSize,
     portScanInterval,
+    repoScanDepth,
+    defaultShell,
+    githubPRCooldown,
     update,
   ]);
 
@@ -290,7 +311,7 @@ export function SettingsView() {
           {/* ── General ───────────────────────────────── */}
           {activeTab === 'general' && (
             <div>
-              <SectionLabel>Appearance</SectionLabel>
+              <SectionLabel>Theme</SectionLabel>
               <div className='grid grid-cols-2 gap-3 py-3'>
                 {(
                   [
@@ -298,14 +319,12 @@ export function SettingsView() {
                       id: 'default' as const,
                       name: 'Default Dark',
                       sub: 'Neutral grays',
-                      icon: Moon,
                       swatches: ['#1a1a1a', '#3a3a3a', '#fafafa', '#6366f1'],
                     },
                     {
                       id: 'palenight' as const,
                       name: 'Palenight',
                       sub: 'Material colors',
-                      icon: Palette,
                       swatches: ['#1e2030', '#292D3E', '#C792EA', '#82AAFF'],
                     },
                   ] as const
@@ -346,6 +365,101 @@ export function SettingsView() {
                   );
                 })}
               </div>
+
+              <Divider />
+              <SectionLabel>Colors</SectionLabel>
+
+              <div className='py-3.5'>
+                <div className='text-[12px] text-muted-foreground mb-4'>
+                  Override individual colors from the active theme. Changes apply live.
+                </div>
+                <div className='flex flex-col gap-1'>
+                  {COLOR_ROLES.map(role => {
+                    const overrides = config.colorOverrides ?? {};
+                    const value = overrides[role.key] || '';
+                    return (
+                      <div
+                        key={role.key}
+                        className='group flex items-center gap-3 rounded-lg px-2.5 py-2 -mx-2.5 hover:bg-accent/30 transition-colors'
+                      >
+                        <label className='relative flex-shrink-0 cursor-pointer'>
+                          <span
+                            className={`block h-7 w-7 rounded-md border transition-all ${
+                              value
+                                ? 'border-foreground/30'
+                                : 'border-dashed border-muted-foreground/30'
+                            }`}
+                            style={value ? { background: value } : undefined}
+                          >
+                            {!value && (
+                              <Palette className='absolute inset-0 m-auto h-3 w-3 text-muted-foreground/40' />
+                            )}
+                          </span>
+                          <input
+                            type='color'
+                            value={value || '#888888'}
+                            onChange={e =>
+                              update({
+                                colorOverrides: { ...overrides, [role.key]: e.target.value },
+                              })
+                            }
+                            className='absolute inset-0 h-full w-full cursor-pointer opacity-0'
+                          />
+                        </label>
+                        <div className='flex-1 min-w-0'>
+                          <div className='text-[13px] font-medium text-foreground'>
+                            {role.label}
+                          </div>
+                          <div className='text-[11px] text-muted-foreground'>
+                            {role.description}
+                          </div>
+                        </div>
+                        {value && (
+                          <div className='flex items-center gap-2'>
+                            <span className='text-[11px] font-mono text-muted-foreground'>
+                              {value}
+                            </span>
+                            <button
+                              onClick={() => {
+                                const next = { ...overrides };
+                                delete next[role.key];
+                                update({ colorOverrides: next });
+                              }}
+                              className='text-muted-foreground/50 hover:text-foreground transition-colors'
+                              title='Reset to theme default'
+                            >
+                              <RotateCcw className='h-3 w-3' />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {Object.keys(config.colorOverrides ?? {}).length > 0 && (
+                  <button
+                    onClick={() => update({ colorOverrides: {} })}
+                    className='mt-3 text-[12px] text-muted-foreground hover:text-foreground transition-colors'
+                  >
+                    Reset all colors to theme defaults
+                  </button>
+                )}
+              </div>
+
+              <Divider />
+              <SectionLabel>Display</SectionLabel>
+
+              <Row
+                label='UI font size'
+                description='Scale the interface text for your display (12–20px).'
+              >
+                <NumInput
+                  value={config.uiFontSize ?? 14}
+                  onChange={v => update({ uiFontSize: v })}
+                  unit='px'
+                  min={12}
+                />
+              </Row>
             </div>
           )}
 
@@ -365,6 +479,19 @@ export function SettingsView() {
                   className='h-8 text-[13px] font-mono'
                 />
               </div>
+
+              <Divider />
+
+              <Row
+                label='Scan depth'
+                description='Maximum directory depth to recurse when looking for projects.'
+              >
+                <NumInput
+                  value={repoScanDepth}
+                  onChange={setRepoScanDepth}
+                  unit='levels'
+                />
+              </Row>
 
               <Divider />
 
@@ -436,6 +563,44 @@ export function SettingsView() {
                   setItems={setCodeSearchExcludePatterns}
                   placeholder='e.g. **/vendor/**'
                   mono
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── GitHub ────────────────────────────────── */}
+          {activeTab === 'github' && (
+            <div>
+              <SectionLabel>Pull Requests</SectionLabel>
+              <Row
+                label='Auto-refresh cooldown'
+                description='Minimum wait between automatic PR status refreshes. Lower values refresh faster but may hit GitHub rate limits.'
+              >
+                <NumInput
+                  value={githubPRCooldown}
+                  onChange={setGithubPRCooldown}
+                  unit='seconds'
+                  min={10}
+                />
+              </Row>
+            </div>
+          )}
+
+          {/* ── Terminals ─────────────────────────────── */}
+          {activeTab === 'terminals' && (
+            <div>
+              <SectionLabel>Shell</SectionLabel>
+              <div className='py-3.5'>
+                <div className='text-[13px] font-medium text-foreground'>Default shell</div>
+                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                  Shell used for project terminals. Leave empty to use your system default
+                  ($SHELL).
+                </div>
+                <Input
+                  value={defaultShell}
+                  onChange={e => setDefaultShell(e.target.value)}
+                  placeholder={`e.g. /bin/zsh, /opt/homebrew/bin/fish`}
+                  className='h-8 text-[13px] font-mono'
                 />
               </div>
             </div>

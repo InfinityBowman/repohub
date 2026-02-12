@@ -4,6 +4,7 @@ export interface SkillSource {
   repo: string;
   label: string;
   branch: string;
+  skillsDir: string; // subdirectory containing skills, e.g. 'skills' or '' for root
 }
 
 export interface SkillSummary {
@@ -19,4 +20,13 @@ export interface SkillDetail extends SkillSummary {
   content: string;
   files: string[];
   rawFrontmatter: Record<string, any>;
+  /** Content of all text files in the skill directory, keyed by relative path */
+  allTextContent?: Record<string, string>;
+}
+
+export interface DirectorySkill {
+  source: string; // "owner/repo"
+  skillId: string; // "skill-name"
+  name: string;
+  installs: number;
 }

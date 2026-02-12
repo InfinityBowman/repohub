@@ -1,53 +1,60 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useSkillsStore } from '@/store/skillsStore';
 
+const FEATURED_QUERY = 'skills';
+
 export function useSkills() {
   const store = useSkillsStore();
-  const sourcesLoaded = useRef(false);
+  const initialLoaded = useRef(false);
 
-  // Load sources on first use
+  // Load featured skills on first mount
   useEffect(() => {
-    if (sourcesLoaded.current) return;
-    sourcesLoaded.current = true;
-    window.electron.skills.getSources().then(sources => {
-      useSkillsStore.getState().setSources(sources);
-      // Auto-select first source
-      if (sources.length > 0 && !useSkillsStore.getState().activeSourceId) {
-        useSkillsStore.getState().setActiveSource(sources[0].id);
-      }
+    if (initialLoaded.current) return;
+    const s = useSkillsStore.getState();
+    if (s.directoryResults.length > 0) {
+      initialLoaded.current = true;
+      return;
+    }
+    initialLoaded.current = true;
+    s.setDirectoryLoading(true);
+    window.electron.skills.searchDirectory(FEATURED_QUERY, 100).then(results => {
+      useSkillsStore.getState().setDirectoryResults(results);
+    }).catch(() => {
+      useSkillsStore.getState().setDirectoryLoading(false);
     });
   }, []);
 
-  const loadSkills = useCallback(async (sourceId: string) => {
+  const searchDirectory = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      // When clearing search, reload featured
+      const s = useSkillsStore.getState();
+      s.setDirectoryLoading(true);
+      try {
+        const results = await window.electron.skills.searchDirectory(FEATURED_QUERY, 100);
+        useSkillsStore.getState().setDirectoryResults(results);
+      } catch {
+        useSkillsStore.getState().setDirectoryLoading(false);
+      }
+      return;
+    }
     const s = useSkillsStore.getState();
-    // Use cache if available
-    if (s.skills[sourceId]) return;
-
-    s.setLoading(true);
+    s.setDirectoryLoading(true);
     s.setError(null);
     try {
-      const skills = await window.electron.skills.list(sourceId);
-      useSkillsStore.getState().setSkills(sourceId, skills);
+      const results = await window.electron.skills.searchDirectory(query, 100);
+      useSkillsStore.getState().setDirectoryResults(results);
     } catch (err: any) {
-      useSkillsStore.getState().setError(err.message || 'Failed to load skills');
-      useSkillsStore.getState().setLoading(false);
+      useSkillsStore.getState().setError(err.message || 'Search failed');
+      useSkillsStore.getState().setDirectoryLoading(false);
     }
   }, []);
 
-  const selectSource = useCallback(
-    (sourceId: string) => {
-      useSkillsStore.getState().setActiveSource(sourceId);
-      loadSkills(sourceId);
-    },
-    [loadSkills],
-  );
-
-  const selectSkill = useCallback(async (sourceId: string, skillPath: string) => {
+  const selectDirectorySkill = useCallback(async (source: string, skillId: string) => {
     const s = useSkillsStore.getState();
     s.setLoadingDetail(true);
     s.setError(null);
     try {
-      const detail = await window.electron.skills.getDetail(sourceId, skillPath);
+      const detail = await window.electron.skills.getDirectoryDetail(source, skillId);
       useSkillsStore.getState().setSelectedSkill(detail);
     } catch (err: any) {
       useSkillsStore.getState().setError(err.message || 'Failed to load skill details');
@@ -55,7 +62,7 @@ export function useSkills() {
     }
   }, []);
 
-  const installSkill = useCallback(async (sourceId: string, skillPath: string) => {
+  const installDirectorySkill = useCallback(async (source: string, skillId: string) => {
     const targetDir = await window.electron.skills.pickDirectory();
     if (!targetDir) return;
 
@@ -63,7 +70,7 @@ export function useSkills() {
     s.setInstalling(true);
     s.setError(null);
     try {
-      const result = await window.electron.skills.install(sourceId, skillPath, targetDir);
+      const result = await window.electron.skills.installDirectory(source, skillId, targetDir);
       if (!result.success) {
         useSkillsStore.getState().setError(result.error || 'Install failed');
       }
@@ -74,41 +81,25 @@ export function useSkills() {
     }
   }, []);
 
-  // Auto-load skills when source changes
-  useEffect(() => {
-    if (store.activeSourceId) {
-      loadSkills(store.activeSourceId);
-    }
-  }, [store.activeSourceId, loadSkills]);
-
-  // Filter skills by search query
-  const currentSkills = store.activeSourceId ? store.skills[store.activeSourceId] || [] : [];
-  const filteredSkills =
-    store.searchQuery.trim() ?
-      currentSkills.filter(s => {
-        const q = store.searchQuery.toLowerCase();
-        return (
-          s.name.toLowerCase().includes(q) ||
-          s.description.toLowerCase().includes(q) ||
-          s.tags.some(t => t.toLowerCase().includes(q))
-        );
-      })
-    : currentSkills;
+  // Sort results
+  const sortedResults = store.sortByInstalls
+    ? [...store.directoryResults].sort((a, b) => b.installs - a.installs)
+    : store.directoryResults;
 
   return {
-    sources: store.sources,
-    activeSourceId: store.activeSourceId,
-    skills: filteredSkills,
     selectedSkill: store.selectedSkill,
-    loading: store.loading,
     loadingDetail: store.loadingDetail,
     installing: store.installing,
     error: store.error,
-    searchQuery: store.searchQuery,
-    selectSource,
-    selectSkill,
-    installSkill,
-    setSearchQuery: store.setSearchQuery,
+    directoryResults: sortedResults,
+    directorySearchQuery: store.directorySearchQuery,
+    directoryLoading: store.directoryLoading,
+    sortByInstalls: store.sortByInstalls,
     setSelectedSkill: store.setSelectedSkill,
+    searchDirectory,
+    selectDirectorySkill,
+    installDirectorySkill,
+    setDirectorySearchQuery: store.setDirectorySearchQuery,
+    setSortByInstalls: store.setSortByInstalls,
   };
 }

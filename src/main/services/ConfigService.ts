@@ -39,6 +39,12 @@ export class ConfigService {
       theme: this.store.get('theme') ?? DEFAULT_CONFIG.theme,
       protectedBranches:
         this.store.get('protectedBranches') ?? DEFAULT_CONFIG.protectedBranches,
+      colorOverrides: this.store.get('colorOverrides') ?? DEFAULT_CONFIG.colorOverrides,
+      uiFontSize: this.store.get('uiFontSize') ?? DEFAULT_CONFIG.uiFontSize,
+      repoScanDepth: this.store.get('repoScanDepth') ?? DEFAULT_CONFIG.repoScanDepth,
+      defaultShell: this.store.get('defaultShell') ?? DEFAULT_CONFIG.defaultShell,
+      githubPRCooldown:
+        this.store.get('githubPRCooldown') ?? DEFAULT_CONFIG.githubPRCooldown,
     };
   }
 

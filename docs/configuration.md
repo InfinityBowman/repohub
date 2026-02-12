@@ -22,13 +22,18 @@ Accessible via the Settings tab in the sidebar.
 | `codeSearchExcludePatterns` | `**/node_modules/**`, `**/.git/**`, `**/dist/**`, `**/build/**`, `**/*.min.js` | Glob patterns to exclude from code search indexing                                                                    |
 | `codeSearchMaxFileSize`     | `1048576` (1MB)                                                                | Maximum file size in bytes for code search indexing                                                                   |
 | `theme`                     | `'palenight'`                                                                  | UI theme: `'default'` or `'palenight'`                                                                               |
+| `colorOverrides`            | `{}` (theme defaults)                                                          | Per-role color overrides. Keys: `accent`, `background`, `surface`, `sidebar`, `border`, `text`. Values: CSS colors. |
+| `uiFontSize`                | `14`                                                                           | Base UI font size in pixels (range: 12–18). Applied to `document.documentElement.style.fontSize`.                    |
 | `protectedBranches`         | `['main', 'master', 'develop']`                                                | Branch names that can never be deleted via branch cleanup                                                             |
+| `repoScanDepth`             | `5`                                                                            | Maximum directory depth for recursive project scanning                                                                |
+| `defaultShell`              | `''` (uses `$SHELL` or `/bin/zsh`)                                             | Shell executable path for PTY processes. Empty string falls back to environment.                                     |
+| `githubPRCooldown`          | `120` (seconds)                                                                | Minimum time between automatic GitHub PR refresh cycles                                                              |
 
 ## Scan Directory
 
-RepoHub recursively scans this directory up to 5 levels deep, looking for project marker files (`package.json`, `Cargo.toml`, etc.). When a project is found, recursion stops for that branch (nested projects within a project are not scanned).
+RepoHub recursively scans this directory looking for project marker files (`package.json`, `Cargo.toml`, etc.). The maximum depth is controlled by `repoScanDepth` (default: 5). When a project is found, recursion stops for that branch (nested projects within a project are not scanned).
 
-Change this in Settings and click Save. A rescan runs automatically when the directory changes.
+Change the scan directory or depth in Settings and click Save. A rescan runs automatically when the directory changes.
 
 ## Ignore Patterns
 

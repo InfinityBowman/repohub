@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import type { RepositoryService } from './RepositoryService';
+import type { ConfigService } from './ConfigService';
 import type {
   PRInfo,
   GitHubStatus,
@@ -14,20 +15,27 @@ import type {
 
 const execAsync = promisify(exec);
 
-const COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes
+const DEFAULT_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes
 const TRENDING_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 export class GitHubService extends EventEmitter {
   private repositoryService: RepositoryService;
+  private configService: ConfigService | null;
   private prsByRepo = new Map<string, PRInfo | null>();
   private allUserPRs: PRInfo[] = [];
   private lastFetch = 0;
   private _status: GitHubStatus | null = null;
   private trendingCache = new Map<string, { data: TrendingRepo[]; timestamp: number }>();
 
-  constructor(repositoryService: RepositoryService) {
+  constructor(repositoryService: RepositoryService, configService?: ConfigService) {
     super();
     this.repositoryService = repositoryService;
+    this.configService = configService ?? null;
+  }
+
+  private get cooldownMs(): number {
+    const seconds = this.configService?.get().githubPRCooldown;
+    return seconds ? seconds * 1000 : DEFAULT_COOLDOWN_MS;
   }
 
   async checkAvailability(): Promise<GitHubStatus> {
@@ -185,7 +193,7 @@ export class GitHubService extends EventEmitter {
   }
 
   refreshIfNeeded(): void {
-    if (Date.now() - this.lastFetch < COOLDOWN_MS) return;
+    if (Date.now() - this.lastFetch < this.cooldownMs) return;
 
     // Auto-refresh only checks the 5 most recently modified repos for speed
     this.checkAvailability().then(status => {

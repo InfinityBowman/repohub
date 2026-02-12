@@ -58,7 +58,8 @@ export class RepositoryService extends EventEmitter {
     repos: Repository[],
     depth: number,
   ): void {
-    if (depth > 5) return;
+    const maxDepth = this.configService.get().repoScanDepth ?? 5;
+    if (depth > maxDepth) return;
 
     let entries: fs.Dirent[];
     try {
