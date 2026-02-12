@@ -185,8 +185,9 @@ export function SkillsView() {
 
       {/* Right panel */}
       {loadingDetail ?
-        <div className='flex flex-1 items-center justify-center'>
+        <div className='flex flex-1 flex-col items-center justify-center gap-2'>
           <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
+          <p className='text-muted-foreground/50 text-xs'>Scanning for vulnerabilities...</p>
         </div>
       : selectedSkill ?
         <SkillDetailPanel

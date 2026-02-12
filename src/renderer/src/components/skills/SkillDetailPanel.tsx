@@ -3,7 +3,7 @@ import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { Loader2, Sparkles, Check, FileText, FolderDown } from 'lucide-react';
+import { Loader2, Sparkles, Check, FileText, FolderDown, ExternalLink } from 'lucide-react';
 import { SecurityBadge } from './SecurityBadge';
 import { scanSkillFiles } from '@/lib/skill-scanner';
 import type { SkillDetail } from '@/types';
@@ -59,6 +59,20 @@ export function SkillDetailPanel({
           </div>
           <div className='flex shrink-0 items-center gap-2'>
             <SecurityBadge warnings={warnings} />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  className='gap-1.5'
+                  onClick={() => window.electron.shell.openUrl(`https://skills.sh/${source}/${skill.path}`)}
+                >
+                  <ExternalLink className='h-3.5 w-3.5' />
+                  skills.sh
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className='text-xs'>View on skills.sh</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
