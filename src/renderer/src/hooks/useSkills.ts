@@ -3,49 +3,72 @@ import { useSkillsStore } from '@/store/skillsStore';
 
 const FEATURED_QUERY = 'skills';
 
+// Track active listener count to handle StrictMode double-mount
+let activeListeners = 0;
+let initialLoadDone = false;
+
 export function useSkills() {
   const store = useSkillsStore();
-  const initialLoaded = useRef(false);
+  const currentSearchId = useRef(0);
 
-  // Load featured skills on first mount
+  // Load featured skills on first mount (StrictMode-safe)
   useEffect(() => {
-    if (initialLoaded.current) return;
-    const s = useSkillsStore.getState();
-    if (s.directoryResults.length > 0) {
-      initialLoaded.current = true;
-      return;
+    activeListeners++;
+
+    if (activeListeners === 1 && !initialLoadDone) {
+      const s = useSkillsStore.getState();
+      if (s.directoryResults.length === 0) {
+        initialLoadDone = true;
+        s.setDirectoryLoading(true);
+        window.electron.skills
+          .searchDirectory(FEATURED_QUERY, 100)
+          .then(results => {
+            useSkillsStore.getState().setDirectoryResults(results);
+          })
+          .catch(() => {
+            useSkillsStore.getState().setDirectoryLoading(false);
+          });
+      }
     }
-    initialLoaded.current = true;
-    s.setDirectoryLoading(true);
-    window.electron.skills.searchDirectory(FEATURED_QUERY, 100).then(results => {
-      useSkillsStore.getState().setDirectoryResults(results);
-    }).catch(() => {
-      useSkillsStore.getState().setDirectoryLoading(false);
-    });
+
+    return () => {
+      activeListeners--;
+    };
   }, []);
 
   const searchDirectory = useCallback(async (query: string) => {
+    const searchId = ++currentSearchId.current;
+
     if (!query.trim()) {
       // When clearing search, reload featured
-      const s = useSkillsStore.getState();
-      s.setDirectoryLoading(true);
+      useSkillsStore.getState().setDirectoryLoading(true);
       try {
         const results = await window.electron.skills.searchDirectory(FEATURED_QUERY, 100);
-        useSkillsStore.getState().setDirectoryResults(results);
+        if (currentSearchId.current === searchId) {
+          useSkillsStore.getState().setDirectoryResults(results);
+        }
       } catch {
-        useSkillsStore.getState().setDirectoryLoading(false);
+        if (currentSearchId.current === searchId) {
+          useSkillsStore.getState().setDirectoryLoading(false);
+        }
       }
       return;
     }
+
     const s = useSkillsStore.getState();
     s.setDirectoryLoading(true);
     s.setError(null);
     try {
       const results = await window.electron.skills.searchDirectory(query, 100);
-      useSkillsStore.getState().setDirectoryResults(results);
+      if (currentSearchId.current === searchId) {
+        useSkillsStore.getState().setDirectoryResults(results);
+      }
     } catch (err: any) {
-      useSkillsStore.getState().setError(err.message || 'Search failed');
-      useSkillsStore.getState().setDirectoryLoading(false);
+      if (currentSearchId.current === searchId) {
+        const state = useSkillsStore.getState();
+        state.setError(err.message || 'Search failed');
+        state.setDirectoryLoading(false);
+      }
     }
   }, []);
 
@@ -57,8 +80,9 @@ export function useSkills() {
       const detail = await window.electron.skills.getDirectoryDetail(source, skillId);
       useSkillsStore.getState().setSelectedSkill(detail);
     } catch (err: any) {
-      useSkillsStore.getState().setError(err.message || 'Failed to load skill details');
-      useSkillsStore.getState().setLoadingDetail(false);
+      const state = useSkillsStore.getState();
+      state.setError(err.message || 'Failed to load skill details');
+      state.setLoadingDetail(false);
     }
   }, []);
 
@@ -81,25 +105,18 @@ export function useSkills() {
     }
   }, []);
 
-  // Sort results
-  const sortedResults = store.sortByInstalls
-    ? [...store.directoryResults].sort((a, b) => b.installs - a.installs)
-    : store.directoryResults;
-
   return {
     selectedSkill: store.selectedSkill,
     loadingDetail: store.loadingDetail,
     installing: store.installing,
     error: store.error,
-    directoryResults: sortedResults,
+    directoryResults: store.directoryResults,
     directorySearchQuery: store.directorySearchQuery,
     directoryLoading: store.directoryLoading,
-    sortByInstalls: store.sortByInstalls,
     setSelectedSkill: store.setSelectedSkill,
     searchDirectory,
     selectDirectorySkill,
     installDirectorySkill,
     setDirectorySearchQuery: store.setDirectorySearchQuery,
-    setSortByInstalls: store.setSortByInstalls,
   };
 }

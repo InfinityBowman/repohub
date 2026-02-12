@@ -19,6 +19,7 @@ export default [
       globals: {
         // Browser globals
         window: 'readonly',
+        AbortSignal: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
         console: 'readonly',

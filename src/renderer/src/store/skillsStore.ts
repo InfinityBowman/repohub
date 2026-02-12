@@ -11,7 +11,6 @@ interface SkillsState {
   directoryResults: DirectorySkill[];
   directorySearchQuery: string;
   directoryLoading: boolean;
-  sortByInstalls: boolean;
 
   setSelectedSkill: (skill: SkillDetail | null) => void;
   setLoadingDetail: (loading: boolean) => void;
@@ -20,7 +19,6 @@ interface SkillsState {
   setDirectoryResults: (skills: DirectorySkill[]) => void;
   setDirectorySearchQuery: (query: string) => void;
   setDirectoryLoading: (loading: boolean) => void;
-  setSortByInstalls: (sort: boolean) => void;
 }
 
 export const useSkillsStore = create<SkillsState>(set => ({
@@ -31,7 +29,6 @@ export const useSkillsStore = create<SkillsState>(set => ({
   directoryResults: [],
   directorySearchQuery: '',
   directoryLoading: false,
-  sortByInstalls: true,
 
   setSelectedSkill: skill => set({ selectedSkill: skill, loadingDetail: false }),
   setLoadingDetail: loadingDetail => set({ loadingDetail }),
@@ -40,5 +37,4 @@ export const useSkillsStore = create<SkillsState>(set => ({
   setDirectoryResults: skills => set({ directoryResults: skills, directoryLoading: false }),
   setDirectorySearchQuery: query => set({ directorySearchQuery: query }),
   setDirectoryLoading: loading => set({ directoryLoading: loading }),
-  setSortByInstalls: sortByInstalls => set({ sortByInstalls }),
 }));

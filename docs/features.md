@@ -359,17 +359,31 @@ Requires `gh` CLI installed and authenticated (same as the GitHub PR integration
 
 ## Port Monitoring
 
-The Ports tab shows all TCP ports currently listening on localhost.
+The Ports tab shows all TCP ports currently listening on localhost. The sidebar shows a live count badge next to "Ports" when ports are open.
+
+### Port List
 
 For each port:
 
-- Port number, process name, and PID
+- **Port number badge** — click to copy `localhost:<port>` to clipboard (tooltip confirms copy)
+- Process name and PID
 - **"Managed"** badge if the process was started by RepoHub
-- Link to the originating project (if managed)
+- **Clickable project name** — navigates to the repo detail view (`/repo/:id`) when the port belongs to a managed process
 - **Open** button to launch `http://localhost:<port>` in the browser
-- **Kill** button to terminate the process (sends SIGTERM, then SIGKILL after 3s if still alive)
+- **Kill** button to terminate the process — opens a confirmation dialog showing command, PID, and port before proceeding (sends SIGTERM, then SIGKILL after 3s if still alive)
 
-Port scanning runs on a configurable interval (default: every 5 seconds). It uses `lsof -iTCP -sTCP:LISTEN` under the hood. The port list also refreshes automatically when navigating to the Ports tab.
+### Search & Filter
+
+- **Search bar** — filter ports by command name, port number, or project name
+- **"Managed only" toggle** — show only ports from RepoHub-managed processes
+
+### Error Handling
+
+If `lsof` fails (permissions, not installed, etc.), a red error banner appears in the port list with the failure message.
+
+### Configuration
+
+Port scanning runs on a configurable interval (default: every 5 seconds, min 1s, max 60s in Settings). It uses `lsof -iTCP -sTCP:LISTEN` under the hood. The port list also refreshes automatically when navigating to the Ports tab.
 
 ## Agent Command Center
 

@@ -21,13 +21,13 @@ Accessible via the Settings tab in the sidebar.
 | `codeSearchEnabled`         | `true`                                                                         | Whether to enable code search file watching and indexing                                                              |
 | `codeSearchExcludePatterns` | `**/node_modules/**`, `**/.git/**`, `**/dist/**`, `**/build/**`, `**/*.min.js` | Glob patterns to exclude from code search indexing                                                                    |
 | `codeSearchMaxFileSize`     | `1048576` (1MB)                                                                | Maximum file size in bytes for code search indexing                                                                   |
-| `theme`                     | `'palenight'`                                                                  | UI theme: `'default'` or `'palenight'`                                                                               |
-| `colorOverrides`            | `{}` (theme defaults)                                                          | Per-role color overrides. Keys: `accent`, `background`, `surface`, `sidebar`, `border`, `text`. Values: CSS colors. |
-| `uiFontSize`                | `14`                                                                           | Base UI font size in pixels (range: 12–18). Applied to `document.documentElement.style.fontSize`.                    |
+| `theme`                     | `'palenight'`                                                                  | UI theme: `'default'` or `'palenight'`                                                                                |
+| `colorOverrides`            | `{}` (theme defaults)                                                          | Per-role color overrides. Keys: `accent`, `background`, `surface`, `sidebar`, `border`, `text`. Values: CSS colors.   |
+| `uiFontSize`                | `14`                                                                           | Base UI font size in pixels (range: 12–18). Applied to `document.documentElement.style.fontSize`.                     |
 | `protectedBranches`         | `['main', 'master', 'develop']`                                                | Branch names that can never be deleted via branch cleanup                                                             |
 | `repoScanDepth`             | `5`                                                                            | Maximum directory depth for recursive project scanning                                                                |
-| `defaultShell`              | `''` (uses `$SHELL` or `/bin/zsh`)                                             | Shell executable path for PTY processes. Empty string falls back to environment.                                     |
-| `githubPRCooldown`          | `120` (seconds)                                                                | Minimum time between automatic GitHub PR refresh cycles                                                              |
+| `defaultShell`              | `''` (uses `$SHELL` or `/bin/zsh`)                                             | Shell executable path for PTY processes. Empty string falls back to environment.                                      |
+| `githubPRCooldown`          | `120` (seconds)                                                                | Minimum time between automatic GitHub PR refresh cycles                                                               |
 
 ## Scan Directory
 

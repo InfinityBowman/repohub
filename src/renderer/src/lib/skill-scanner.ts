@@ -42,10 +42,7 @@ const INVISIBLE_CHARS: Record<string, string> = {
   '\u206F': 'Nominal Digit Shapes',
 };
 
-const INVISIBLE_CHAR_REGEX = new RegExp(
-  `[${Object.keys(INVISIBLE_CHARS).join('')}]`,
-  'g',
-);
+const INVISIBLE_CHAR_REGEX = new RegExp(`[${Object.keys(INVISIBLE_CHARS).join('')}]`, 'g');
 
 // HTML comment pattern
 const HTML_COMMENT_REGEX = /<!--([\s\S]*?)-->/g;
@@ -99,9 +96,7 @@ export function scanSkillContent(rawContent: string, filename?: string): ScanWar
   }
 
   if (comments.length > 0) {
-    const hasInjection = comments.some(c =>
-      INJECTION_PATTERNS.some(p => p.test(c)),
-    );
+    const hasInjection = comments.some(c => INJECTION_PATTERNS.some(p => p.test(c)));
     warnings.push({
       severity: hasInjection ? 'high' : 'medium',
       type: 'html-comments',
@@ -118,7 +113,8 @@ export function scanSkillContent(rawContent: string, filename?: string): ScanWar
     // Count by type
     const counts = new Map<string, number>();
     for (const ch of invisibleMatches) {
-      const name = INVISIBLE_CHARS[ch] || `U+${ch.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`;
+      const name =
+        INVISIBLE_CHARS[ch] || `U+${ch.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`;
       counts.set(name, (counts.get(name) || 0) + 1);
     }
     const breakdown = Array.from(counts.entries())
@@ -153,9 +149,7 @@ export function scanSkillContent(rawContent: string, filename?: string): ScanWar
       .map(h => h.replace(/<[^>]+>/g, '').trim())
       .filter(t => t.length > 0);
 
-    const hasInjection = hiddenTexts.some(t =>
-      INJECTION_PATTERNS.some(p => p.test(t)),
-    );
+    const hasInjection = hiddenTexts.some(t => INJECTION_PATTERNS.some(p => p.test(t)));
 
     warnings.push({
       severity: hasInjection ? 'high' : 'medium',

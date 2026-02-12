@@ -9,6 +9,7 @@ import {
   Bot,
   Sparkles,
 } from 'lucide-react';
+import { usePortStore } from '@/store/portStore';
 
 const navItems = [
   { to: '/', icon: FolderGit2, label: 'Repositories' },
@@ -24,6 +25,7 @@ const navItems = [
 export function Sidebar() {
   const location = useLocation();
   const isRepoDetail = location.pathname.startsWith('/repo/');
+  const portCount = usePortStore(s => s.ports.length);
 
   return (
     <aside className='border-border bg-sidebar flex h-full w-56 flex-col border-r pt-12'>
@@ -45,7 +47,12 @@ export function Sidebar() {
             }}
           >
             <Icon className='h-4 w-4' />
-            {label}
+            <span className='flex-1'>{label}</span>
+            {to === '/ports' && portCount > 0 && (
+              <span className='bg-secondary text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px] leading-none font-medium tabular-nums'>
+                {portCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -1,8 +1,8 @@
-import { EventEmitter } from 'events';
 import { app } from 'electron';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
+import type { Dirent } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import matter from 'gray-matter';
@@ -10,8 +10,9 @@ import type { SkillSource, SkillSummary, SkillDetail, DirectorySkill } from '../
 
 const execFileAsync = promisify(execFile);
 
-const CLONE_TIMEOUT = 60_000; // 60 seconds
-const SKILLS_CLI_TIMEOUT = 60_000; // 60 seconds
+const CLONE_TIMEOUT = 60_000;
+const SKILLS_CLI_TIMEOUT = 60_000;
+const MAX_RECURSIVE_DEPTH = 20;
 
 const SKILL_SOURCES: SkillSource[] = [
   {
@@ -40,7 +41,7 @@ const SKILL_SOURCES: SkillSource[] = [
   },
 ];
 
-export class SkillsService extends EventEmitter {
+export class SkillsService {
   private referencesDir: string;
   private listCache = new Map<string, { data: SkillSummary[]; timestamp: number }>();
   private searchCache = new Map<string, { data: DirectorySkill[]; timestamp: number }>();
@@ -48,8 +49,10 @@ export class SkillsService extends EventEmitter {
   private readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
   private readonly SEARCH_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
+  // Per-source lock to prevent concurrent clone/pull operations (#1)
+  private cloneLocks = new Map<string, Promise<string>>();
+
   constructor() {
-    super();
     this.referencesDir = path.join(app.getPath('userData'), 'skills-reference');
   }
 
@@ -63,20 +66,32 @@ export class SkillsService extends EventEmitter {
 
   /**
    * Ensure the repo is cloned locally. Pull if it already exists, clone if not.
+   * Uses per-source locking to prevent concurrent git operations on the same repo.
    */
   private async ensureClone(source: SkillSource): Promise<string> {
+    const existing = this.cloneLocks.get(source.id);
+    if (existing) return existing;
+
+    const operation = this.performClone(source);
+    this.cloneLocks.set(source.id, operation);
+    try {
+      return await operation;
+    } finally {
+      this.cloneLocks.delete(source.id);
+    }
+  }
+
+  private async performClone(source: SkillSource): Promise<string> {
     await fs.mkdir(this.referencesDir, { recursive: true });
     const clonePath = path.join(this.referencesDir, source.id);
 
     try {
       await fs.access(path.join(clonePath, '.git'));
-      // Already cloned — pull latest
       await execFileAsync('git', ['pull', '--ff-only'], {
         cwd: clonePath,
         timeout: CLONE_TIMEOUT,
       });
     } catch {
-      // Not cloned yet — remove stale dir and clone fresh
       await fs.rm(clonePath, { recursive: true, force: true });
       const repoUrl = `https://github.com/${source.owner}/${source.repo}.git`;
       await execFileAsync(
@@ -90,12 +105,47 @@ export class SkillsService extends EventEmitter {
   }
 
   /**
-   * Recursively find all SKILL.md files under a directory.
+   * Resolve the skills root directory for a source (ensureClone + skillsDir).
+   * Extracted to eliminate duplication across listSkills/getSkillDetail/installSkill.
    */
-  private async findSkillFiles(dir: string): Promise<string[]> {
+  private async getSkillsRoot(source: SkillSource): Promise<string> {
+    const clonePath = await this.ensureClone(source);
+    return source.skillsDir ? path.join(clonePath, source.skillsDir) : clonePath;
+  }
+
+  /**
+   * Parse common skill fields from frontmatter. Eliminates duplication across
+   * listSkills, getSkillDetail, and getDirectorySkillDetail.
+   */
+  private parseSkillFrontmatter(
+    frontmatter: Record<string, any>,
+    fallbackName: string,
+    sourceId: string,
+    skillPath: string,
+  ): Pick<SkillDetail, 'sourceId' | 'path' | 'name' | 'description' | 'tags' | 'version'> {
+    return {
+      sourceId,
+      path: skillPath,
+      name: (frontmatter.name as string) || fallbackName,
+      description: (frontmatter.description as string) || '',
+      tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
+      version: frontmatter.version as string | undefined,
+    };
+  }
+
+  /**
+   * Recursively find all SKILL.md files under a directory.
+   * Has a depth limit to prevent runaway recursion.
+   */
+  private async findSkillFiles(dir: string, depth = 0): Promise<string[]> {
+    if (depth > MAX_RECURSIVE_DEPTH) {
+      console.warn(`[SkillsService] Max depth ${MAX_RECURSIVE_DEPTH} reached in ${dir}`);
+      return [];
+    }
+
     const results: string[] = [];
 
-    let entries: Awaited<ReturnType<typeof fs.readdir>>;
+    let entries: Dirent[];
     try {
       entries = await fs.readdir(dir, { withFileTypes: true });
     } catch {
@@ -107,7 +157,7 @@ export class SkillsService extends EventEmitter {
       const fullPath = path.join(dir, entry.name);
 
       if (entry.isDirectory()) {
-        const subResults = await this.findSkillFiles(fullPath);
+        const subResults = await this.findSkillFiles(fullPath, depth + 1);
         results.push(...subResults);
       } else if (entry.isFile() && entry.name === 'SKILL.md') {
         results.push(fullPath);
@@ -118,7 +168,6 @@ export class SkillsService extends EventEmitter {
   }
 
   async listSkills(sourceId: string): Promise<SkillSummary[]> {
-    // Check cache
     const cached = this.listCache.get(sourceId);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
       return cached.data;
@@ -127,11 +176,7 @@ export class SkillsService extends EventEmitter {
     const source = SKILL_SOURCES.find(s => s.id === sourceId);
     if (!source) throw new Error(`Unknown source: ${sourceId}`);
 
-    const clonePath = await this.ensureClone(source);
-    const skillsRoot = source.skillsDir
-      ? path.join(clonePath, source.skillsDir)
-      : clonePath;
-
+    const skillsRoot = await this.getSkillsRoot(source);
     const skillFiles = await this.findSkillFiles(skillsRoot);
 
     const skills: SkillSummary[] = [];
@@ -140,16 +185,16 @@ export class SkillsService extends EventEmitter {
         const raw = await fs.readFile(skillMdPath, 'utf-8');
         const { data: frontmatter } = matter(raw);
         const skillDir = path.dirname(skillMdPath);
-        // Path relative to the skills root (e.g. '.curated/figma' or 'frontend-design')
         const relativePath = path.relative(skillsRoot, skillDir);
         const dirName = path.basename(skillDir);
 
+        const parsed = this.parseSkillFrontmatter(frontmatter, dirName, source.id, relativePath);
         skills.push({
-          sourceId: source.id,
-          path: relativePath,
-          name: (frontmatter.name as string) || dirName,
-          description: (frontmatter.description as string) || '',
-          tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
+          sourceId: parsed.sourceId,
+          path: parsed.path,
+          name: parsed.name,
+          description: parsed.description,
+          tags: parsed.tags,
         });
       } catch {
         // Skip unparseable files
@@ -166,36 +211,30 @@ export class SkillsService extends EventEmitter {
     const source = SKILL_SOURCES.find(s => s.id === sourceId);
     if (!source) throw new Error(`Unknown source: ${sourceId}`);
 
-    const clonePath = await this.ensureClone(source);
-    const skillsRoot = source.skillsDir
-      ? path.join(clonePath, source.skillsDir)
-      : clonePath;
+    const skillsRoot = await this.getSkillsRoot(source);
     const skillDir = path.join(skillsRoot, skillPath);
 
     // Path traversal check
-    if (!skillDir.startsWith(skillsRoot)) {
+    const resolvedSkillDir = path.resolve(skillDir);
+    const resolvedSkillsRoot = path.resolve(skillsRoot);
+    if (!resolvedSkillDir.startsWith(resolvedSkillsRoot)) {
       throw new Error('Invalid skill path');
     }
 
-    const skillMdPath = path.join(skillDir, 'SKILL.md');
+    const skillMdPath = path.join(resolvedSkillDir, 'SKILL.md');
     const raw = await fs.readFile(skillMdPath, 'utf-8');
     const { data: frontmatter, content } = matter(raw);
 
-    // List files and read all text content in the skill directory
     const [files, allTextContent] = await Promise.all([
-      this.listSkillFiles(skillDir),
-      this.readAllTextFiles(skillDir),
+      this.listSkillFiles(resolvedSkillDir),
+      this.readAllTextFiles(resolvedSkillDir),
     ]);
 
-    const dirName = path.basename(skillDir);
+    const dirName = path.basename(resolvedSkillDir);
+    const parsed = this.parseSkillFrontmatter(frontmatter, dirName, source.id, skillPath);
 
     return {
-      sourceId: source.id,
-      path: skillPath,
-      name: (frontmatter.name as string) || dirName,
-      description: (frontmatter.description as string) || '',
-      tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
-      version: frontmatter.version as string | undefined,
+      ...parsed,
       content,
       files,
       rawFrontmatter: frontmatter,
@@ -211,22 +250,40 @@ export class SkillsService extends EventEmitter {
     const source = SKILL_SOURCES.find(s => s.id === sourceId);
     if (!source) return { success: false, error: `Unknown source: ${sourceId}` };
 
+    if (!sourceId || !skillPath || !targetDir) {
+      return { success: false, error: 'Missing required parameters' };
+    }
+
     try {
-      const clonePath = await this.ensureClone(source);
-      const skillsRoot = source.skillsDir
-        ? path.join(clonePath, source.skillsDir)
-        : clonePath;
+      // Validate targetDir exists and is a directory
+      const targetStat = await fs.stat(targetDir).catch(() => null);
+      if (!targetStat?.isDirectory()) {
+        return { success: false, error: 'Target directory does not exist' };
+      }
+      const resolvedTargetDir = await fs.realpath(targetDir);
+
+      const skillsRoot = await this.getSkillsRoot(source);
       const skillDir = path.join(skillsRoot, skillPath);
 
-      // Path traversal check
-      if (!skillDir.startsWith(skillsRoot)) {
+      // Path traversal check with resolved paths
+      const resolvedSkillDir = path.resolve(skillDir);
+      const resolvedSkillsRoot = path.resolve(skillsRoot);
+      if (!resolvedSkillDir.startsWith(resolvedSkillsRoot)) {
         return { success: false, error: 'Invalid skill path' };
       }
 
-      const dirName = path.basename(skillDir);
-      const installDir = path.join(targetDir, dirName);
+      const dirName = path.basename(resolvedSkillDir);
+      if (dirName.includes('..') || dirName.includes('/') || dirName.includes('\\')) {
+        return { success: false, error: 'Invalid skill directory name' };
+      }
 
-      await this.copyDirRecursive(skillDir, installDir);
+      const installDir = path.join(resolvedTargetDir, dirName);
+
+      await this.copyDirRecursive(resolvedSkillDir, installDir);
+
+      // Invalidate caches after successful install
+      this.listCache.delete(sourceId);
+      this.detailCache.delete(`${sourceId}:${skillPath}`);
 
       return { success: true };
     } catch (err: any) {
@@ -234,9 +291,6 @@ export class SkillsService extends EventEmitter {
     }
   }
 
-  /**
-   * Search the skills.sh directory via their public API.
-   */
   async searchDirectory(query: string, limit = 50): Promise<DirectorySkill[]> {
     const cacheKey = `${query}:${limit}`;
     const cached = this.searchCache.get(cacheKey);
@@ -270,21 +324,19 @@ export class SkillsService extends EventEmitter {
       return cached.data;
     }
 
-    // Install to a temp dir using the skills CLI
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'repohub-skill-'));
     try {
-      await execFileAsync(
-        'npx',
-        ['skills', 'add', source, '-s', skillId, '-y'],
-        { cwd: tmpDir, timeout: SKILLS_CLI_TIMEOUT },
-      );
+      await execFileAsync('npx', ['skills', 'add', source, '-s', skillId, '-y'], {
+        cwd: tmpDir,
+        timeout: SKILLS_CLI_TIMEOUT,
+      });
 
-      // Find the SKILL.md in the temp dir
       const skillFiles = await this.findSkillFiles(tmpDir);
-      const skillMdPath = skillFiles.find(f => {
-        const dir = path.basename(path.dirname(f));
-        return dir === skillId;
-      }) || skillFiles[0];
+      const skillMdPath =
+        skillFiles.find(f => {
+          const dir = path.basename(path.dirname(f));
+          return dir === skillId;
+        }) || skillFiles[0];
 
       if (!skillMdPath) {
         throw new Error(`skills CLI did not produce a SKILL.md for ${skillId}`);
@@ -298,13 +350,9 @@ export class SkillsService extends EventEmitter {
         this.readAllTextFiles(skillDir),
       ]);
 
+      const parsed = this.parseSkillFrontmatter(frontmatter, skillId, source, skillId);
       const detail: SkillDetail = {
-        sourceId: source,
-        path: skillId,
-        name: (frontmatter.name as string) || skillId,
-        description: (frontmatter.description as string) || '',
-        tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
-        version: frontmatter.version as string | undefined,
+        ...parsed,
         content,
         files,
         rawFrontmatter: frontmatter,
@@ -314,8 +362,9 @@ export class SkillsService extends EventEmitter {
       this.detailCache.set(cacheKey, { data: detail, timestamp: Date.now() });
       return detail;
     } finally {
-      // Clean up temp dir
-      fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+      fs.rm(tmpDir, { recursive: true, force: true }).catch(err => {
+        console.error(`[SkillsService] Failed to clean up temp directory ${tmpDir}:`, err);
+      });
     }
   }
 
@@ -327,12 +376,26 @@ export class SkillsService extends EventEmitter {
     skillId: string,
     targetDir: string,
   ): Promise<{ success: boolean; error?: string }> {
+    if (!source || !skillId || !targetDir) {
+      return { success: false, error: 'Missing required parameters' };
+    }
+
     try {
-      await execFileAsync(
-        'npx',
-        ['skills', 'add', source, '-s', skillId, '-y'],
-        { cwd: targetDir, timeout: SKILLS_CLI_TIMEOUT },
-      );
+      // Validate targetDir exists and is a directory
+      const targetStat = await fs.stat(targetDir).catch(() => null);
+      if (!targetStat?.isDirectory()) {
+        return { success: false, error: 'Target directory does not exist' };
+      }
+
+      await execFileAsync('npx', ['skills', 'add', source, '-s', skillId, '-y'], {
+        cwd: targetDir,
+        timeout: SKILLS_CLI_TIMEOUT,
+      });
+
+      // Invalidate caches after successful install
+      const cacheKey = `${source}:${skillId}`;
+      this.detailCache.delete(cacheKey);
+
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || 'Install failed' };
@@ -355,24 +418,73 @@ export class SkillsService extends EventEmitter {
     return results.sort();
   }
 
-  // Extensions that are considered text files for security scanning
   private static TEXT_EXTENSIONS = new Set([
-    '.md', '.txt', '.sh', '.bash', '.zsh', '.fish',
-    '.py', '.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs',
-    '.yaml', '.yml', '.json', '.toml', '.ini', '.cfg',
-    '.xml', '.html', '.css', '.scss', '.less',
-    '.rs', '.go', '.java', '.kt', '.swift', '.rb', '.lua',
-    '.c', '.cpp', '.h', '.hpp', '.cs',
-    '.r', '.R', '.jl', '.ex', '.exs', '.erl',
-    '.vim', '.el', '.clj', '.cljs', '.hs',
-    '.dockerfile', '.env', '.gitignore', '.editorconfig',
+    '.md',
+    '.txt',
+    '.sh',
+    '.bash',
+    '.zsh',
+    '.fish',
+    '.py',
+    '.js',
+    '.ts',
+    '.jsx',
+    '.tsx',
+    '.mjs',
+    '.cjs',
+    '.yaml',
+    '.yml',
+    '.json',
+    '.toml',
+    '.ini',
+    '.cfg',
+    '.xml',
+    '.html',
+    '.css',
+    '.scss',
+    '.less',
+    '.rs',
+    '.go',
+    '.java',
+    '.kt',
+    '.swift',
+    '.rb',
+    '.lua',
+    '.c',
+    '.cpp',
+    '.h',
+    '.hpp',
+    '.cs',
+    '.r',
+    '.R',
+    '.jl',
+    '.ex',
+    '.exs',
+    '.erl',
+    '.vim',
+    '.el',
+    '.clj',
+    '.cljs',
+    '.hs',
+    '.dockerfile',
+    '.env',
+    '.gitignore',
+    '.editorconfig',
   ]);
 
-  private static MAX_TEXT_FILE_SIZE = 512 * 1024; // 512 KB per file
+  private static MAX_TEXT_FILE_SIZE = 512 * 1024;
 
   private isTextFile(filename: string): boolean {
-    // Files with no extension but known names
-    const noExtNames = ['Makefile', 'Dockerfile', 'Jenkinsfile', 'Vagrantfile', 'Rakefile', 'Gemfile', 'LICENSE', 'AGENTS.md'];
+    const noExtNames = [
+      'Makefile',
+      'Dockerfile',
+      'Jenkinsfile',
+      'Vagrantfile',
+      'Rakefile',
+      'Gemfile',
+      'LICENSE',
+      'AGENTS.md',
+    ];
     if (noExtNames.includes(filename)) return true;
 
     const ext = path.extname(filename).toLowerCase();
@@ -383,14 +495,23 @@ export class SkillsService extends EventEmitter {
   /**
    * Recursively read all text files in a skill directory.
    * Returns a map of relative path -> content.
+   * Has a depth limit to prevent runaway recursion.
    */
   private async readAllTextFiles(
     dir: string,
     basePath = '',
+    depth = 0,
   ): Promise<Record<string, string>> {
+    if (depth > MAX_RECURSIVE_DEPTH) {
+      console.warn(
+        `[SkillsService] Max depth ${MAX_RECURSIVE_DEPTH} reached reading text files in ${dir}`,
+      );
+      return {};
+    }
+
     const results: Record<string, string> = {};
 
-    let entries: Awaited<ReturnType<typeof fs.readdir>>;
+    let entries: Dirent[];
     try {
       entries = await fs.readdir(dir, { withFileTypes: true });
     } catch {
@@ -403,7 +524,7 @@ export class SkillsService extends EventEmitter {
       const relativePath = basePath ? `${basePath}/${entry.name}` : entry.name;
 
       if (entry.isDirectory()) {
-        const subResults = await this.readAllTextFiles(fullPath, relativePath);
+        const subResults = await this.readAllTextFiles(fullPath, relativePath, depth + 1);
         Object.assign(results, subResults);
       } else if (entry.isFile() && this.isTextFile(entry.name)) {
         try {

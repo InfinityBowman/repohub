@@ -56,7 +56,8 @@ export class PortService extends EventEmitter {
 
       ports.sort((a, b) => a.port - b.port);
       return ports;
-    } catch {
+    } catch (err: any) {
+      this.emit('scanError', err.message ?? 'Failed to scan ports');
       return [];
     }
   }

@@ -1,21 +1,34 @@
 import { useEffect, useCallback } from 'react';
 import { usePortStore } from '@/store/portStore';
 
+// Track active listener count to handle StrictMode double-mount
+let activeListeners = 0;
+let cleanupFns: (() => void)[] = [];
+
 export function usePorts() {
   const store = usePortStore();
 
   useEffect(() => {
-    // Start monitoring
-    window.electron.ports.startMonitoring().then(() => {
-      usePortStore.getState().setMonitoring(true);
-    });
+    activeListeners++;
 
-    const unsubscribe = window.electron.on.portsChanged(ports => {
-      usePortStore.getState().setPorts(ports);
-    });
+    if (activeListeners === 1) {
+      const unsubPorts = window.electron.on.portsChanged(ports => {
+        usePortStore.getState().setPorts(ports);
+      });
+
+      const unsubError = window.electron.on.portScanError((message: string) => {
+        usePortStore.getState().setError(message);
+      });
+
+      cleanupFns = [unsubPorts, unsubError];
+    }
 
     return () => {
-      unsubscribe();
+      activeListeners--;
+      if (activeListeners === 0) {
+        for (const fn of cleanupFns) fn();
+        cleanupFns = [];
+      }
     };
   }, []);
 
@@ -30,7 +43,8 @@ export function usePorts() {
 
   return {
     ports: store.ports,
-    monitoring: store.monitoring,
+    error: store.error,
+    firstSeen: store.firstSeen,
     killByPort,
     refresh,
   };

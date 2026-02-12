@@ -34,9 +34,9 @@ function Row({
   return (
     <div className='group flex items-start justify-between gap-8 py-3.5'>
       <div className='min-w-0 flex-1'>
-        <div className='text-[13px] font-medium text-foreground'>{label}</div>
+        <div className='text-foreground text-[13px] font-medium'>{label}</div>
         {description && (
-          <div className='text-[12px] leading-relaxed text-muted-foreground mt-0.5'>
+          <div className='text-muted-foreground mt-0.5 text-[12px] leading-relaxed'>
             {description}
           </div>
         )}
@@ -51,11 +51,13 @@ function NumInput({
   onChange,
   unit,
   min = 1,
+  max,
 }: {
   value: number;
   onChange: (v: number) => void;
   unit: string;
   min?: number;
+  max?: number;
 }) {
   return (
     <div className='flex items-center gap-2'>
@@ -64,12 +66,13 @@ function NumInput({
         value={value}
         onChange={e => {
           const v = parseInt(e.target.value, 10);
-          if (v >= min) onChange(v);
+          if (v >= min && (max === undefined || v <= max)) onChange(v);
         }}
-        className='h-8 w-20 text-[13px] text-center tabular-nums'
+        className='h-8 w-20 text-center text-[13px] tabular-nums'
         min={min}
+        max={max}
       />
-      <span className='text-[12px] text-muted-foreground'>{unit}</span>
+      <span className='text-muted-foreground text-[12px]'>{unit}</span>
     </div>
   );
 }
@@ -98,16 +101,16 @@ function TagList({
   return (
     <div className='flex flex-col gap-2.5'>
       {items.length > 0 && (
-        <div className='flex flex-wrap gap-1.5 max-h-40 overflow-y-auto py-0.5'>
+        <div className='flex max-h-40 flex-wrap gap-1.5 overflow-y-auto py-0.5'>
           {items.map((item, i) => (
             <span
               key={i}
-              className='group/tag inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-1 text-[12px] leading-none transition-colors hover:bg-secondary'
+              className='group/tag bg-secondary/80 hover:bg-secondary inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] leading-none transition-colors'
             >
               <span className={mono ? 'font-mono' : ''}>{item}</span>
               <button
                 onClick={() => setItems(items.filter((_, j) => j !== i))}
-                className='text-muted-foreground/60 hover:text-destructive transition-colors -mr-0.5'
+                className='text-muted-foreground/60 hover:text-destructive -mr-0.5 transition-colors'
               >
                 <X className='h-3 w-3' />
               </button>
@@ -126,7 +129,7 @@ function TagList({
               add();
             }
           }}
-          className='h-8 text-[13px] flex-1'
+          className='h-8 flex-1 text-[13px]'
         />
         <Button variant='ghost' size='xs' onClick={add} className='text-muted-foreground'>
           <Plus className='h-3 w-3' />
@@ -139,14 +142,14 @@ function TagList({
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className='text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 pt-2 pb-1'>
+    <div className='text-muted-foreground/70 pt-2 pb-1 text-[11px] font-semibold tracking-wider uppercase'>
       {children}
     </div>
   );
 }
 
 function Divider() {
-  return <div className='border-t border-border/50' />;
+  return <div className='border-border/50 border-t' />;
 }
 
 /* ─── Color customization roles ──────────────────────────────────── */
@@ -188,10 +191,10 @@ function NavItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] w-full text-left transition-colors ${
-        active
-          ? 'bg-accent text-foreground font-medium'
-          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+      className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-colors ${
+        active ?
+          'bg-accent text-foreground font-medium'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
       }`}
     >
       <Icon className='h-4 w-4 shrink-0' />
@@ -277,7 +280,7 @@ export function SettingsView() {
   }
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className='flex h-full flex-col'>
       {/* Header */}
       <div className='flex items-center justify-between pb-5'>
         <h2 className='text-lg font-semibold tracking-tight'>Settings</h2>
@@ -286,15 +289,17 @@ export function SettingsView() {
           size='sm'
           className={`transition-all ${saved ? 'bg-green-600 hover:bg-green-600' : ''}`}
         >
-          {saved ? <Check className='h-3.5 w-3.5' /> : <Save className='h-3.5 w-3.5' />}
+          {saved ?
+            <Check className='h-3.5 w-3.5' />
+          : <Save className='h-3.5 w-3.5' />}
           {saved ? 'Saved' : 'Save changes'}
         </Button>
       </div>
 
       {/* Two-column layout */}
-      <div className='flex gap-8 flex-1 min-h-0'>
+      <div className='flex min-h-0 flex-1 gap-8'>
         {/* Sidebar nav */}
-        <nav className='flex flex-col gap-1 w-40 shrink-0'>
+        <nav className='flex w-40 shrink-0 flex-col gap-1'>
           {sections.map(s => (
             <NavItem
               key={s.id}
@@ -307,7 +312,7 @@ export function SettingsView() {
         </nav>
 
         {/* Content — px-1 so focus rings on flush-left inputs aren't clipped */}
-        <div className='flex-1 min-w-0 overflow-y-auto pb-8 px-1'>
+        <div className='min-w-0 flex-1 overflow-y-auto px-1 pb-8'>
           {/* ── General ───────────────────────────────── */}
           {activeTab === 'general' && (
             <div>
@@ -330,22 +335,22 @@ export function SettingsView() {
                   ] as const
                 ).map(theme => {
                   const isActive =
-                    theme.id === 'palenight'
-                      ? config.theme === 'palenight'
-                      : config.theme !== 'palenight';
+                    theme.id === 'palenight' ?
+                      config.theme === 'palenight'
+                    : config.theme !== 'palenight';
                   return (
                     <button
                       key={theme.id}
                       onClick={() => update({ theme: theme.id })}
                       className={`relative flex items-center gap-3 rounded-lg border p-3.5 text-left transition-all ${
-                        isActive
-                          ? 'border-primary/60 bg-accent/60 ring-1 ring-primary/20'
-                          : 'border-border/60 hover:border-border hover:bg-accent/30'
+                        isActive ?
+                          'border-primary/60 bg-accent/60 ring-primary/20 ring-1'
+                        : 'border-border/60 hover:border-border hover:bg-accent/30'
                       }`}
                     >
                       {isActive && (
                         <div className='absolute top-2.5 right-2.5'>
-                          <Check className='h-3.5 w-3.5 text-primary' />
+                          <Check className='text-primary h-3.5 w-3.5' />
                         </div>
                       )}
                       <div className='flex gap-0.5'>
@@ -359,7 +364,7 @@ export function SettingsView() {
                       </div>
                       <div>
                         <div className='text-[13px] font-medium'>{theme.name}</div>
-                        <div className='text-[11px] text-muted-foreground'>{theme.sub}</div>
+                        <div className='text-muted-foreground text-[11px]'>{theme.sub}</div>
                       </div>
                     </button>
                   );
@@ -370,7 +375,7 @@ export function SettingsView() {
               <SectionLabel>Colors</SectionLabel>
 
               <div className='py-3.5'>
-                <div className='text-[12px] text-muted-foreground mb-4'>
+                <div className='text-muted-foreground mb-4 text-[12px]'>
                   Override individual colors from the active theme. Changes apply live.
                 </div>
                 <div className='flex flex-col gap-1'>
@@ -380,19 +385,19 @@ export function SettingsView() {
                     return (
                       <div
                         key={role.key}
-                        className='group flex items-center gap-3 rounded-lg px-2.5 py-2 -mx-2.5 hover:bg-accent/30 transition-colors'
+                        className='group hover:bg-accent/30 -mx-2.5 flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors'
                       >
                         <label className='relative flex-shrink-0 cursor-pointer'>
                           <span
                             className={`block h-7 w-7 rounded-md border transition-all ${
-                              value
-                                ? 'border-foreground/30'
-                                : 'border-dashed border-muted-foreground/30'
+                              value ? 'border-foreground/30' : (
+                                'border-muted-foreground/30 border-dashed'
+                              )
                             }`}
                             style={value ? { background: value } : undefined}
                           >
                             {!value && (
-                              <Palette className='absolute inset-0 m-auto h-3 w-3 text-muted-foreground/40' />
+                              <Palette className='text-muted-foreground/40 absolute inset-0 m-auto h-3 w-3' />
                             )}
                           </span>
                           <input
@@ -406,17 +411,17 @@ export function SettingsView() {
                             className='absolute inset-0 h-full w-full cursor-pointer opacity-0'
                           />
                         </label>
-                        <div className='flex-1 min-w-0'>
-                          <div className='text-[13px] font-medium text-foreground'>
+                        <div className='min-w-0 flex-1'>
+                          <div className='text-foreground text-[13px] font-medium'>
                             {role.label}
                           </div>
-                          <div className='text-[11px] text-muted-foreground'>
+                          <div className='text-muted-foreground text-[11px]'>
                             {role.description}
                           </div>
                         </div>
                         {value && (
                           <div className='flex items-center gap-2'>
-                            <span className='text-[11px] font-mono text-muted-foreground'>
+                            <span className='text-muted-foreground font-mono text-[11px]'>
                               {value}
                             </span>
                             <button
@@ -439,7 +444,7 @@ export function SettingsView() {
                 {Object.keys(config.colorOverrides ?? {}).length > 0 && (
                   <button
                     onClick={() => update({ colorOverrides: {} })}
-                    className='mt-3 text-[12px] text-muted-foreground hover:text-foreground transition-colors'
+                    className='text-muted-foreground hover:text-foreground mt-3 text-[12px] transition-colors'
                   >
                     Reset all colors to theme defaults
                   </button>
@@ -468,15 +473,15 @@ export function SettingsView() {
             <div>
               <SectionLabel>Scanning</SectionLabel>
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>Scan directory</div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                <div className='text-foreground text-[13px] font-medium'>Scan directory</div>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
                   Root directory to scan for repositories.
                 </div>
                 <Input
                   value={scanDir}
                   onChange={e => setScanDir(e.target.value)}
                   placeholder='~/Documents/Repos'
-                  className='h-8 text-[13px] font-mono'
+                  className='h-8 font-mono text-[13px]'
                 />
               </div>
 
@@ -486,18 +491,14 @@ export function SettingsView() {
                 label='Scan depth'
                 description='Maximum directory depth to recurse when looking for projects.'
               >
-                <NumInput
-                  value={repoScanDepth}
-                  onChange={setRepoScanDepth}
-                  unit='levels'
-                />
+                <NumInput value={repoScanDepth} onChange={setRepoScanDepth} unit='levels' />
               </Row>
 
               <Divider />
 
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>Ignore patterns</div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                <div className='text-foreground text-[13px] font-medium'>Ignore patterns</div>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
                   Glob patterns for directories to exclude from the repository list.
                 </div>
                 <TagList
@@ -512,8 +513,8 @@ export function SettingsView() {
               <SectionLabel>Branch protection</SectionLabel>
 
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>Protected branches</div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                <div className='text-foreground text-[13px] font-medium'>Protected branches</div>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
                   Branches that can never be deleted via cleanup. The current branch is always
                   protected.
                 </div>
@@ -554,8 +555,8 @@ export function SettingsView() {
               <SectionLabel>Exclusions</SectionLabel>
 
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>Exclude patterns</div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                <div className='text-foreground text-[13px] font-medium'>Exclude patterns</div>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
                   Glob patterns for files and directories to skip when indexing.
                 </div>
                 <TagList
@@ -591,16 +592,15 @@ export function SettingsView() {
             <div>
               <SectionLabel>Shell</SectionLabel>
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>Default shell</div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
-                  Shell used for project terminals. Leave empty to use your system default
-                  ($SHELL).
+                <div className='text-foreground text-[13px] font-medium'>Default shell</div>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
+                  Shell used for project terminals. Leave empty to use your system default ($SHELL).
                 </div>
                 <Input
                   value={defaultShell}
                   onChange={e => setDefaultShell(e.target.value)}
                   placeholder={`e.g. /bin/zsh, /opt/homebrew/bin/fish`}
-                  className='h-8 text-[13px] font-mono'
+                  className='h-8 font-mono text-[13px]'
                 />
               </div>
             </div>
@@ -618,6 +618,8 @@ export function SettingsView() {
                   value={portScanInterval}
                   onChange={setPortScanInterval}
                   unit='seconds'
+                  min={1}
+                  max={60}
                 />
               </Row>
             </div>
@@ -628,34 +630,34 @@ export function SettingsView() {
             <div>
               <SectionLabel>Templates</SectionLabel>
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>
+                <div className='text-foreground text-[13px] font-medium'>
                   Project templates directory
                 </div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
                   Each subdirectory becomes a template in "New Project".
                 </div>
                 <Input
                   value={projectTemplatesDir}
                   onChange={e => setProjectTemplatesDir(e.target.value)}
                   placeholder='~/Templates/projects'
-                  className='h-8 text-[13px] font-mono'
+                  className='h-8 font-mono text-[13px]'
                 />
               </div>
 
               <Divider />
 
               <div className='py-3.5'>
-                <div className='text-[13px] font-medium text-foreground'>
+                <div className='text-foreground text-[13px] font-medium'>
                   Setup template directory
                 </div>
-                <div className='text-[12px] text-muted-foreground mt-0.5 mb-2.5'>
+                <div className='text-muted-foreground mt-0.5 mb-2.5 text-[12px]'>
                   Config files (eslint, prettier, etc.) copied into new projects after scaffolding.
                 </div>
                 <Input
                   value={setupTemplateDir}
                   onChange={e => setSetupTemplateDir(e.target.value)}
                   placeholder='~/dotfiles/project-templates'
-                  className='h-8 text-[13px] font-mono'
+                  className='h-8 font-mono text-[13px]'
                 />
               </div>
             </div>

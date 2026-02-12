@@ -434,8 +434,6 @@ declare global {
       };
       ports: {
         scan: () => Promise<PortInfo[]>;
-        startMonitoring: () => Promise<{ success: boolean }>;
-        stopMonitoring: () => Promise<{ success: boolean }>;
         killByPort: (port: number) => Promise<{ success: boolean; error?: string }>;
       };
       shell: {
@@ -540,6 +538,7 @@ declare global {
         processOutput: (callback: (data: ProcessOutputData) => void) => () => void;
         processStatusChanged: (callback: (info: ProcessInfo) => void) => () => void;
         portsChanged: (callback: (ports: PortInfo[]) => void) => () => void;
+        portScanError: (callback: (message: string) => void) => () => void;
         healthChanged: (callback: (health: DependencyHealth) => void) => () => void;
         githubChanged: (
           callback: (data: {

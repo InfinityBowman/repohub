@@ -30,21 +30,18 @@ export class ConfigService {
       hiddenDefaultRecipes:
         this.store.get('hiddenDefaultRecipes') ?? DEFAULT_CONFIG.hiddenDefaultRecipes,
       setupTemplateDir: this.store.get('setupTemplateDir') ?? DEFAULT_CONFIG.setupTemplateDir,
-      codeSearchEnabled:
-        this.store.get('codeSearchEnabled') ?? DEFAULT_CONFIG.codeSearchEnabled,
+      codeSearchEnabled: this.store.get('codeSearchEnabled') ?? DEFAULT_CONFIG.codeSearchEnabled,
       codeSearchExcludePatterns:
         this.store.get('codeSearchExcludePatterns') ?? DEFAULT_CONFIG.codeSearchExcludePatterns,
       codeSearchMaxFileSize:
         this.store.get('codeSearchMaxFileSize') ?? DEFAULT_CONFIG.codeSearchMaxFileSize,
       theme: this.store.get('theme') ?? DEFAULT_CONFIG.theme,
-      protectedBranches:
-        this.store.get('protectedBranches') ?? DEFAULT_CONFIG.protectedBranches,
+      protectedBranches: this.store.get('protectedBranches') ?? DEFAULT_CONFIG.protectedBranches,
       colorOverrides: this.store.get('colorOverrides') ?? DEFAULT_CONFIG.colorOverrides,
       uiFontSize: this.store.get('uiFontSize') ?? DEFAULT_CONFIG.uiFontSize,
       repoScanDepth: this.store.get('repoScanDepth') ?? DEFAULT_CONFIG.repoScanDepth,
       defaultShell: this.store.get('defaultShell') ?? DEFAULT_CONFIG.defaultShell,
-      githubPRCooldown:
-        this.store.get('githubPRCooldown') ?? DEFAULT_CONFIG.githubPRCooldown,
+      githubPRCooldown: this.store.get('githubPRCooldown') ?? DEFAULT_CONFIG.githubPRCooldown,
     };
   }
 

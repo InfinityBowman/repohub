@@ -37,8 +37,6 @@ const electronAPI = {
 
   ports: {
     scan: () => ipcRenderer.invoke('port:scan'),
-    startMonitoring: () => ipcRenderer.invoke('port:start-monitoring'),
-    stopMonitoring: () => ipcRenderer.invoke('port:stop-monitoring'),
     killByPort: (port: number) => ipcRenderer.invoke('port:kill-by-port', port),
   },
 
@@ -168,6 +166,11 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data);
       ipcRenderer.on('port:changed', handler);
       return () => ipcRenderer.removeListener('port:changed', handler);
+    },
+    portScanError: (callback: (message: string) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('port:scan-error', handler);
+      return () => ipcRenderer.removeListener('port:scan-error', handler);
     },
     healthChanged: (callback: (health: any) => void) => {
       const handler = (_: any, data: any) => callback(data);

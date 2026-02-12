@@ -32,12 +32,9 @@ export function registerSkillsHandlers(skillsService: SkillsService): void {
     return skillsService.searchDirectory(query, limit);
   });
 
-  ipcMain.handle(
-    'skills:directory-detail',
-    async (_event, source: string, skillId: string) => {
-      return skillsService.getDirectorySkillDetail(source, skillId);
-    },
-  );
+  ipcMain.handle('skills:directory-detail', async (_event, source: string, skillId: string) => {
+    return skillsService.getDirectorySkillDetail(source, skillId);
+  });
 
   ipcMain.handle(
     'skills:directory-install',
