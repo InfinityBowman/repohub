@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { diffLines, type Change } from 'diff';
-import { codeToTokens, type ThemedToken } from 'shiki';
+import { codeToTokens, type ThemedToken, type BundledLanguage } from 'shiki';
 
 const SHIKI_THEME = 'github-dark-default';
 
@@ -118,7 +118,7 @@ function useTokenizedLines(code: string, lang: string): ThemedToken[][] | null {
     if (!code) return;
     let cancelled = false;
 
-    codeToTokens(code, { lang, theme: SHIKI_THEME })
+    codeToTokens(code, { lang: lang as BundledLanguage, theme: SHIKI_THEME })
       .then(result => {
         if (!cancelled) setTokens(result.tokens);
       })
@@ -219,17 +219,17 @@ export function DiffViewer({ oldCode, newCode, fileName, lang }: DiffViewerProps
               return (
                 <tr key={i} className={rowBg[line.type]}>
                   <td
-                    className={`w-[1px] min-w-8 px-2 text-right whitespace-nowrap select-none ${gutterStyles[line.type]}`}
+                    className={`w-px min-w-8 px-2 text-right whitespace-nowrap select-none ${gutterStyles[line.type]}`}
                   >
                     {line.oldLineNo ?? ''}
                   </td>
                   <td
-                    className={`w-[1px] min-w-8 px-2 text-right whitespace-nowrap select-none ${gutterStyles[line.type]}`}
+                    className={`w-px min-w-8 px-2 text-right whitespace-nowrap select-none ${gutterStyles[line.type]}`}
                   >
                     {line.newLineNo ?? ''}
                   </td>
                   <td
-                    className={`w-[1px] px-1 text-center whitespace-nowrap select-none ${gutterStyles[line.type]}`}
+                    className={`w-px px-1 text-center whitespace-nowrap select-none ${gutterStyles[line.type]}`}
                   >
                     {prefixMap[line.type]}
                   </td>
@@ -281,10 +281,10 @@ export function NewContentViewer({ content, fileName }: { content: string; fileN
           <tbody>
             {lines.map((line, i) => (
               <tr key={i} className='bg-green-500/10'>
-                <td className='w-[1px] min-w-8 px-2 text-right whitespace-nowrap text-green-500/60 select-none'>
+                <td className='w-px min-w-8 px-2 text-right whitespace-nowrap text-green-500/60 select-none'>
                   {i + 1}
                 </td>
-                <td className='w-[1px] px-1 text-center whitespace-nowrap text-green-500/60 select-none'>
+                <td className='w-px px-1 text-center whitespace-nowrap text-green-500/60 select-none'>
                   +
                 </td>
                 <td className='px-2 py-px break-all whitespace-pre-wrap'>

@@ -24,7 +24,7 @@ import type { AgentMessage } from '@/types';
 // --- Helpers ---
 
 /** Extract a short preview string from tool input JSON */
-export function getToolPreview(toolName?: string, toolInput?: string): string {
+function getToolPreview(toolName?: string, toolInput?: string): string {
   if (!toolInput) return '';
   try {
     const parsed = JSON.parse(toolInput);

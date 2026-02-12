@@ -189,7 +189,7 @@ function HighlightedCode({
 
   return (
     <div
-      className='min-h-0 flex-1 overflow-auto [&_pre]:!max-h-none [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!p-4 [&_pre]:font-mono [&_pre]:text-xs'
+      className='min-h-0 flex-1 overflow-auto [&_pre]:max-h-none! [&_pre]:rounded-none! [&_pre]:border-0! [&_pre]:p-4! [&_pre]:font-mono [&_pre]:text-xs'
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

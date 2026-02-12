@@ -413,7 +413,7 @@ export function PackagesView() {
   const [inputValue, setInputValue] = useState('');
   const [tab, setTab] = useState<'preview' | 'source' | 'ai'>('preview');
   const searchRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const trendingFetched = useRef(false);
 
   // Focus search on mount
@@ -524,7 +524,7 @@ export function PackagesView() {
   return (
     <div className='-mx-6 -mb-6 flex h-[calc(100%+1.5rem)] overflow-hidden'>
       {/* Left: Search/Trending + Results — soft sidebar */}
-      <div className='from-background/60 to-background/80 flex w-72 shrink-0 flex-col overflow-hidden bg-gradient-to-b'>
+      <div className='from-background/60 to-background/80 flex w-72 shrink-0 flex-col overflow-hidden bg-linear-to-b'>
         {/* Mode toggle */}
         <div className='shrink-0 px-4 pt-4 pb-2'>
           <div className='bg-background/60 inline-flex w-full items-center gap-1 rounded-xl p-1'>
@@ -716,7 +716,7 @@ export function PackagesView() {
       </div>
 
       {/* Soft divider */}
-      <div className='via-border/30 w-px bg-gradient-to-b from-transparent to-transparent' />
+      <div className='via-border/30 w-px bg-linear-to-b from-transparent to-transparent' />
 
       {/* Right panel */}
       {rightPanel}
@@ -762,7 +762,7 @@ function PackageDetailPanel({
                   Zero deps
                 </Badge>
               )}
-              <Separator orientation='vertical' className='!h-3.5 opacity-30' />
+              <Separator orientation='vertical' className='h-3.5! opacity-30' />
               <CloneActions pkg={pkg} />
             </div>
           </div>
@@ -771,7 +771,7 @@ function PackageDetailPanel({
           </div>
         </div>
         {/* Gradient fade border */}
-        <div className='via-border/40 absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent to-transparent' />
+        <div className='via-border/40 absolute right-8 bottom-0 left-8 h-px bg-linear-to-r from-transparent to-transparent' />
       </div>
 
       {/* Stats — flowing pill row */}
@@ -858,7 +858,7 @@ function PackageDetailPanel({
             </button>
           ))}
         </div>
-        <div className='via-border/25 absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent to-transparent' />
+        <div className='via-border/25 absolute right-8 bottom-0 left-8 h-px bg-linear-to-r from-transparent to-transparent' />
       </div>
 
       {/* Content */}
@@ -1020,7 +1020,7 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
           </div>
         </div>
         {/* Gradient fade border */}
-        <div className='via-border/40 absolute right-8 bottom-0 left-8 h-px bg-gradient-to-r from-transparent to-transparent' />
+        <div className='via-border/40 absolute right-8 bottom-0 left-8 h-px bg-linear-to-r from-transparent to-transparent' />
       </div>
 
       {/* Stats — flowing pill row */}
@@ -1101,7 +1101,7 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
 
       {/* Divider before README */}
       <div className='shrink-0 px-8'>
-        <div className='via-border/25 h-px bg-gradient-to-r from-transparent to-transparent' />
+        <div className='via-border/25 h-px bg-linear-to-r from-transparent to-transparent' />
       </div>
 
       {/* README */}

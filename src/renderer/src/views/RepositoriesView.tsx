@@ -75,9 +75,9 @@ function FolderNode({ node, depth }: { node: TreeNode; depth: number }) {
           style={{ paddingLeft: `${depth * 20 + 8}px` }}
         >
           {open ?
-            <ChevronDown className='h-3.5 w-3.5 flex-shrink-0' />
-          : <ChevronRight className='h-3.5 w-3.5 flex-shrink-0' />}
-          <FolderOpen className='text-muted-foreground h-3.5 w-3.5 flex-shrink-0' />
+            <ChevronDown className='h-3.5 w-3.5 shrink-0' />
+          : <ChevronRight className='h-3.5 w-3.5 shrink-0' />}
+          <FolderOpen className='text-muted-foreground h-3.5 w-3.5 shrink-0' />
           <span className='font-medium'>{node.name}</span>
         </button>
         {hovered && (

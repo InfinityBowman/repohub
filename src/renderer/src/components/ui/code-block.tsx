@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { codeToHtml } from 'shiki';
+import { codeToHtml, type BundledLanguage } from 'shiki';
 
 interface CodeBlockProps {
   code: string;
@@ -17,7 +17,10 @@ export function CodeBlock({ code, lang = 'json', theme = 'default' }: CodeBlockP
 
   useEffect(() => {
     const shikiTheme = themeMap[theme] || themeMap.default;
-    codeToHtml(code, { lang, theme: shikiTheme }).then(setHtml);
+    codeToHtml(code, { lang: lang as BundledLanguage, theme: shikiTheme }).then(setHtml).catch(() => {
+      // Fallback if lang isn't a valid shiki language
+      codeToHtml(code, { lang: 'text', theme: shikiTheme }).then(setHtml);
+    });
   }, [code, lang, theme]);
 
   if (!html) {

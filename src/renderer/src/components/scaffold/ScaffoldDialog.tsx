@@ -261,7 +261,7 @@ export function ScaffoldDialog({ open, onOpenChange }: ScaffoldDialogProps) {
         {step === 'pick' && pickMode === 'templates' && (
           <div className='flex flex-col gap-3'>
             {templates.length > 0 ?
-              <ScrollArea className='max-h-[400px] overflow-y-auto'>
+              <ScrollArea className='max-h-100 overflow-y-auto'>
                 <div className='grid grid-cols-2 gap-2 pr-3'>
                   {templates.map(t => (
                     <button
@@ -269,7 +269,7 @@ export function ScaffoldDialog({ open, onOpenChange }: ScaffoldDialogProps) {
                       onClick={() => handleSelect({ type: 'template', template: t })}
                       className='hover:bg-accent hover:border-accent-foreground/20 flex items-center gap-3 rounded-lg border p-3 text-left transition-colors'
                     >
-                      <FolderOpen className='text-muted-foreground h-4 w-4 flex-shrink-0' />
+                      <FolderOpen className='text-muted-foreground h-4 w-4 shrink-0' />
                       <span className='truncate text-sm font-medium'>{t.name}</span>
                     </button>
                   ))}
@@ -329,7 +329,7 @@ export function ScaffoldDialog({ open, onOpenChange }: ScaffoldDialogProps) {
                 </div>
               </div>
             : <>
-                <ScrollArea className='max-h-[320px] overflow-y-auto'>
+                <ScrollArea className='max-h-80 overflow-y-auto'>
                   <div className='flex flex-col gap-1 pr-3'>
                     {recipes.map(recipe => (
                       <div
@@ -350,7 +350,7 @@ export function ScaffoldDialog({ open, onOpenChange }: ScaffoldDialogProps) {
                             {recipe.command}
                           </code>
                         </div>
-                        <div className='ml-2 flex flex-shrink-0 items-center gap-1'>
+                        <div className='ml-2 flex shrink-0 items-center gap-1'>
                           <Button
                             variant='ghost'
                             size='icon-xs'
