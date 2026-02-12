@@ -85,14 +85,9 @@ All errors from `execAsync('lsof ...')` are caught and silently return `[]`. If 
 
 **Fix:** Emit an `error` event from the service, forward it through IPC, and show a banner or toast in the UI.
 
-### Bug 3: No StrictMode Protection in usePorts
+### Bug 3: ~~No StrictMode Protection in usePorts~~ (Resolved)
 
-**Severity: Low**
-**Location:** `usePorts.ts`
-
-Unlike `useProcesses.ts` which uses a module-level listener counter, `usePorts.ts` doesn't guard against React StrictMode double-mount. In development, this creates duplicate event listeners.
-
-**Fix:** Add the same module-level counter pattern used in `useProcesses.ts`.
+StrictMode was removed from the app entirely. No listener-count workarounds are needed.
 
 ---
 
@@ -226,7 +221,7 @@ Unlike `useProcesses.ts` which uses a module-level listener counter, `usePorts.t
 1. ~~Fix workspace process linking bug in `ProcessService.getByPid()`~~ ✅ Verified: `getByPid()` already works correctly — `ManagedProcess.repoId` is set to the composite key for workspace entries, and `repoName` is set to `repo/package`. No code change needed.
 2. ~~Add error handling for lsof failures (emit + display)~~ ✅ `PortService` emits `scanError`, forwarded via IPC `port:scan-error`, displayed as red error banner in PortsView.
 3. ~~Add kill confirmation dialog~~ ✅ Dialog shows process command, PID, and port before confirming kill.
-4. ~~Add StrictMode protection to `usePorts.ts`~~ ✅ Module-level `activeListeners` counter pattern matching `useProcesses.ts`.
+4. ~~Add StrictMode protection to `usePorts.ts`~~ ✅ Resolved — StrictMode removed from app.
 
 ### Short-Term Polish
 

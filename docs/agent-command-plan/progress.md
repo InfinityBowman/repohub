@@ -15,7 +15,7 @@ Main Process:
 Renderer:
 
 - src/renderer/src/store/agentStore.ts — Zustand store for agents, messages, permissions, streaming state
-- src/renderer/src/hooks/useAgents.ts — IPC listeners (StrictMode-safe) + action wrappers
+- src/renderer/src/hooks/useAgents.ts — IPC listeners + action wrappers
 - src/renderer/src/components/agents/AgentLaunchPanel.tsx — Repo picker, role cards, task input, mode toggle
 - src/renderer/src/components/agents/AgentTerminal.tsx — Structured message renderer with collapsible tool calls
 - src/renderer/src/components/agents/InfoBar.tsx — Role badge, state indicator, elapsed time, cost, stop button

@@ -3,37 +3,24 @@ import { useSkillsStore } from '@/store/skillsStore';
 
 const FEATURED_QUERY = 'skills';
 
-// Track active listener count to handle StrictMode double-mount
-let activeListeners = 0;
-let initialLoadDone = false;
-
 export function useSkills() {
   const store = useSkillsStore();
   const currentSearchId = useRef(0);
 
-  // Load featured skills on first mount (StrictMode-safe)
+  // Load featured skills on first mount
   useEffect(() => {
-    activeListeners++;
-
-    if (activeListeners === 1 && !initialLoadDone) {
-      const s = useSkillsStore.getState();
-      if (s.directoryResults.length === 0) {
-        initialLoadDone = true;
-        s.setDirectoryLoading(true);
-        window.electron.skills
-          .searchDirectory(FEATURED_QUERY, 100)
-          .then(results => {
-            useSkillsStore.getState().setDirectoryResults(results);
-          })
-          .catch(() => {
-            useSkillsStore.getState().setDirectoryLoading(false);
-          });
-      }
+    const s = useSkillsStore.getState();
+    if (s.directoryResults.length === 0 && !s.directoryLoading) {
+      s.setDirectoryLoading(true);
+      window.electron.skills
+        .searchDirectory(FEATURED_QUERY, 100)
+        .then(results => {
+          useSkillsStore.getState().setDirectoryResults(results);
+        })
+        .catch(() => {
+          useSkillsStore.getState().setDirectoryLoading(false);
+        });
     }
-
-    return () => {
-      activeListeners--;
-    };
   }, []);
 
   const searchDirectory = useCallback(async (query: string) => {

@@ -62,10 +62,6 @@ macOS packaged apps (`.app` bundles) inherit a minimal PATH (`/usr/bin:/bin:/usr
 
 This ensures `gh`, `git`, `pnpm`, `node`, etc. are found without spawning a shell to read the user's PATH (which would be slow).
 
-### StrictMode-Safe IPC Listeners
-
-React 18+'s StrictMode double-mounts components in development. IPC event listeners use a module-level counter pattern to prevent double-registration. See `useProcesses.ts` for the reference implementation.
-
 ### Repository IDs
 
 Each repository is identified by the first 12 characters of an MD5 hash of its full filesystem path. These IDs are used as keys for:

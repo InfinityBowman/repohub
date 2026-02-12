@@ -2,84 +2,68 @@ import { useEffect, useCallback } from 'react';
 import { useAgentStore } from '@/store/agentStore';
 import type { AgentLaunchConfig } from '@/types';
 
-// Module-level counter for StrictMode double-mount protection
-let activeListeners = 0;
-let cleanupFns: (() => void)[] = [];
-
 export function useAgentListeners() {
   useEffect(() => {
-    activeListeners++;
+    // Initial fetch
+    window.electron.agent.list().then(agents => {
+      for (const agent of agents) {
+        useAgentStore.getState().addAgent(agent);
+      }
+    });
 
-    if (activeListeners === 1) {
-      // Initial fetch
-      window.electron.agent.list().then(agents => {
-        for (const agent of agents) {
-          useAgentStore.getState().addAgent(agent);
-        }
-      });
+    const unsubLaunched = window.electron.on.agentLaunched(data => {
+      useAgentStore.getState().addAgent(data);
+    });
 
-      const unsubLaunched = window.electron.on.agentLaunched(data => {
-        useAgentStore.getState().addAgent(data);
-      });
+    const unsubStatus = window.electron.on.agentStatusChanged(data => {
+      useAgentStore.getState().updateAgent(data);
+    });
 
-      const unsubStatus = window.electron.on.agentStatusChanged(data => {
-        useAgentStore.getState().updateAgent(data);
-      });
+    const unsubOutput = window.electron.on.agentOutput(data => {
+      useAgentStore.getState().clearStream(data.sessionId);
+      useAgentStore.getState().appendMessage(data.sessionId, data.message);
+    });
 
-      const unsubOutput = window.electron.on.agentOutput(data => {
+    const unsubResult = window.electron.on.agentResult(data => {
+      const agent = useAgentStore.getState().agents[data.sessionId];
+      if (agent) {
+        useAgentStore.getState().updateAgent({ ...agent, cost: data.cost });
+      }
+    });
+
+    const unsubStream = window.electron.on.agentStream(data => {
+      if (data.delta === '') {
         useAgentStore.getState().clearStream(data.sessionId);
-        useAgentStore.getState().appendMessage(data.sessionId, data.message);
-      });
+      } else {
+        useAgentStore.getState().appendStreamChunk(data.sessionId, data.delta);
+      }
+    });
 
-      const unsubResult = window.electron.on.agentResult(data => {
-        const agent = useAgentStore.getState().agents[data.sessionId];
-        if (agent) {
-          useAgentStore.getState().updateAgent({ ...agent, cost: data.cost });
-        }
-      });
-
-      const unsubStream = window.electron.on.agentStream(data => {
-        if (data.delta === '') {
-          useAgentStore.getState().clearStream(data.sessionId);
-        } else {
-          useAgentStore.getState().appendStreamChunk(data.sessionId, data.delta);
-        }
-      });
-
-      const unsubStreamThinking = window.electron.on.agentStreamThinking(data => {
-        if (data.delta === '') {
-          useAgentStore.getState().clearStreamThinking(data.sessionId);
-        } else {
-          useAgentStore.getState().appendStreamThinkingChunk(data.sessionId, data.delta);
-        }
-      });
-
-      const unsubError = window.electron.on.agentError(data => {
-        const agent = useAgentStore.getState().agents[data.sessionId];
-        if (agent) {
-          useAgentStore.getState().updateAgent({ ...agent, state: 'error' });
-        }
-        useAgentStore.getState().clearStream(data.sessionId);
+    const unsubStreamThinking = window.electron.on.agentStreamThinking(data => {
+      if (data.delta === '') {
         useAgentStore.getState().clearStreamThinking(data.sessionId);
-      });
+      } else {
+        useAgentStore.getState().appendStreamThinkingChunk(data.sessionId, data.delta);
+      }
+    });
 
-      cleanupFns = [
-        unsubLaunched,
-        unsubStatus,
-        unsubOutput,
-        unsubResult,
-        unsubStream,
-        unsubStreamThinking,
-        unsubError,
-      ];
-    }
+    const unsubError = window.electron.on.agentError(data => {
+      const agent = useAgentStore.getState().agents[data.sessionId];
+      if (agent) {
+        useAgentStore.getState().updateAgent({ ...agent, state: 'error' });
+      }
+      useAgentStore.getState().clearStream(data.sessionId);
+      useAgentStore.getState().clearStreamThinking(data.sessionId);
+    });
 
     return () => {
-      activeListeners--;
-      if (activeListeners === 0) {
-        for (const fn of cleanupFns) fn();
-        cleanupFns = [];
-      }
+      unsubLaunched();
+      unsubStatus();
+      unsubOutput();
+      unsubResult();
+      unsubStream();
+      unsubStreamThinking();
+      unsubError();
     };
   }, []);
 }

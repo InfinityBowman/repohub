@@ -112,7 +112,6 @@ Output goes to `out/main/`, `out/preload/`, `out/renderer/`.
 - **Package manager**: Always use `pnpm`, never npm/yarn
 - **Radix UI**: Import from `"radix-ui"` (unified package), not `@radix-ui/react-*`
 - **shadcn/ui components**: Located in `src/renderer/src/components/ui/`
-- **StrictMode handling**: Use module-level listener count pattern (see `useProcesses.ts`) to prevent double-mount issues
 - **No hardcoded colors**: Never use hex color values (e.g., `#82aaff`, `bg-[#292d3e]`) in components. Use Tailwind theme classes (`text-foreground`, `bg-card`, `border-border`) for UI chrome and Tailwind palette colors (`text-blue-400`, `text-green-400`) for accents. Exception: external brand colors (e.g., GitHub language colors) may use inline hex.
 
 ## Security Model

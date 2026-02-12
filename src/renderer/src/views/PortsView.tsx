@@ -285,7 +285,7 @@ export function PortsView() {
             <ArrowUpDown className='h-3.5 w-3.5' />
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             <SelectItem value='category'>Category</SelectItem>
             <SelectItem value='port'>Port</SelectItem>
             <SelectItem value='newest'>Newest</SelectItem>

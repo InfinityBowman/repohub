@@ -2,10 +2,6 @@ import { useEffect, useCallback } from 'react';
 import { useCodeSearchStore } from '@/store/codeSearchStore';
 import type { SearchOptions } from '@/types';
 
-// Module-level listener count to handle StrictMode double-mount
-let activeListeners = 0;
-let cleanupFns: (() => void)[] = [];
-
 function getStore() {
   return useCodeSearchStore.getState();
 }
@@ -16,31 +12,22 @@ function handleError(error: any, defaultMsg: string) {
 
 export function useCodeSearchListeners() {
   useEffect(() => {
-    activeListeners++;
+    // Fetch initial status
+    window.electron.search.getStatus().then(status => {
+      getStore().setStatus(status);
+    });
 
-    if (activeListeners === 1) {
-      // Fetch initial status
-      window.electron.search.getStatus().then(status => {
-        getStore().setStatus(status);
-      });
+    const unsubStatus = window.electron.on.searchStatusChanged(status => {
+      getStore().setStatus(status);
+    });
 
-      const unsubStatus = window.electron.on.searchStatusChanged(status => {
-        getStore().setStatus(status);
-      });
-
-      const unsubProgress = window.electron.on.searchModelProgress(progress => {
-        getStore().setModelProgress(progress);
-      });
-
-      cleanupFns = [unsubStatus, unsubProgress];
-    }
+    const unsubProgress = window.electron.on.searchModelProgress(progress => {
+      getStore().setModelProgress(progress);
+    });
 
     return () => {
-      activeListeners--;
-      if (activeListeners === 0) {
-        for (const fn of cleanupFns) fn();
-        cleanupFns = [];
-      }
+      unsubStatus();
+      unsubProgress();
     };
   }, []);
 }

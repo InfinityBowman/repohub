@@ -1,45 +1,32 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useProcessStore } from '@/store/processStore';
-
-// Track active listener count to handle StrictMode double-mount
-let activeListeners = 0;
-let cleanupFns: (() => void)[] = [];
 
 export function useProcessListeners() {
   useEffect(() => {
-    activeListeners++;
+    window.electron.processes.getAll().then(processes => {
+      useProcessStore.getState().setProcesses(processes);
 
-    if (activeListeners === 1) {
-      window.electron.processes.getAll().then(processes => {
-        useProcessStore.getState().setProcesses(processes);
+      // Load saved logs for running processes
+      for (const proc of processes) {
+        window.electron.logs.get(proc.repoId).then(savedLog => {
+          if (savedLog) {
+            useProcessStore.getState().appendOutput(proc.repoId, savedLog);
+          }
+        });
+      }
+    });
 
-        // Load saved logs for running processes
-        for (const proc of processes) {
-          window.electron.logs.get(proc.repoId).then(savedLog => {
-            if (savedLog) {
-              useProcessStore.getState().appendOutput(proc.repoId, savedLog);
-            }
-          });
-        }
-      });
+    const unsubOutput = window.electron.on.processOutput(data => {
+      useProcessStore.getState().appendOutput(data.repoId, data.data);
+    });
 
-      const unsubOutput = window.electron.on.processOutput(data => {
-        useProcessStore.getState().appendOutput(data.repoId, data.data);
-      });
-
-      const unsubStatus = window.electron.on.processStatusChanged(info => {
-        useProcessStore.getState().setProcessStatus(info);
-      });
-
-      cleanupFns = [unsubOutput, unsubStatus];
-    }
+    const unsubStatus = window.electron.on.processStatusChanged(info => {
+      useProcessStore.getState().setProcessStatus(info);
+    });
 
     return () => {
-      activeListeners--;
-      if (activeListeners === 0) {
-        for (const fn of cleanupFns) fn();
-        cleanupFns = [];
-      }
+      unsubOutput();
+      unsubStatus();
     };
   }, []);
 }

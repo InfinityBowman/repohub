@@ -81,19 +81,10 @@ interface AgentInfo {
 ```typescript
 // src/renderer/src/hooks/useAgents.ts
 
-// Module-level listener count (StrictMode pattern from useProcesses.ts)
-let listenerCount = 0;
-
 export function useAgents() {
   const store = useAgentStore();
 
   useEffect(() => {
-    listenerCount++;
-    if (listenerCount > 1)
-      return () => {
-        listenerCount--;
-      };
-
     // Register IPC listeners
     const listeners = {
       'agent:launched': (_e, data) => {
@@ -137,7 +128,6 @@ export function useAgents() {
     window.electron.agent.getSharedContext().then(c => store.setSharedContext(c));
 
     return () => {
-      listenerCount--;
       for (const channel of Object.keys(listeners)) {
         window.electron.ipcRenderer.removeAllListeners(channel);
       }
