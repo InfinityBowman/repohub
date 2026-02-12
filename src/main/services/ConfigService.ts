@@ -19,22 +19,26 @@ export class ConfigService {
 
   get(): AppConfig {
     return {
-      version: this.store.get('version'),
-      scanDirectory: this.store.get('scanDirectory'),
-      ignorePatterns: this.store.get('ignorePatterns'),
-      portScanInterval: this.store.get('portScanInterval'),
-      commandOverrides: this.store.get('commandOverrides'),
-      autoStartMonitoring: this.store.get('autoStartMonitoring'),
-      projectTemplatesDir: this.store.get('projectTemplatesDir'),
-      scaffoldRecipes: this.store.get('scaffoldRecipes'),
-      hiddenDefaultRecipes: this.store.get('hiddenDefaultRecipes'),
-      setupTemplateDir: this.store.get('setupTemplateDir'),
-      codeSearchEnabled: this.store.get('codeSearchEnabled') ?? DEFAULT_CONFIG.codeSearchEnabled,
+      version: this.store.get('version') ?? DEFAULT_CONFIG.version,
+      scanDirectory: this.store.get('scanDirectory') ?? DEFAULT_CONFIG.scanDirectory,
+      ignorePatterns: this.store.get('ignorePatterns') ?? DEFAULT_CONFIG.ignorePatterns,
+      portScanInterval: this.store.get('portScanInterval') ?? DEFAULT_CONFIG.portScanInterval,
+      commandOverrides: this.store.get('commandOverrides') ?? DEFAULT_CONFIG.commandOverrides,
+      projectTemplatesDir:
+        this.store.get('projectTemplatesDir') ?? DEFAULT_CONFIG.projectTemplatesDir,
+      scaffoldRecipes: this.store.get('scaffoldRecipes') ?? DEFAULT_CONFIG.scaffoldRecipes,
+      hiddenDefaultRecipes:
+        this.store.get('hiddenDefaultRecipes') ?? DEFAULT_CONFIG.hiddenDefaultRecipes,
+      setupTemplateDir: this.store.get('setupTemplateDir') ?? DEFAULT_CONFIG.setupTemplateDir,
+      codeSearchEnabled:
+        this.store.get('codeSearchEnabled') ?? DEFAULT_CONFIG.codeSearchEnabled,
       codeSearchExcludePatterns:
         this.store.get('codeSearchExcludePatterns') ?? DEFAULT_CONFIG.codeSearchExcludePatterns,
       codeSearchMaxFileSize:
         this.store.get('codeSearchMaxFileSize') ?? DEFAULT_CONFIG.codeSearchMaxFileSize,
       theme: this.store.get('theme') ?? DEFAULT_CONFIG.theme,
+      protectedBranches:
+        this.store.get('protectedBranches') ?? DEFAULT_CONFIG.protectedBranches,
     };
   }
 

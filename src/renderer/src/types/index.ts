@@ -169,7 +169,6 @@ export interface AppConfig {
   ignorePatterns: string[];
   portScanInterval: number;
   commandOverrides: Record<string, string>;
-  autoStartMonitoring: boolean;
   projectTemplatesDir: string;
   scaffoldRecipes: ScaffoldRecipe[];
   hiddenDefaultRecipes: string[];
@@ -178,6 +177,7 @@ export interface AppConfig {
   codeSearchExcludePatterns: string[];
   codeSearchMaxFileSize: number;
   theme: 'default' | 'palenight';
+  protectedBranches: string[];
 }
 
 export interface CodeChunk {
@@ -353,6 +353,30 @@ export interface PackageDetail {
   maintainers: string[];
 }
 
+// Skill types
+export interface SkillSource {
+  id: string;
+  owner: string;
+  repo: string;
+  label: string;
+  branch: string;
+}
+
+export interface SkillSummary {
+  sourceId: string;
+  path: string;
+  name: string;
+  description: string;
+  tags: string[];
+}
+
+export interface SkillDetail extends SkillSummary {
+  version?: string;
+  content: string;
+  files: string[];
+  rawFrontmatter: Record<string, any>;
+}
+
 declare global {
   interface Window {
     electron: {
@@ -470,6 +494,17 @@ declare global {
           repoPath: string,
           config: AgentLaunchConfig,
         ) => Promise<{ sessionId: string }>;
+      };
+      skills: {
+        getSources: () => Promise<SkillSource[]>;
+        list: (sourceId: string) => Promise<SkillSummary[]>;
+        getDetail: (sourceId: string, skillPath: string) => Promise<SkillDetail>;
+        install: (
+          sourceId: string,
+          skillPath: string,
+          targetDir: string,
+        ) => Promise<{ success: boolean; error?: string }>;
+        pickDirectory: () => Promise<string | null>;
       };
       search: {
         query: (options: SearchOptions) => Promise<SearchResult[]>;

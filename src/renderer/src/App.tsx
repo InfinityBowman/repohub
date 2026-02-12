@@ -8,6 +8,7 @@ import { GitHubView } from '@/views/GitHubView';
 import { CodeSearchView } from '@/views/CodeSearchView';
 import { PackagesView } from '@/views/PackagesView';
 import { AgentCommandCenterView } from '@/views/AgentCommandCenterView';
+import { SkillsView } from '@/views/SkillsView';
 import { CommandPalette } from '@/components/CommandPalette';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useProcessListeners } from '@/hooks/useProcesses';
@@ -34,6 +35,7 @@ export default function App() {
             <Route path='/github' element={<GitHubView />} />
             <Route path='/search' element={<CodeSearchView />} />
             <Route path='/agents' element={<AgentCommandCenterView />} />
+            <Route path='/skills' element={<SkillsView />} />
             <Route path='/packages' element={<PackagesView />} />
             <Route path='/ports' element={<PortsView />} />
             <Route path='/settings' element={<SettingsView />} />

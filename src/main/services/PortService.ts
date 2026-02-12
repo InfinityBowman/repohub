@@ -82,6 +82,14 @@ export class PortService extends EventEmitter {
     }, this.intervalMs);
   }
 
+  updateInterval(intervalMs: number): void {
+    this.intervalMs = intervalMs;
+    if (this.scanInterval) {
+      this.stopMonitoring();
+      this.startMonitoring();
+    }
+  }
+
   stopMonitoring(): void {
     if (this.scanInterval) {
       clearInterval(this.scanInterval);

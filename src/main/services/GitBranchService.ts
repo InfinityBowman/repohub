@@ -1,12 +1,23 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import type { BranchInfo } from '../types/repository.types';
+import type { ConfigService } from './ConfigService';
 
 const execAsync = promisify(exec);
 
-const PROTECTED_BRANCHES = new Set(['main', 'master', 'develop']);
+const DEFAULT_PROTECTED = ['main', 'master', 'develop'];
 
 export class GitBranchService {
+  private configService: ConfigService | null;
+
+  constructor(configService?: ConfigService) {
+    this.configService = configService ?? null;
+  }
+
+  private getProtectedBranches(): Set<string> {
+    const branches = this.configService?.get().protectedBranches ?? DEFAULT_PROTECTED;
+    return new Set(branches);
+  }
   async listBranches(repoPath: string): Promise<BranchInfo[]> {
     // Get all local branches with tracking info
     const { stdout: branchOutput } = await execAsync(
@@ -61,7 +72,7 @@ export class GitBranchService {
 
     for (const branch of branchNames) {
       // Safety: never delete protected branches
-      if (PROTECTED_BRANCHES.has(branch)) {
+      if (this.getProtectedBranches().has(branch)) {
         results.push({ branch, success: false, error: 'Protected branch' });
         continue;
       }

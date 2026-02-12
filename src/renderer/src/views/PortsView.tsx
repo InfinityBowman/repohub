@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { RefreshCw, Skull, ExternalLink } from 'lucide-react';
 import { usePorts } from '@/hooks/usePorts';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -36,55 +35,55 @@ export function PortsView() {
         <div className='text-muted-foreground py-12 text-center'>
           No open ports detected on localhost.
         </div>
-      : <div className='flex flex-col gap-2'>
+      : <div className='flex flex-col gap-1.5'>
           {ports.map(port => (
-            <Card key={port.port} className='gap-0 py-0'>
-              <CardContent className='flex items-center justify-between p-4'>
-                <div className='flex items-center gap-4'>
-                  <div className='bg-secondary flex h-10 w-16 items-center justify-center rounded-md font-mono text-sm font-semibold'>
-                    :{port.port}
-                  </div>
-                  <div>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm font-medium'>{port.command}</span>
-                      <span className='text-muted-foreground text-xs'>PID {port.pid}</span>
-                      {port.managed && (
-                        <Badge variant='secondary' className='text-xs'>
-                          Managed
-                        </Badge>
-                      )}
-                    </div>
-                    {port.repoName && (
-                      <p className='text-muted-foreground text-xs'>Project: {port.repoName}</p>
+            <div
+              key={port.port}
+              className='bg-card flex items-center justify-between rounded-lg border px-3 py-2.5'
+            >
+              <div className='flex items-center gap-3'>
+                <div className='bg-secondary flex h-8 w-14 items-center justify-center rounded font-mono text-xs font-semibold'>
+                  :{port.port}
+                </div>
+                <div>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-sm font-medium'>{port.command}</span>
+                    <span className='text-muted-foreground text-xs'>PID {port.pid}</span>
+                    {port.managed && (
+                      <Badge variant='secondary' className='text-xs'>
+                        Managed
+                      </Badge>
                     )}
                   </div>
+                  {port.repoName && (
+                    <p className='text-muted-foreground text-xs'>Project: {port.repoName}</p>
+                  )}
                 </div>
+              </div>
 
-                <div className='flex items-center gap-2'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => {
-                      // Open in browser - this is safe as it's localhost
-                      window.open(`http://localhost:${port.port}`, '_blank');
-                    }}
-                  >
-                    <ExternalLink />
-                    Open
-                  </Button>
-                  <Separator orientation='vertical' className='h-6' />
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='text-destructive-foreground hover:bg-destructive/20'
-                    onClick={() => killByPort(port.port)}
-                  >
-                    <Skull />
-                    Kill
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <div className='flex items-center gap-1'>
+                <Button
+                  variant='ghost'
+                  size='xs'
+                  onClick={() => {
+                    window.open(`http://localhost:${port.port}`, '_blank');
+                  }}
+                >
+                  <ExternalLink />
+                  Open
+                </Button>
+                <Separator orientation='vertical' className='h-4' />
+                <Button
+                  variant='ghost'
+                  size='xs'
+                  className='text-destructive-foreground hover:bg-destructive/20'
+                  onClick={() => killByPort(port.port)}
+                >
+                  <Skull />
+                  Kill
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       }

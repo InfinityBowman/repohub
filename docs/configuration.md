@@ -13,7 +13,6 @@ Accessible via the Settings tab in the sidebar.
 | `scanDirectory`             | `~/Documents/Repos`                                                            | Root directory to recursively scan for projects                                                                       |
 | `ignorePatterns`            | `**/node_modules`, `**/.git`, `**/ThirdParty/**`                               | Glob patterns for directories to skip during scan                                                                     |
 | `portScanInterval`          | `5000` (5 seconds)                                                             | How often to poll for open localhost ports, in milliseconds                                                           |
-| `autoStartMonitoring`       | `true`                                                                         | Whether to start port monitoring automatically on app launch                                                          |
 | `commandOverrides`          | `{}`                                                                           | Per-repo custom run commands, keyed by repository ID                                                                  |
 | `projectTemplatesDir`       | `''`                                                                           | Path to directory where each subdirectory is a project template for "New Project"                                     |
 | `scaffoldRecipes`           | `[]`                                                                           | User-added custom scaffold recipes                                                                                    |
@@ -22,6 +21,8 @@ Accessible via the Settings tab in the sidebar.
 | `codeSearchEnabled`         | `true`                                                                         | Whether to enable code search file watching and indexing                                                              |
 | `codeSearchExcludePatterns` | `**/node_modules/**`, `**/.git/**`, `**/dist/**`, `**/build/**`, `**/*.min.js` | Glob patterns to exclude from code search indexing                                                                    |
 | `codeSearchMaxFileSize`     | `1048576` (1MB)                                                                | Maximum file size in bytes for code search indexing                                                                   |
+| `theme`                     | `'palenight'`                                                                  | UI theme: `'default'` or `'palenight'`                                                                               |
+| `protectedBranches`         | `['main', 'master', 'develop']`                                                | Branch names that can never be deleted via branch cleanup                                                             |
 
 ## Scan Directory
 

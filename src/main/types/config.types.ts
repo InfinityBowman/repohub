@@ -6,7 +6,6 @@ export interface AppConfig {
   ignorePatterns: string[];
   portScanInterval: number;
   commandOverrides: Record<string, string>;
-  autoStartMonitoring: boolean;
   projectTemplatesDir: string;
   scaffoldRecipes: ScaffoldRecipe[];
   hiddenDefaultRecipes: string[];
@@ -15,6 +14,7 @@ export interface AppConfig {
   codeSearchExcludePatterns: string[];
   codeSearchMaxFileSize: number;
   theme: 'default' | 'palenight';
+  protectedBranches: string[];
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -23,7 +23,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   ignorePatterns: ['**/node_modules', '**/.git', '**/ThirdParty/**'],
   portScanInterval: 5000,
   commandOverrides: {},
-  autoStartMonitoring: true,
   projectTemplatesDir: '',
   scaffoldRecipes: [],
   hiddenDefaultRecipes: [],
@@ -81,4 +80,5 @@ export const DEFAULT_CONFIG: AppConfig = {
   ],
   codeSearchMaxFileSize: 1_048_576,
   theme: 'palenight',
+  protectedBranches: ['main', 'master', 'develop'],
 };

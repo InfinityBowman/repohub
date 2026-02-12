@@ -27,6 +27,7 @@ import { PackageIntelligenceService } from './services/PackageIntelligenceServic
 import { PackageCloneService } from './services/PackageCloneService';
 import { AgentService } from './services/AgentService';
 import { ClaudeSessionReader } from './services/ClaudeSessionReader';
+import { SkillsService } from './services/SkillsService';
 
 // Initialize services
 const configService = new ConfigService();
@@ -36,13 +37,14 @@ const portService = new PortService(processService, configService.get().portScan
 const logService = new LogService();
 const healthService = new DependencyHealthService(repositoryService);
 const githubService = new GitHubService(repositoryService);
-const gitBranchService = new GitBranchService();
+const gitBranchService = new GitBranchService(configService);
 const scaffoldService = new ScaffoldService(configService);
 const codeSearchService = new CodeSearchService(configService, repositoryService);
 const packageService = new PackageIntelligenceService();
 const packageCloneService = new PackageCloneService();
 const agentService = new AgentService();
 const claudeSessionReader = new ClaudeSessionReader();
+const skillsService = new SkillsService();
 
 app.whenReady().then(() => {
   // Register IPC handlers
@@ -60,6 +62,7 @@ app.whenReady().then(() => {
     packageCloneService,
     agentService,
     claudeSessionReader,
+    skillsService,
   });
 
   // Create window
@@ -92,10 +95,8 @@ app.whenReady().then(() => {
   repositoryService.scan();
   repositoryService.startWatching();
 
-  // Start port monitoring if configured
-  if (configService.get().autoStartMonitoring) {
-    portService.startMonitoring();
-  }
+  // Start port monitoring
+  portService.startMonitoring();
 
   // Initialize code search (watching starts automatically after first indexing completes)
   codeSearchService.initialize();
@@ -120,4 +121,5 @@ app.on('before-quit', () => {
   codeSearchService.shutdown();
   packageService.shutdown();
   agentService.shutdown();
+  skillsService.shutdown();
 });

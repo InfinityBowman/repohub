@@ -85,8 +85,8 @@ function SessionRow({
       }}
       className={`group flex w-full cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
         isActive ?
-          'border-primary/40 bg-primary/5'
-        : 'border-border hover:border-border/80 hover:bg-secondary/30'
+          'border-primary/40 bg-primary/10'
+        : 'bg-card border-border hover:border-border/80 hover:bg-accent/60'
       }`}
     >
       <MessageSquare className='mt-0.5 h-4 w-4 shrink-0 text-blue-400' />

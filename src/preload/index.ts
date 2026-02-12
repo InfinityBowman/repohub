@@ -124,6 +124,16 @@ const electronAPI = {
       ipcRenderer.invoke('agent:resume-session', { cliSessionId, config }),
   },
 
+  skills: {
+    getSources: () => ipcRenderer.invoke('skills:get-sources'),
+    list: (sourceId: string) => ipcRenderer.invoke('skills:list', sourceId),
+    getDetail: (sourceId: string, skillPath: string) =>
+      ipcRenderer.invoke('skills:get-detail', sourceId, skillPath),
+    install: (sourceId: string, skillPath: string, targetDir: string) =>
+      ipcRenderer.invoke('skills:install', sourceId, skillPath, targetDir),
+    pickDirectory: () => ipcRenderer.invoke('skills:pick-directory'),
+  },
+
   search: {
     query: (options: any) => ipcRenderer.invoke('search:query', options),
     startIndexing: (dirs?: string[]) => ipcRenderer.invoke('search:start-indexing', dirs),

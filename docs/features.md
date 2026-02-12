@@ -435,3 +435,54 @@ The `waiting_permission` state occurs when the agent needs tool approval in supe
 ### Cost Tracking
 
 Token usage and estimated cost are displayed in the info bar (based on approximate Sonnet pricing: $3/Mtok input, $15/Mtok output).
+
+---
+
+## Skills Browser
+
+Browse and install agent skills from curated GitHub repositories. Skills follow the Agent Skills Spec: a `SKILL.md` file with YAML frontmatter (name, description, version, tags) plus markdown body, optionally with `scripts/`, `references/`, `assets/` directories.
+
+### How to Access
+
+Click **Skills** in the sidebar (between Agents and Packages).
+
+### Curated Sources
+
+Three curated skill repositories are available:
+
+| Source       | Repository                   |
+| ------------ | ---------------------------- |
+| Anthropic    | `anthropics/skills`          |
+| OpenAI       | `openai/codex-universal`     |
+| Vercel       | `vercel-labs/agent-skills`   |
+
+Switch between sources using the chip buttons at the top of the left panel.
+
+### Browsing Skills
+
+- Select a source to load its available skills
+- Use the filter input to search by name, description, or tag
+- Click a skill card to view its full details in the right panel
+
+### Skill Detail
+
+The right panel shows:
+
+- **Header** — skill name, version, source badge, tag badges
+- **Files** — list of all files in the skill directory (SKILL.md, scripts/, etc.)
+- **Content** — rendered SKILL.md markdown body
+
+### Installing Skills
+
+Click the **Install** button to install a skill:
+
+1. A native macOS directory picker opens — choose where to install
+2. All files from the skill directory are downloaded and written to `<chosen-dir>/<skill-name>/`
+3. A success indicator appears when complete
+
+### Technical Details
+
+- Uses `gh api` (GitHub CLI) to fetch repo contents — avoids unauthenticated rate limits
+- YAML frontmatter parsed with `gray-matter`
+- Results cached for 1 hour with 30-minute cleanup
+- Requires `gh` CLI installed and authenticated

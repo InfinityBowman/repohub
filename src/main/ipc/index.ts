@@ -10,6 +10,7 @@ import { registerCodeSearchHandlers } from './codesearch.handler';
 import { registerPackageHandlers } from './packages.handler';
 import { registerPackageCloneHandlers } from './package-clone.handler';
 import { registerAgentHandlers } from './agent.handler';
+import { registerSkillsHandlers } from './skills.handler';
 import type { RepositoryService } from '../services/RepositoryService';
 import type { ProcessService } from '../services/ProcessService';
 import type { PortService } from '../services/PortService';
@@ -23,6 +24,7 @@ import type { PackageIntelligenceService } from '../services/PackageIntelligence
 import type { PackageCloneService } from '../services/PackageCloneService';
 import type { AgentService } from '../services/AgentService';
 import type { ClaudeSessionReader } from '../services/ClaudeSessionReader';
+import type { SkillsService } from '../services/SkillsService';
 
 export function registerAllHandlers(services: {
   repositoryService: RepositoryService;
@@ -38,11 +40,12 @@ export function registerAllHandlers(services: {
   packageCloneService: PackageCloneService;
   agentService: AgentService;
   claudeSessionReader: ClaudeSessionReader;
+  skillsService: SkillsService;
 }): void {
   registerRepositoryHandlers(services.repositoryService);
   registerProcessHandlers(services.processService);
   registerPortHandlers(services.portService);
-  registerConfigHandlers(services.configService);
+  registerConfigHandlers(services.configService, services.portService);
   registerHealthHandlers(services.healthService);
   registerGitHubHandlers(services.githubService);
   registerGitHandlers(services.repositoryService, services.gitBranchService);
@@ -51,4 +54,5 @@ export function registerAllHandlers(services: {
   registerPackageHandlers(services.packageService);
   registerPackageCloneHandlers(services.packageCloneService);
   registerAgentHandlers(services.agentService, services.claudeSessionReader);
+  registerSkillsHandlers(services.skillsService);
 }
