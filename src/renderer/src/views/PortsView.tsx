@@ -152,11 +152,17 @@ function categorize(port: PortInfo): PortCategory {
   if (port.managed) return 'dev';
 
   const cmd = port.command.toLowerCase();
+  const full = (port.fullCommand ?? '').toLowerCase();
 
   if (DEV_COMMANDS.has(cmd)) return 'dev';
   if (DB_COMMANDS.has(cmd)) return 'database';
   if (INFRA_COMMANDS.has(cmd)) return 'infra';
   if (APP_COMMANDS.has(cmd)) return 'app';
+
+  // Check fullCommand for better accuracy
+  for (const c of DEV_COMMANDS) { if (full.includes(c)) return 'dev'; }
+  for (const c of DB_COMMANDS) { if (full.includes(c)) return 'database'; }
+  for (const c of INFRA_COMMANDS) { if (full.includes(c)) return 'infra'; }
 
   // Well-known port ranges as fallback
   const p = port.port;
@@ -233,7 +239,10 @@ export function PortsView() {
           p.command.toLowerCase().includes(q) ||
           String(p.port).includes(q) ||
           (p.repoName && p.repoName.toLowerCase().includes(q)) ||
-          CATEGORY_META[categorize(p)].label.toLowerCase().includes(q),
+          CATEGORY_META[categorize(p)].label.toLowerCase().includes(q) ||
+          (p.description && p.description.toLowerCase().includes(q)) ||
+          (p.fullCommand && p.fullCommand.toLowerCase().includes(q)) ||
+          (p.parentCommand && p.parentCommand.toLowerCase().includes(q)),
       );
     }
 
@@ -404,7 +413,23 @@ export function PortsView() {
                   </Tooltip>
                   <div>
                     <div className='flex items-center gap-2'>
-                      <span className='text-sm font-medium'>{port.command}</span>
+                      {port.description ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className='text-sm font-medium cursor-default'>{port.description}</span>
+                          </TooltipTrigger>
+                          {port.fullCommand && (
+                            <TooltipContent side='bottom' className='max-w-md'>
+                              <code className='break-all text-xs'>{port.fullCommand}</code>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      ) : (
+                        <span className='text-sm font-medium'>{port.command}</span>
+                      )}
+                      {port.description && (
+                        <span className='text-muted-foreground text-xs'>{port.command}</span>
+                      )}
                       <span className='text-muted-foreground text-xs'>PID {port.pid}</span>
                       <Badge
                         variant='outline'
@@ -419,6 +444,16 @@ export function PortsView() {
                       )}
                     </div>
                     <div className='flex items-center gap-2'>
+                      {port.parentCommand && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className='text-muted-foreground text-xs cursor-default'>
+                              via {port.parentCommand}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>Parent PID {port.parentPid}</TooltipContent>
+                        </Tooltip>
+                      )}
                       {port.repoName && (
                         <p className='text-xs'>
                           <span className='text-muted-foreground'>Project: </span>
@@ -479,10 +514,24 @@ export function PortsView() {
           </DialogHeader>
           {pendingKill && (
             <div className='bg-secondary rounded-lg p-3 text-sm'>
-              <div className='flex items-center gap-2'>
+              {pendingKill.description && (
+                <div className='flex items-center gap-2'>
+                  <span className='text-muted-foreground'>Description:</span>
+                  <span className='font-medium'>{pendingKill.description}</span>
+                </div>
+              )}
+              <div className={`flex items-center gap-2 ${pendingKill.description ? 'mt-1' : ''}`}>
                 <span className='text-muted-foreground'>Command:</span>
                 <span className='font-mono font-medium'>{pendingKill.command}</span>
               </div>
+              {pendingKill.fullCommand && pendingKill.fullCommand !== pendingKill.command && (
+                <div className='mt-1'>
+                  <span className='text-muted-foreground'>Full command:</span>
+                  <code className='mt-0.5 block break-all rounded bg-background/50 px-2 py-1 text-xs'>
+                    {pendingKill.fullCommand}
+                  </code>
+                </div>
+              )}
               <div className='mt-1 flex items-center gap-2'>
                 <span className='text-muted-foreground'>PID:</span>
                 <span className='font-mono'>{pendingKill.pid}</span>
@@ -491,6 +540,15 @@ export function PortsView() {
                 <span className='text-muted-foreground'>Port:</span>
                 <span className='font-mono'>{pendingKill.port}</span>
               </div>
+              {pendingKill.parentCommand && (
+                <div className='mt-1 flex items-center gap-2'>
+                  <span className='text-muted-foreground'>Parent:</span>
+                  <span className='font-mono'>{pendingKill.parentCommand}</span>
+                  {pendingKill.parentPid && (
+                    <span className='text-muted-foreground text-xs'>(PID {pendingKill.parentPid})</span>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
@@ -519,7 +577,10 @@ export function PortsView() {
             {selectedPorts.map(p => (
               <div key={p.port} className='bg-secondary flex items-center gap-3 rounded-lg px-3 py-2 text-sm'>
                 <span className='font-mono text-xs font-semibold'>:{p.port}</span>
-                <span className='font-medium'>{p.command}</span>
+                <span className='font-medium'>{p.description ?? p.command}</span>
+                {p.description && (
+                  <span className='text-muted-foreground text-xs'>{p.command}</span>
+                )}
                 <span className='text-muted-foreground text-xs'>PID {p.pid}</span>
               </div>
             ))}

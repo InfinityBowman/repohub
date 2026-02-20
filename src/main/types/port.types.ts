@@ -5,4 +5,8 @@ export interface PortInfo {
   repoId?: string;
   repoName?: string;
   managed: boolean;
+  fullCommand?: string;
+  parentPid?: number;
+  parentCommand?: string;
+  description?: string;
 }
