@@ -114,6 +114,16 @@ export interface AgentSessionInfo {
   messageCount: number;
 }
 
+// A Claude project directory discovered in ~/.claude/projects/
+export interface ClaudeProject {
+  encodedPath: string;
+  decodedPath: string;
+  isValidPath: boolean;
+  displayName: string;
+  sessionCount: number;
+  lastActiveAt: string;
+}
+
 // Summary of a Claude CLI session read from ~/.claude/projects/
 export interface ClaudeSessionSummary {
   sessionId: string;
@@ -123,4 +133,9 @@ export interface ClaudeSessionSummary {
   startedAt: string;
   modifiedAt: string;
   durationSeconds: number;
+  // Present when returned from listAllSessions (cross-project)
+  projectEncodedPath?: string;
+  projectDisplayName?: string;
+  projectDecodedPath?: string;
+  projectIsValidPath?: boolean;
 }

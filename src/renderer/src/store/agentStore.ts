@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { AgentSessionInfo, AgentMessage, ClaudeSessionSummary } from '@/types';
+import type { AgentSessionInfo, AgentMessage, ClaudeProject, ClaudeSessionSummary } from '@/types';
 
 interface AgentState {
   agents: Record<string, AgentSessionInfo>;
@@ -8,6 +8,7 @@ interface AgentState {
   streaming: Record<string, string>;
   streamingThinking: Record<string, string>;
   showLaunchPanel: boolean;
+  claudeProjects: ClaudeProject[];
   sessionHistory: ClaudeSessionSummary[];
   viewingHistorySessionId: string | null;
 
@@ -22,6 +23,7 @@ interface AgentState {
   appendStreamThinkingChunk: (sessionId: string, delta: string) => void;
   clearStreamThinking: (sessionId: string) => void;
   setShowLaunchPanel: (show: boolean) => void;
+  setClaudeProjects: (projects: ClaudeProject[]) => void;
   setSessionHistory: (sessions: ClaudeSessionSummary[]) => void;
   setViewingHistorySessionId: (id: string | null) => void;
 }
@@ -33,6 +35,7 @@ export const useAgentStore = create<AgentState>(set => ({
   streaming: {},
   streamingThinking: {},
   showLaunchPanel: false,
+  claudeProjects: [],
   sessionHistory: [],
   viewingHistorySessionId: null,
 
@@ -103,6 +106,8 @@ export const useAgentStore = create<AgentState>(set => ({
     })),
 
   setShowLaunchPanel: show => set({ showLaunchPanel: show }),
+
+  setClaudeProjects: projects => set({ claudeProjects: projects }),
 
   setSessionHistory: sessions => set({ sessionHistory: sessions }),
 

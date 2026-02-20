@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   RefreshCw,
@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Check,
   ArrowUpDown,
+  X,
 } from 'lucide-react';
 import { usePorts } from '@/hooks/usePorts';
 import { Button } from '@/components/ui/button';
@@ -191,12 +192,32 @@ export function PortsView() {
   const [managedOnly, setManagedOnly] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>('category');
   const [pendingKill, setPendingKill] = useState<PortInfo | null>(null);
+  const [pendingBulkKill, setPendingBulkKill] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [copiedPort, setCopiedPort] = useState<number | null>(null);
 
   // Refresh on mount (navigating to tab)
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Clear selection when ports change (killed ports disappear)
+  useEffect(() => {
+    setSelected(prev => {
+      const activePorts = new Set(ports.map(p => p.port));
+      const next = new Set([...prev].filter(p => activePorts.has(p)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [ports]);
+
+  const toggleSelect = useCallback((port: number) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(port)) next.delete(port);
+      else next.add(port);
+      return next;
+    });
+  }, []);
 
   const filteredPorts = useMemo(() => {
     let result = ports;
@@ -253,6 +274,19 @@ export function PortsView() {
     setPendingKill(null);
   };
 
+  const handleConfirmBulkKill = async () => {
+    const toKill = [...selected];
+    await Promise.all(toKill.map(port => killByPort(port)));
+    setSelected(new Set());
+    setPendingBulkKill(false);
+  };
+
+  const selectedPorts = useMemo(
+    () => filteredPorts.filter(p => selected.has(p.port)),
+    [filteredPorts, selected],
+  );
+
+
   return (
     <div className='flex h-full flex-col gap-4'>
       <div className='flex items-center justify-between'>
@@ -263,10 +297,32 @@ export function PortsView() {
             Monitoring
           </Badge>
         </div>
-        <Button variant='outline' size='sm' onClick={refresh}>
-          <RefreshCw />
-          Refresh
-        </Button>
+        <div className='flex items-center gap-2'>
+          {selected.size > 0 && (
+            <>
+              <span className='text-muted-foreground text-sm'>
+                {selected.size} selected
+              </span>
+              <Button variant='ghost' size='sm' onClick={() => setSelected(new Set())}>
+                <X className='h-3.5 w-3.5' />
+                Clear
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                onClick={() => setPendingBulkKill(true)}
+              >
+                <Skull className='h-3.5 w-3.5' />
+                Kill {selected.size}
+              </Button>
+              <Separator orientation='vertical' className='h-5' />
+            </>
+          )}
+          <Button variant='outline' size='sm' onClick={refresh}>
+            <RefreshCw />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Search, sort & filter bar */}
@@ -320,17 +376,19 @@ export function PortsView() {
             const cat = categorize(port);
             const meta = CATEGORY_META[cat];
             const seen = firstSeen[port.port];
+            const isSelected = selected.has(port.port);
 
             return (
               <div
                 key={port.port}
-                className='bg-card flex items-center justify-between rounded-lg border px-3 py-2.5'
+                onClick={() => toggleSelect(port.port)}
+                className={`flex cursor-pointer items-center justify-between rounded-lg border px-3 py-2.5 transition-colors select-none ${isSelected ? 'border-primary/40 bg-accent' : 'bg-card hover:bg-accent/50'}`}
               >
                 <div className='flex items-center gap-3'>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={() => handleCopyPort(port.port)}
+                        onClick={e => { e.stopPropagation(); handleCopyPort(port.port); }}
                         className='bg-secondary hover:bg-secondary/80 flex h-8 w-14 items-center justify-center rounded font-mono text-xs font-semibold transition-colors'
                       >
                         {copiedPort === port.port ?
@@ -366,8 +424,8 @@ export function PortsView() {
                           <span className='text-muted-foreground'>Project: </span>
                           {port.repoId ?
                             <button
-                              onClick={() => navigate(`/repo/${port.repoId}`)}
-                              className='cursor-pointer text-blue-400 hover:underline'
+                              onClick={e => { e.stopPropagation(); navigate(`/repo/${port.repoId}`); }}
+                              className='cursor-pointer text-primary hover:underline'
                             >
                               {port.repoName}
                             </button>
@@ -381,7 +439,7 @@ export function PortsView() {
                   </div>
                 </div>
 
-                <div className='flex items-center gap-1'>
+                <div className='flex items-center gap-1' onClick={e => e.stopPropagation()}>
                   <Button
                     variant='ghost'
                     size='xs'
@@ -409,7 +467,7 @@ export function PortsView() {
         </div>
       }
 
-      {/* Kill confirmation dialog */}
+      {/* Kill confirmation dialog (single) */}
       <Dialog open={!!pendingKill} onOpenChange={open => !open && setPendingKill(null)}>
         <DialogContent>
           <DialogHeader>
@@ -442,6 +500,37 @@ export function PortsView() {
             <Button variant='destructive' onClick={handleConfirmKill}>
               <Skull className='h-4 w-4' />
               Kill process
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk kill confirmation dialog */}
+      <Dialog open={pendingBulkKill} onOpenChange={open => !open && setPendingBulkKill(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kill {selected.size} process{selected.size > 1 ? 'es' : ''}?</DialogTitle>
+            <DialogDescription>
+              This will send SIGTERM to each process. If any don't stop within 3 seconds, SIGKILL
+              will be used.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='flex max-h-48 flex-col gap-1 overflow-y-auto'>
+            {selectedPorts.map(p => (
+              <div key={p.port} className='bg-secondary flex items-center gap-3 rounded-lg px-3 py-2 text-sm'>
+                <span className='font-mono text-xs font-semibold'>:{p.port}</span>
+                <span className='font-medium'>{p.command}</span>
+                <span className='text-muted-foreground text-xs'>PID {p.pid}</span>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setPendingBulkKill(false)}>
+              Cancel
+            </Button>
+            <Button variant='destructive' onClick={handleConfirmBulkKill}>
+              <Skull className='h-4 w-4' />
+              Kill {selected.size} process{selected.size > 1 ? 'es' : ''}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -311,6 +311,15 @@ export interface AgentSessionInfo {
   messageCount: number;
 }
 
+export interface ClaudeProject {
+  encodedPath: string;
+  decodedPath: string;
+  isValidPath: boolean;
+  displayName: string;
+  sessionCount: number;
+  lastActiveAt: string;
+}
+
 export interface ClaudeSessionSummary {
   sessionId: string;
   task: string;
@@ -319,6 +328,10 @@ export interface ClaudeSessionSummary {
   startedAt: string;
   modifiedAt: string;
   durationSeconds: number;
+  projectEncodedPath?: string;
+  projectDisplayName?: string;
+  projectDecodedPath?: string;
+  projectIsValidPath?: boolean;
 }
 
 export type TypeScriptSupport = 'built-in' | 'types' | 'none';
@@ -500,11 +513,12 @@ declare global {
         sendMessage: (sessionId: string, content: string) => Promise<{ success: boolean }>;
         list: () => Promise<AgentSessionInfo[]>;
         getMessages: (sessionId: string) => Promise<AgentMessage[]>;
+        listAllProjects: () => Promise<ClaudeProject[]>;
+        listAllSessions: () => Promise<ClaudeSessionSummary[]>;
         listSessions: (repoPath: string) => Promise<ClaudeSessionSummary[]>;
         readSession: (repoPath: string, sessionId: string) => Promise<AgentMessage[]>;
         resumeSession: (
           cliSessionId: string,
-          repoPath: string,
           config: AgentLaunchConfig,
         ) => Promise<{ sessionId: string }>;
       };

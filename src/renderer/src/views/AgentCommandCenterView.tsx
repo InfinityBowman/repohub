@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   Bot,
   Plus,
@@ -13,16 +13,13 @@ import {
   X,
   Eye,
   AlertCircle,
+  FolderOpen,
+  ChevronDown,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAgents } from '@/hooks/useAgents';
 import { useRepositoryStore } from '@/store/repositoryStore';
 import { useAgentStore } from '@/store/agentStore';
@@ -30,7 +27,7 @@ import { AgentLaunchPanel } from '@/components/agents/AgentLaunchPanel';
 import { AgentTerminal } from '@/components/agents/AgentTerminal';
 import { InfoBar } from '@/components/agents/InfoBar';
 import { MessageInput } from '@/components/agents/MessageInput';
-import type { AgentLaunchConfig, ClaudeSessionSummary } from '@/types';
+import type { AgentLaunchConfig, ClaudeProject, ClaudeSessionSummary } from '@/types';
 
 function timeAgo(isoDate: string): string {
   const seconds = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
@@ -66,11 +63,13 @@ function SessionRow({
   onView,
   onResume,
   isActive,
+  showProject,
 }: {
   session: ClaudeSessionSummary;
   onView: () => void;
   onResume: () => void;
   isActive: boolean;
+  showProject?: boolean;
 }) {
   return (
     <div
@@ -93,6 +92,17 @@ function SessionRow({
       <div className='min-w-0 flex-1'>
         <p className='truncate text-sm font-medium'>{session.task || '(no task)'}</p>
         <div className='text-muted-foreground mt-1 flex flex-wrap items-center gap-3 text-xs'>
+          {showProject && session.projectDisplayName && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className='flex items-center gap-1'>
+                  <FolderOpen className='h-3 w-3' />
+                  {session.projectDisplayName}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{session.projectDecodedPath}</TooltipContent>
+            </Tooltip>
+          )}
           <span className='flex items-center gap-1'>
             <Clock className='h-3 w-3' />
             {timeAgo(session.modifiedAt)}
@@ -125,6 +135,113 @@ function SessionRow({
   );
 }
 
+function ProjectFilterDropdown({
+  projects,
+  selected,
+  onSelect,
+}: {
+  projects: ClaudeProject[];
+  selected: ClaudeProject | null;
+  onSelect: (project: ClaudeProject | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const filtered = filter
+    ? projects.filter(
+        p =>
+          p.displayName.toLowerCase().includes(filter.toLowerCase()) ||
+          p.decodedPath.toLowerCase().includes(filter.toLowerCase()),
+      )
+    : projects;
+
+  return (
+    <div ref={ref} className='relative flex-1'>
+      <button
+        onClick={() => setOpen(!open)}
+        className='border-border bg-card hover:bg-accent/60 flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors'
+      >
+        <FolderOpen className='text-muted-foreground h-4 w-4 shrink-0' />
+        <p className='min-w-0 flex-1 truncate text-sm'>
+          {selected ? selected.displayName : 'All projects'}
+        </p>
+        <ChevronDown className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className='border-border bg-popover absolute top-full z-50 mt-1 w-full overflow-hidden rounded-lg border shadow-lg'>
+          <div className='border-border flex items-center gap-2 border-b px-3 py-2'>
+            <Search className='text-muted-foreground h-3.5 w-3.5 shrink-0' />
+            <input
+              autoFocus
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              placeholder='Filter projects...'
+              className='bg-transparent text-sm outline-none placeholder:text-muted-foreground flex-1'
+            />
+          </div>
+          <div className='max-h-[320px] overflow-y-auto py-1'>
+            {/* "All projects" option */}
+            <button
+              onClick={() => {
+                onSelect(null);
+                setOpen(false);
+                setFilter('');
+              }}
+              className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
+                !selected ? 'bg-primary/10 text-primary' : 'hover:bg-accent/60'
+              }`}
+            >
+              <History className='h-4 w-4 shrink-0 text-blue-400' />
+              <p className='text-sm font-medium'>All projects</p>
+            </button>
+
+            {filtered.length === 0 && filter ?
+              <p className='text-muted-foreground px-3 py-4 text-center text-sm'>No projects match</p>
+            : filtered.map(project => (
+                <button
+                  key={project.encodedPath}
+                  onClick={() => {
+                    onSelect(project);
+                    setOpen(false);
+                    setFilter('');
+                  }}
+                  className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
+                    selected?.encodedPath === project.encodedPath
+                      ? 'bg-primary/10 text-primary'
+                      : 'hover:bg-accent/60'
+                  }`}
+                >
+                  <FolderOpen className={`h-4 w-4 shrink-0 ${project.isValidPath ? 'text-blue-400' : 'text-muted-foreground'}`} />
+                  <div className='min-w-0 flex-1'>
+                    <p className='truncate text-sm font-medium'>{project.displayName}</p>
+                    <p className='text-muted-foreground truncate text-xs'>{project.decodedPath}</p>
+                  </div>
+                  <div className='flex shrink-0 items-center gap-2'>
+                    <span className='text-muted-foreground text-xs'>{timeAgo(project.lastActiveAt)}</span>
+                    <Badge variant='secondary' className='text-xs'>
+                      {project.sessionCount}
+                    </Badge>
+                  </div>
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AgentCommandCenterView() {
   const {
     agents,
@@ -133,6 +250,7 @@ export function AgentCommandCenterView() {
     streaming,
     streamingThinking,
     showLaunchPanel,
+    claudeProjects,
     sessionHistory,
     viewingHistorySessionId,
     setActiveAgent,
@@ -141,6 +259,8 @@ export function AgentCommandCenterView() {
     launch,
     stop,
     sendMessage,
+    loadAllProjects,
+    loadAllSessions,
     loadSessionHistory,
     viewSession,
     resumeSession,
@@ -149,7 +269,7 @@ export function AgentCommandCenterView() {
   const repositories = useRepositoryStore(s => s.repositories);
   const removeAgent = useAgentStore(s => s.removeAgent);
 
-  const [selectedRepoPath, setSelectedRepoPath] = useState<string>('');
+  const [filterProject, setFilterProject] = useState<ClaudeProject | null>(null);
   const [loading, setLoading] = useState(false);
   const [resuming, setResuming] = useState<string | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
@@ -167,9 +287,21 @@ export function AgentCommandCenterView() {
       sessionHistory.find(s => s.sessionId === viewingHistorySessionId)
     : null;
 
-  const selectedRepo = repositories.find(r => r.path === selectedRepoPath);
+  // Client-side filter
+  const filteredSessions = useMemo(() => {
+    if (!filterProject) return sessionHistory;
+    return sessionHistory.filter(s => s.projectEncodedPath === filterProject.encodedPath);
+  }, [sessionHistory, filterProject]);
 
-  // Ensure repos are loaded
+  // Load all sessions on first visit only — store persists across tab switches
+  useEffect(() => {
+    const { sessionHistory, claudeProjects } = useAgentStore.getState();
+    if (sessionHistory.length > 0 || claudeProjects.length > 0) return;
+    setLoading(true);
+    Promise.all([loadAllProjects(), loadAllSessions()]).finally(() => setLoading(false));
+  }, [loadAllProjects, loadAllSessions]);
+
+  // Ensure repos are loaded (still needed for launch panel)
   useEffect(() => {
     if (repositories.length === 0) {
       window.electron.repositories.scan().then(repos => {
@@ -177,21 +309,6 @@ export function AgentCommandCenterView() {
       });
     }
   }, [repositories.length]);
-
-  // Auto-select first repo
-  useEffect(() => {
-    if (repositories.length > 0 && !selectedRepoPath) {
-      setSelectedRepoPath(repositories[0].path);
-    }
-  }, [repositories, selectedRepoPath]);
-
-  // Load sessions when repo changes
-  useEffect(() => {
-    if (selectedRepoPath) {
-      setLoading(true);
-      loadSessionHistory(selectedRepoPath).finally(() => setLoading(false));
-    }
-  }, [selectedRepoPath, loadSessionHistory]);
 
   // --- Handlers ---
 
@@ -218,22 +335,29 @@ export function AgentCommandCenterView() {
   );
 
   const handleView = useCallback(
-    (sessionId: string) => {
-      if (selectedRepoPath) viewSession(selectedRepoPath, sessionId);
+    (session: ClaudeSessionSummary) => {
+      const encodedPath = session.projectEncodedPath;
+      if (encodedPath) {
+        viewSession(encodedPath, session.sessionId);
+      }
     },
-    [selectedRepoPath, viewSession],
+    [viewSession],
   );
 
   const handleResume = useCallback(
     async (session: ClaudeSessionSummary) => {
-      if (!selectedRepo) return;
+      if (!session.projectEncodedPath || !session.projectIsValidPath) {
+        setResumeError('Cannot resume: project directory no longer exists on disk');
+        setTimeout(() => setResumeError(null), 5000);
+        return;
+      }
       setResuming(session.sessionId);
       setResumeError(null);
       try {
         await resumeSession(session.sessionId, {
-          repoId: selectedRepo.id,
-          repoPath: selectedRepo.path,
-          repoName: selectedRepo.name,
+          repoId: session.projectEncodedPath,
+          repoPath: session.projectDecodedPath!,
+          repoName: session.projectDisplayName || 'Unknown',
           roleId: 'coder',
           task: session.task,
           autonomous: false,
@@ -245,8 +369,13 @@ export function AgentCommandCenterView() {
         setResuming(null);
       }
     },
-    [selectedRepo, resumeSession],
+    [resumeSession],
   );
+
+  const handleRefresh = useCallback(() => {
+    setLoading(true);
+    Promise.all([loadAllProjects(), loadAllSessions()]).finally(() => setLoading(false));
+  }, [loadAllProjects, loadAllSessions]);
 
   const goToList = useCallback(() => {
     setActiveAgent(null);
@@ -372,25 +501,41 @@ export function AgentCommandCenterView() {
           <Button variant='ghost' size='sm' onClick={goToList}>
             <ArrowLeft className='h-4 w-4' />
           </Button>
-          <p className='min-w-0 flex-1 truncate text-sm font-medium'>
-            {viewingSession?.task || 'Session'}
-          </p>
+          <div className='min-w-0 flex-1'>
+            <p className='truncate text-sm font-medium'>
+              {viewingSession?.task || 'Session'}
+            </p>
+            {viewingSession?.projectDisplayName && (
+              <p className='text-muted-foreground truncate text-xs'>
+                {viewingSession.projectDisplayName}
+              </p>
+            )}
+          </div>
           <Badge variant='secondary' className='text-muted-foreground gap-1 text-xs'>
             <Eye className='h-3 w-3' />
             Read-only
           </Badge>
           {viewingSession && (
-            <Button
-              size='sm'
-              variant='outline'
-              disabled={resuming === viewingSession.sessionId}
-              onClick={() => handleResume(viewingSession)}
-            >
-              {resuming === viewingSession.sessionId ?
-                <Loader2 className='h-3.5 w-3.5 animate-spin' />
-              : <Play className='h-3.5 w-3.5' />}
-              Resume
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    disabled={resuming === viewingSession.sessionId || !viewingSession.projectIsValidPath}
+                    onClick={() => handleResume(viewingSession)}
+                  >
+                    {resuming === viewingSession.sessionId ?
+                      <Loader2 className='h-3.5 w-3.5 animate-spin' />
+                    : <Play className='h-3.5 w-3.5' />}
+                    Resume
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!viewingSession.projectIsValidPath && (
+                <TooltipContent>Project directory no longer exists</TooltipContent>
+              )}
+            </Tooltip>
           )}
         </div>
         {resumeError && <ErrorBanner message={resumeError} />}
@@ -400,63 +545,51 @@ export function AgentCommandCenterView() {
   }
 
   // ==========================================================================
-  // State 4: Session list (natural page scroll)
+  // State 4: Session timeline (natural page scroll)
   // ==========================================================================
 
   return (
     <div className='flex flex-col gap-4'>
       {header}
 
-      {/* Resume error */}
       {resumeError && <ErrorBanner message={resumeError} />}
 
-      {/* Repo selector + refresh */}
-      {repositories.length > 0 && (
-        <div className='flex items-center gap-2'>
-          <Select value={selectedRepoPath} onValueChange={setSelectedRepoPath}>
-            <SelectTrigger className='w-full'>
-              <SelectValue placeholder='Select a repository' />
-            </SelectTrigger>
-            <SelectContent>
-              {repositories
-                .slice()
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(repo => (
-                  <SelectItem key={repo.id} value={repo.path}>
-                    {repo.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-          <Button
-            size='sm'
-            variant='ghost'
-            disabled={loading || !selectedRepoPath}
-            onClick={() => {
-              if (selectedRepoPath) {
-                setLoading(true);
-                loadSessionHistory(selectedRepoPath).finally(() => setLoading(false));
-              }
-            }}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      )}
+      {/* Project filter + refresh */}
+      <div className='flex items-center gap-2'>
+        <ProjectFilterDropdown
+          projects={claudeProjects}
+          selected={filterProject}
+          onSelect={setFilterProject}
+        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size='sm'
+              variant='ghost'
+              disabled={loading}
+              onClick={handleRefresh}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Refresh</TooltipContent>
+        </Tooltip>
+      </div>
 
       {/* Session list */}
       {loading ?
         <div className='flex items-center justify-center py-8'>
           <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
         </div>
-      : sessionHistory.length > 0 ?
+      : filteredSessions.length > 0 ?
         <div className='flex flex-col gap-1.5'>
-          {sessionHistory.map(session => (
+          {filteredSessions.map(session => (
             <SessionRow
-              key={session.sessionId}
+              key={`${session.projectEncodedPath}:${session.sessionId}`}
               session={session}
               isActive={viewingHistorySessionId === session.sessionId}
-              onView={() => handleView(session.sessionId)}
+              showProject={!filterProject}
+              onView={() => handleView(session)}
               onResume={() => handleResume(session)}
             />
           ))}
@@ -466,9 +599,9 @@ export function AgentCommandCenterView() {
           <div>
             <p className='text-sm font-medium'>No sessions found</p>
             <p className='text-muted-foreground text-xs'>
-              {selectedRepoPath ?
-                'No Claude Code sessions exist for this repository yet.'
-              : 'Select a repository to browse session history.'}
+              {filterProject ?
+                'No Claude Code sessions for this project.'
+              : 'No Claude Code sessions found. Use Claude Code in a project to create sessions.'}
             </p>
           </div>
         </div>

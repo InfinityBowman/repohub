@@ -115,6 +115,8 @@ const electronAPI = {
       ipcRenderer.invoke('agent:send-message', { sessionId, content }),
     list: () => ipcRenderer.invoke('agent:list'),
     getMessages: (sessionId: string) => ipcRenderer.invoke('agent:get-messages', sessionId),
+    listAllProjects: () => ipcRenderer.invoke('agent:list-all-projects'),
+    listAllSessions: () => ipcRenderer.invoke('agent:list-all-sessions'),
     listSessions: (repoPath: string) => ipcRenderer.invoke('agent:list-sessions', repoPath),
     readSession: (repoPath: string, sessionId: string) =>
       ipcRenderer.invoke('agent:read-session', { repoPath, sessionId }),

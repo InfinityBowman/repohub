@@ -75,6 +75,7 @@ export function useAgents() {
   const streaming = useAgentStore(s => s.streaming);
   const streamingThinking = useAgentStore(s => s.streamingThinking);
   const showLaunchPanel = useAgentStore(s => s.showLaunchPanel);
+  const claudeProjects = useAgentStore(s => s.claudeProjects);
   const sessionHistory = useAgentStore(s => s.sessionHistory);
   const viewingHistorySessionId = useAgentStore(s => s.viewingHistorySessionId);
   const setActiveAgent = useAgentStore(s => s.setActiveAgent);
@@ -99,9 +100,29 @@ export function useAgents() {
     return window.electron.agent.sendMessage(sessionId, content);
   }, []);
 
-  const loadSessionHistory = useCallback(async (repoPath: string) => {
+  const loadAllProjects = useCallback(async () => {
     try {
-      const sessions = await window.electron.agent.listSessions(repoPath);
+      const projects = await window.electron.agent.listAllProjects();
+      useAgentStore.getState().setClaudeProjects(projects);
+    } catch (err) {
+      console.error('Failed to load Claude projects:', err);
+      useAgentStore.getState().setClaudeProjects([]);
+    }
+  }, []);
+
+  const loadAllSessions = useCallback(async () => {
+    try {
+      const sessions = await window.electron.agent.listAllSessions();
+      useAgentStore.getState().setSessionHistory(sessions);
+    } catch (err) {
+      console.error('Failed to load all sessions:', err);
+      useAgentStore.getState().setSessionHistory([]);
+    }
+  }, []);
+
+  const loadSessionHistory = useCallback(async (pathOrEncoded: string) => {
+    try {
+      const sessions = await window.electron.agent.listSessions(pathOrEncoded);
       useAgentStore.getState().setSessionHistory(sessions);
     } catch (err) {
       console.error('Failed to load session history:', err);
@@ -109,9 +130,9 @@ export function useAgents() {
     }
   }, []);
 
-  const viewSession = useCallback(async (repoPath: string, sessionId: string) => {
+  const viewSession = useCallback(async (pathOrEncoded: string, sessionId: string) => {
     try {
-      const messages = await window.electron.agent.readSession(repoPath, sessionId);
+      const messages = await window.electron.agent.readSession(pathOrEncoded, sessionId);
       // Store messages under the history session ID and mark as viewing
       const viewKey = `history:${sessionId}`;
       useAgentStore.getState().setMessages(viewKey, messages);
@@ -147,6 +168,7 @@ export function useAgents() {
     streaming,
     streamingThinking,
     showLaunchPanel,
+    claudeProjects,
     sessionHistory,
     viewingHistorySessionId,
     setActiveAgent,
@@ -155,6 +177,8 @@ export function useAgents() {
     launch,
     stop,
     sendMessage,
+    loadAllProjects,
+    loadAllSessions,
     loadSessionHistory,
     viewSession,
     resumeSession,

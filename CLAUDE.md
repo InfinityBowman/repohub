@@ -113,6 +113,8 @@ Output goes to `out/main/`, `out/preload/`, `out/renderer/`.
 - **Radix UI**: Import from `"radix-ui"` (unified package), not `@radix-ui/react-*`
 - **shadcn/ui components**: Located in `src/renderer/src/components/ui/`
 - **No hardcoded colors**: Never use hex color values (e.g., `#82aaff`, `bg-[#292d3e]`) in components. Use Tailwind theme classes (`text-foreground`, `bg-card`, `border-border`) for UI chrome and Tailwind palette colors (`text-blue-400`, `text-green-400`) for accents. Exception: external brand colors (e.g., GitHub language colors) may use inline hex.
+- **Prefer theme tokens over palette colors for interactive states**: For selection, hover, focus, and active states use semantic theme tokens (`bg-accent`, `border-primary/40`, `text-primary`) rather than raw palette colors (`bg-blue-950/20`, `border-blue-700/60`, `text-blue-400`). Palette colors are for static category badges and decorative accents only.
+- **No layout shift**: Avoid conditionally rendered UI elements (action bars, toolbars, banners) that push page content around. Instead, integrate contextual actions into existing fixed-position areas (e.g., header bars) or use overlays/absolute positioning, or popovers/dialogs. The page layout should be stable regardless of state.
 
 ## Security Model
 

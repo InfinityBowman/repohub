@@ -32,6 +32,16 @@ export function registerAgentHandlers(
     return agentService.getMessages(sessionId);
   });
 
+  // List all Claude projects from ~/.claude/projects/
+  ipcMain.handle('agent:list-all-projects', async () => {
+    return claudeSessionReader.listAllProjects();
+  });
+
+  // List ALL sessions across ALL projects, sorted by time
+  ipcMain.handle('agent:list-all-sessions', async () => {
+    return claudeSessionReader.listAllSessions();
+  });
+
   // Session history: list sessions from Claude's native JSONL files
   ipcMain.handle('agent:list-sessions', async (_event, repoPath: string) => {
     return claudeSessionReader.listSessions(repoPath);
