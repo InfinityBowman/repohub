@@ -26,25 +26,29 @@ export function registerRepositoryHandlers(repositoryService: RepositoryService)
   });
 
   ipcMain.handle('shell:open-in-vscode', async (_event, dirPath: string) => {
-    try {
+    return new Promise<{ success: boolean; error?: string }>((resolve) => {
       // Use VS Code CLI with -g flag to support file:line syntax
-      spawn('code', ['-g', dirPath], {
+      const child = spawn('code', ['-g', dirPath], {
         detached: true,
         stdio: 'ignore',
-      }).unref();
-      return { success: true };
-    } catch (err: any) {
-      // Fallback to macOS open if code CLI not found
-      try {
-        spawn('open', ['-b', 'com.microsoft.VSCode', dirPath.split(':')[0]], {
+      });
+      child.on('error', () => {
+        // Fallback to macOS open if code CLI not found
+        const fallback = spawn('open', ['-b', 'com.microsoft.VSCode', dirPath.split(':')[0]], {
           detached: true,
           stdio: 'ignore',
-        }).unref();
-        return { success: true };
-      } catch (fallbackErr: any) {
-        return { success: false, error: fallbackErr.message };
-      }
-    }
+        });
+        fallback.on('error', (fallbackErr) => {
+          resolve({ success: false, error: fallbackErr.message });
+        });
+        fallback.unref();
+        // If no error fires synchronously, assume success
+        setTimeout(() => resolve({ success: true }), 200);
+      });
+      child.unref();
+      // If no error fires, resolve as success
+      setTimeout(() => resolve({ success: true }), 200);
+    });
   });
 
   ipcMain.handle('shell:open-in-terminal', async (_event, dirPath: string) => {
