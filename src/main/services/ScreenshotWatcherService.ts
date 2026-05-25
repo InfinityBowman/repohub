@@ -36,6 +36,13 @@ export class ScreenshotWatcherService extends EventEmitter {
     return this.storageDir;
   }
 
+  clearAll(): void {
+    for (const info of this.recent) {
+      try { fs.unlinkSync(info.path); } catch {}
+    }
+    this.recent = [];
+  }
+
   capture(): void {
     if (this.capturing) return;
     this.capturing = true;

@@ -579,6 +579,7 @@ declare global {
       overlay: {
         getSystemSnapshot: () => Promise<SystemSnapshot>;
         getRecentScreenshots: () => Promise<ScreenshotInfo[]>;
+        clearScreenshots: () => Promise<void>;
         getRecentCommits: () => Promise<CommitInfo[]>;
         refreshCommits: () => Promise<CommitInfo[]>;
         expandToDashboard: (route: string) => Promise<void>;

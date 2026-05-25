@@ -1,14 +1,24 @@
 import { useScreenshotsStore } from '@/store/screenshotsStore';
+import { Trash2 } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 
 export function OverlayScreenshots() {
   const screenshots = useScreenshotsStore(s => s.screenshots);
+  const clear = useScreenshotsStore(s => s.clear);
 
   if (screenshots.length === 0) return null;
 
   return (
     <div className='flex flex-col gap-1.5'>
-      <SectionHeader label='SCREENSHOTS' />
+      <div className='flex items-center justify-between'>
+        <SectionHeader label='SCREENSHOTS' />
+        <button
+          onClick={clear}
+          className='rounded-md p-0.5 text-muted-foreground transition-colors hover:text-destructive'
+        >
+          <Trash2 className='h-3 w-3' />
+        </button>
+      </div>
       <div className='grid grid-cols-2 gap-1.5'>
         {screenshots.slice(0, 6).map(screenshot => (
           <button

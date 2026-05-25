@@ -5,6 +5,7 @@ interface ScreenshotsState {
   screenshots: ScreenshotInfo[];
   setScreenshots: (screenshots: ScreenshotInfo[]) => void;
   addScreenshot: (screenshot: ScreenshotInfo) => void;
+  clear: () => void;
 }
 
 export const useScreenshotsStore = create<ScreenshotsState>(set => ({
@@ -14,4 +15,8 @@ export const useScreenshotsStore = create<ScreenshotsState>(set => ({
     set(state => ({
       screenshots: [screenshot, ...state.screenshots].slice(0, 8),
     })),
+  clear: () => {
+    window.electron.overlay.clearScreenshots();
+    set({ screenshots: [] });
+  },
 }));

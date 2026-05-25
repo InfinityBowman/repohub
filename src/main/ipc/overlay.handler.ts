@@ -18,6 +18,10 @@ export function registerOverlayHandlers(
     return screenshotWatcher.getRecent();
   });
 
+  ipcMain.handle('overlay:clear-screenshots', () => {
+    screenshotWatcher.clearAll();
+  });
+
   ipcMain.handle('overlay:get-recent-commits', async () => {
     return recentCommits.getRecent();
   });

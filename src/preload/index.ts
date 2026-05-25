@@ -151,6 +151,7 @@ const electronAPI = {
   overlay: {
     getSystemSnapshot: () => ipcRenderer.invoke('overlay:get-system-snapshot'),
     getRecentScreenshots: () => ipcRenderer.invoke('overlay:get-recent-screenshots'),
+    clearScreenshots: () => ipcRenderer.invoke('overlay:clear-screenshots'),
     getRecentCommits: () => ipcRenderer.invoke('overlay:get-recent-commits'),
     refreshCommits: () => ipcRenderer.invoke('overlay:refresh-commits'),
     expandToDashboard: (route: string) =>
