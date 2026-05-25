@@ -3,6 +3,7 @@ dist/
 dist-electron/
 out/
 *.log
+.buildcount
 .DS_Store
 release/
 _reference/

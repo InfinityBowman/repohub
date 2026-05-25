@@ -156,6 +156,7 @@ const electronAPI = {
     expandToDashboard: (route: string) =>
       ipcRenderer.invoke('overlay:expand-to-dashboard', { route }),
     hide: () => ipcRenderer.invoke('overlay:hide'),
+    startDrag: (filePath: string) => ipcRenderer.invoke('overlay:start-drag', filePath),
   },
 
   app: {

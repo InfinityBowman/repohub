@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, app } from 'electron';
+import { ipcMain, BrowserWindow, app, nativeImage } from 'electron';
 import type { SystemMonitorService } from '../services/SystemMonitorService';
 import type { ScreenshotWatcherService } from '../services/ScreenshotWatcherService';
 import type { RecentCommitsService } from '../services/RecentCommitsService';
@@ -53,5 +53,12 @@ export function registerOverlayHandlers(
     if (overlay) {
       overlay.hide();
     }
+  });
+
+  ipcMain.handle('overlay:start-drag', (_event, filePath: string) => {
+    const overlay = getOverlayWindow();
+    if (!overlay) return;
+    const icon = nativeImage.createFromPath(filePath).resize({ width: 64, height: 64 });
+    overlay.webContents.startDrag({ file: filePath, icon });
   });
 }

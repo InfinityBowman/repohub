@@ -35,8 +35,7 @@ import { ScreenshotWatcherService } from './services/ScreenshotWatcherService';
 import { RecentCommitsService } from './services/RecentCommitsService';
 import { registerOverlayHandlers } from './ipc/overlay.handler';
 
-// Build timestamp injected at build time for version tracking
-const BUILD_ID: string = __BUILD_TIMESTAMP__;
+const BUILD_ID: string = __BUILD_ID__;
 
 // Initialize services
 const configService = new ConfigService();

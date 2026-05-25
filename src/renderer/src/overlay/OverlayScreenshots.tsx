@@ -14,12 +14,17 @@ export function OverlayScreenshots() {
           <button
             key={screenshot.path}
             onClick={() => window.electron.shell.openUrl(`file://${screenshot.path}`)}
+            onDragStart={e => {
+              e.preventDefault();
+              window.electron.overlay.startDrag(screenshot.path);
+            }}
+            draggable
             className='group relative overflow-hidden rounded-lg bg-secondary/30 transition-colors hover:bg-secondary/50'
           >
             <img
               src={`safe-file://${screenshot.path}`}
               alt={screenshot.name}
-              className='h-16 w-full object-cover'
+              className='pointer-events-none h-16 w-full object-cover'
               onError={e => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
