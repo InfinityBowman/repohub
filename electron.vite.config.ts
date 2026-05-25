@@ -5,6 +5,9 @@ import { resolve } from 'path';
 
 export default defineConfig({
   main: {
+    define: {
+      '__BUILD_TIMESTAMP__': JSON.stringify(new Date().toISOString()),
+    },
     plugins: [externalizeDepsPlugin({ exclude: ['electron-store'] })],
     build: {
       rollupOptions: {

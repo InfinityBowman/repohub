@@ -7,6 +7,7 @@ export function createMainWindow(): BrowserWindow {
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    show: false,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 16 },
     webPreferences: {
@@ -15,6 +16,11 @@ export function createMainWindow(): BrowserWindow {
       nodeIntegration: false,
       sandbox: false,
     },
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
   });
 
   if (process.env.NODE_ENV === 'development' && process.env['ELECTRON_RENDERER_URL']) {

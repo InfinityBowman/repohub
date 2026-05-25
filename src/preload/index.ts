@@ -158,6 +158,11 @@ const electronAPI = {
     hide: () => ipcRenderer.invoke('overlay:hide'),
   },
 
+  app: {
+    getBuildId: () => ipcRenderer.invoke('app:build-id'),
+    quit: () => ipcRenderer.invoke('app:quit'),
+  },
+
   on: {
     repositoriesChanged: (callback: (repos: any[]) => void) => {
       const handler = (_: any, data: any) => callback(data);

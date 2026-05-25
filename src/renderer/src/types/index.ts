@@ -582,6 +582,10 @@ declare global {
         expandToDashboard: (route: string) => Promise<void>;
         hide: () => Promise<void>;
       };
+      app: {
+        getBuildId: () => Promise<string>;
+        quit: () => Promise<void>;
+      };
       on: {
         repositoriesChanged: (callback: (repos: Repository[]) => void) => () => void;
         processOutput: (callback: (data: ProcessOutputData) => void) => () => void;

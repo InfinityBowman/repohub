@@ -35,6 +35,9 @@ import { ScreenshotWatcherService } from './services/ScreenshotWatcherService';
 import { RecentCommitsService } from './services/RecentCommitsService';
 import { registerOverlayHandlers } from './ipc/overlay.handler';
 
+// Build timestamp injected at build time for version tracking
+const BUILD_ID: string = __BUILD_TIMESTAMP__;
+
 // Initialize services
 const configService = new ConfigService();
 const repositoryService = new RepositoryService(configService);
@@ -54,6 +57,12 @@ const skillsService = new SkillsService();
 const systemMonitor = new SystemMonitorService(2000);
 const screenshotWatcher = new ScreenshotWatcherService();
 const recentCommits = new RecentCommitsService(repositoryService);
+
+// Single instance lock (Signal pattern)
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+}
 
 app.whenReady().then(() => {
   // Register custom protocol for serving local screenshot files
@@ -119,7 +128,7 @@ app.whenReady().then(() => {
     if (overlayWindow.isVisible()) {
       overlayWindow.hide();
     } else {
-      overlayWindow.show();
+      overlayWindow.showInactive();
     }
   });
 
@@ -151,6 +160,9 @@ app.whenReady().then(() => {
     return { success: true };
   });
 
+  // Build ID for version tracking
+  ipcMain.handle('app:build-id', () => BUILD_ID);
+
   // Initial scan
   repositoryService.scan();
   repositoryService.startWatching();
@@ -165,28 +177,90 @@ app.whenReady().then(() => {
   // Initialize code search (watching starts automatically after first indexing completes)
   codeSearchService.initialize();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
-    }
-  });
-});
+  // --- Window lifecycle (Gitify + Signal Desktop patterns) ---
+  //
+  // Key insight: on macOS, Cmd+Q triggers before-quit. We PREVENT the quit
+  // and hide to background instead. Only app.exit() actually terminates.
+  // This means windows are never destroyed during normal use.
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
+  // Signal pattern: force window to front
+  function focusAndForceToTop(win: BrowserWindow): void {
+    win.setAlwaysOnTop(true);
+    win.focus();
+    win.setAlwaysOnTop(false);
   }
-});
 
-app.on('before-quit', () => {
-  globalShortcut.unregisterAll();
-  processService.stopAll();
-  portService.stopMonitoring();
-  repositoryService.stopWatching();
-  codeSearchService.shutdown();
-  packageService.shutdown();
-  agentService.shutdown();
-  skillsService.shutdown();
-  systemMonitor.stop();
-  screenshotWatcher.stop();
+  function showMainWindow(): void {
+    if (app.dock) app.dock.show();
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (mainWindow.isVisible()) {
+      focusAndForceToTop(mainWindow);
+    } else {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  }
+
+  function hideToBackground(): void {
+    mainWindow.hide();
+    overlayWindow.hide();
+    if (app.dock) app.dock.hide();
+  }
+
+  function quitForReal(): void {
+    globalShortcut.unregisterAll();
+    processService.stopAll();
+    portService.stopMonitoring();
+    repositoryService.stopWatching();
+    codeSearchService.shutdown();
+    packageService.shutdown();
+    agentService.shutdown();
+    skillsService.shutdown();
+    systemMonitor.stop();
+    screenshotWatcher.stop();
+    app.exit(0);
+  }
+
+  // Cmd+Q / app menu Quit: hide to background instead of quitting.
+  // app.exit() in quitForReal() bypasses this handler entirely.
+  app.on('before-quit', (e) => {
+    e.preventDefault();
+    hideToBackground();
+  });
+
+  // Close button: hide instead of destroy (Gitify pattern — preserves renderer state)
+  mainWindow.on('close', (e) => {
+    e.preventDefault();
+    setImmediate(() => {
+      if (!mainWindow.isDestroyed()) mainWindow.hide();
+      if (app.dock) app.dock.hide();
+    });
+  });
+
+  overlayWindow.on('close', (e) => {
+    e.preventDefault();
+    setImmediate(() => {
+      if (!overlayWindow.isDestroyed()) overlayWindow.hide();
+    });
+  });
+
+  // Signal pattern: second-instance shows existing window (Spotlight relaunch)
+  app.on('second-instance', () => {
+    showMainWindow();
+  });
+
+  // macOS dock click reactivation
+  app.on('activate', () => {
+    showMainWindow();
+  });
+
+  // Keep app alive when all windows are hidden
+  app.on('window-all-closed', () => {
+    // no-op: app stays alive for hotkeys and background services
+  });
+
+  // IPC for explicit quit (from menu or UI button)
+  ipcMain.handle('app:quit', () => {
+    quitForReal();
+  });
 });
