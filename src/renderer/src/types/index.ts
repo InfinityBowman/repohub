@@ -471,6 +471,8 @@ declare global {
           cols: number,
           rows: number,
         ) => Promise<void>;
+        write: (repoId: string, data: string) => Promise<void>;
+        openShell: (repoId: string) => Promise<void>;
       };
       ports: {
         scan: () => Promise<PortInfo[]>;
@@ -581,6 +583,7 @@ declare global {
         refreshCommits: () => Promise<CommitInfo[]>;
         expandToDashboard: (route: string) => Promise<void>;
         hide: () => Promise<void>;
+        startDrag: (filePath: string) => Promise<void>;
       };
       app: {
         getBuildId: () => Promise<string>;
@@ -613,7 +616,7 @@ declare global {
         agentResult: (
           callback: (data: {
             sessionId: string;
-            cost: { inputTokens: number; outputTokens: number; totalCost: number };
+            cost: { inputTokens: number; outputTokens: number; totalCost: number; contextTokens: number };
           }) => void,
         ) => () => void;
         agentStream: (callback: (data: { sessionId: string; delta: string }) => void) => () => void;

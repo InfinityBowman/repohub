@@ -1,7 +1,7 @@
 import path from 'path';
 import os from 'os';
 import { app, BrowserWindow, ipcMain, globalShortcut, protocol, net } from 'electron';
-import { createMainWindow, createOverlayWindow } from './window';
+import { createMainWindow, createOverlayWindow, showScreenshotThumbnail } from './window';
 
 // macOS packaged apps inherit a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin).
 // Augment with common tool directories so gh, git, pnpm, npm, node etc. are found.
@@ -35,6 +35,7 @@ import { ScreenshotWatcherService } from './services/ScreenshotWatcherService';
 import { RecentCommitsService } from './services/RecentCommitsService';
 import { registerOverlayHandlers } from './ipc/overlay.handler';
 
+declare const __BUILD_ID__: string;
 const BUILD_ID: string = __BUILD_ID__;
 
 // Initialize services
@@ -115,11 +116,12 @@ app.whenReady().then(() => {
     }
   });
 
-  // Push screenshot events to all windows
+  // Push screenshot events to all windows + show thumbnail
   screenshotWatcher.on('screenshot', info => {
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send('overlay:screenshot', info);
     }
+    showScreenshotThumbnail(info.path);
   });
 
   // Global hotkey: Option+Space toggles overlay
@@ -131,7 +133,7 @@ app.whenReady().then(() => {
     }
   });
 
-  // Intercept Cmd+Shift+4 to capture screenshots instantly
+  // Intercept Cmd+Shift+4 to capture screenshots
   globalShortcut.register('CommandOrControl+Shift+4', () => {
     screenshotWatcher.capture();
   });

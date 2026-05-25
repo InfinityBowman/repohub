@@ -1,6 +1,6 @@
 import { usePortStore } from '@/store/portStore';
-import { ChevronRight, Network } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ChevronRight, ExternalLink, Network, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
 import { SectionHeader } from './SectionHeader';
 
 export function OverlayPortsSection() {
@@ -12,15 +12,10 @@ export function OverlayPortsSection() {
 
   const displayed = ports.slice(0, 5);
 
-  function handleContextMenu(e: React.MouseEvent, port: number) {
+  function openMenu(e: React.MouseEvent, port: number) {
     e.preventDefault();
-    setMenu({ port, x: e.clientX, y: e.clientY });
-  }
-
-  async function handleKill() {
-    if (!menu) return;
-    await window.electron.ports.killByPort(menu.port);
-    setMenu(null);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenu({ port, x: rect.left, y: rect.bottom + 4 });
   }
 
   return (
@@ -33,13 +28,12 @@ export function OverlayPortsSection() {
       {displayed.map(port => (
         <button
           key={port.port}
-          onClick={() => window.electron.shell.openUrl(`http://localhost:${port.port}`)}
-          onContextMenu={e => handleContextMenu(e, port.port)}
-          className='flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-secondary/50'
+          onClick={e => openMenu(e, port.port)}
+          className='hover:bg-secondary/50 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors'
         >
-          <Network className='h-3 w-3 flex-shrink-0 text-muted-foreground' />
+          <Network className='text-muted-foreground h-3 w-3 shrink-0' />
           <span className='text-xs font-medium tabular-nums'>{port.port}</span>
-          <span className='flex-1 truncate text-xs text-muted-foreground'>
+          <span className='text-muted-foreground flex-1 truncate text-xs'>
             {port.description || port.command}
           </span>
         </button>
@@ -47,7 +41,7 @@ export function OverlayPortsSection() {
       {ports.length > 5 && (
         <button
           onClick={() => window.electron.overlay.expandToDashboard('/ports')}
-          className='flex items-center justify-center gap-1 rounded-lg py-1 text-xs text-muted-foreground transition-colors hover:text-foreground'
+          className='text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 rounded-lg py-1 text-xs transition-colors'
         >
           +{ports.length - 5} more
           <ChevronRight className='h-3 w-3' />
@@ -59,13 +53,27 @@ export function OverlayPortsSection() {
           <div className='fixed inset-0 z-40' onClick={() => setMenu(null)} />
           <div
             ref={menuRef}
-            className='fixed z-50 min-w-[140px] rounded-md border border-border bg-popover p-1 shadow-md'
+            className='border-border bg-popover fixed z-50 min-w-35 rounded-md border p-1 shadow-md'
             style={{ left: menu.x, top: menu.y }}
           >
             <button
-              onClick={handleKill}
-              className='flex w-full items-center rounded-sm px-2 py-1.5 text-xs text-destructive transition-colors hover:bg-destructive/10'
+              onClick={() => {
+                window.electron.shell.openUrl(`http://localhost:${menu.port}`);
+                setMenu(null);
+              }}
+              className='text-foreground hover:bg-secondary flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs transition-colors'
             >
+              <ExternalLink className='h-3 w-3' />
+              Open in Browser
+            </button>
+            <button
+              onClick={async () => {
+                await window.electron.ports.killByPort(menu.port);
+                setMenu(null);
+              }}
+              className='text-destructive hover:bg-destructive/10 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs transition-colors'
+            >
+              <X className='h-3 w-3' />
               Kill :{menu.port}
             </button>
           </div>

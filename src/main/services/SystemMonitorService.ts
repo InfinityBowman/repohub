@@ -49,9 +49,9 @@ export class SystemMonitorService extends EventEmitter {
         this.osu.memory.detailed(),
       ]);
 
-      const cpuPercent = cpuResult.data ?? 0;
+      const cpuPercent = cpuResult.success ? cpuResult.data : 0;
 
-      const memData = memResult.data;
+      const memData = memResult.success ? memResult.data : null;
       const breakdown = (memData as any)?.breakdown;
       const totalBytes = typeof this.osu.memory.totalMem() === 'number'
         ? this.osu.memory.totalMem() as number

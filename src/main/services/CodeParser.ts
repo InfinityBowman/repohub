@@ -4,9 +4,8 @@ import { createHash } from 'crypto';
 import { app } from 'electron';
 import type { CodeChunk } from '../types/codesearch.types';
 
-type TreeSitterModule = typeof import('web-tree-sitter');
-type Parser = InstanceType<TreeSitterModule['default']>;
-type Language = InstanceType<TreeSitterModule['default']['Language']>;
+type Parser = import('web-tree-sitter');
+type Language = import('web-tree-sitter').Language;
 
 const EXTENSION_TO_LANGUAGE: Record<string, string> = {
   '.js': 'javascript',
