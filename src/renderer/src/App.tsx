@@ -1,4 +1,5 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RepositoriesView } from '@/views/RepositoriesView';
 import { RepositoryDetailView } from '@/views/RepositoryDetailView';
@@ -16,8 +17,29 @@ import { useHealthListeners } from '@/hooks/useHealth';
 import { useGitHubListeners } from '@/hooks/useGitHub';
 import { useCodeSearchListeners } from '@/hooks/useCodeSearch';
 import { useAgentListeners } from '@/hooks/useAgents';
+import { OverlayApp } from '@/overlay/OverlayApp';
 
-export default function App() {
+function DashboardNavigator() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    return window.electron.on.dashboardNavigate((route: string) => {
+      navigate(route);
+    });
+  }, [navigate]);
+
+  return null;
+}
+
+export default function App({ mode }: { mode: 'dashboard' | 'overlay' }) {
+  if (mode === 'overlay') {
+    return <OverlayApp />;
+  }
+
+  return <DashboardApp />;
+}
+
+function DashboardApp() {
   useProcessListeners();
   useHealthListeners();
   useGitHubListeners();
@@ -27,6 +49,7 @@ export default function App() {
   return (
     <TooltipProvider>
       <HashRouter>
+        <DashboardNavigator />
         <CommandPalette />
         <Routes>
           <Route element={<AppLayout />}>

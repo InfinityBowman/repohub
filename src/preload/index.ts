@@ -148,6 +148,16 @@ const electronAPI = {
     reindex: () => ipcRenderer.invoke('search:reindex'),
   },
 
+  overlay: {
+    getSystemSnapshot: () => ipcRenderer.invoke('overlay:get-system-snapshot'),
+    getRecentScreenshots: () => ipcRenderer.invoke('overlay:get-recent-screenshots'),
+    getRecentCommits: () => ipcRenderer.invoke('overlay:get-recent-commits'),
+    refreshCommits: () => ipcRenderer.invoke('overlay:refresh-commits'),
+    expandToDashboard: (route: string) =>
+      ipcRenderer.invoke('overlay:expand-to-dashboard', { route }),
+    hide: () => ipcRenderer.invoke('overlay:hide'),
+  },
+
   on: {
     repositoriesChanged: (callback: (repos: any[]) => void) => {
       const handler = (_: any, data: any) => callback(data);
@@ -238,6 +248,21 @@ const electronAPI = {
       const handler = (_: any, data: any) => callback(data);
       ipcRenderer.on('search:model-progress', handler);
       return () => ipcRenderer.removeListener('search:model-progress', handler);
+    },
+    systemSnapshot: (callback: (data: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('overlay:system-snapshot', handler);
+      return () => ipcRenderer.removeListener('overlay:system-snapshot', handler);
+    },
+    screenshotAdded: (callback: (info: any) => void) => {
+      const handler = (_: any, data: any) => callback(data);
+      ipcRenderer.on('overlay:screenshot', handler);
+      return () => ipcRenderer.removeListener('overlay:screenshot', handler);
+    },
+    dashboardNavigate: (callback: (route: string) => void) => {
+      const handler = (_: any, route: string) => callback(route);
+      ipcRenderer.on('dashboard:navigate', handler);
+      return () => ipcRenderer.removeListener('dashboard:navigate', handler);
     },
   },
 };

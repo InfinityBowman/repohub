@@ -409,6 +409,29 @@ export interface DirectorySkill {
   installs: number;
 }
 
+export interface SystemSnapshot {
+  cpuPercent: number;
+  memUsedPercent: number;
+  memUsedGb: number;
+  memTotalGb: number;
+}
+
+export interface ScreenshotInfo {
+  path: string;
+  name: string;
+  timestamp: number;
+}
+
+export interface CommitInfo {
+  hash: string;
+  shortHash: string;
+  subject: string;
+  author: string;
+  date: string;
+  repoId: string;
+  repoName: string;
+}
+
 declare global {
   interface Window {
     electron: {
@@ -551,6 +574,14 @@ declare global {
         ensureModel: () => Promise<{ success: boolean }>;
         reindex: () => Promise<{ success: boolean }>;
       };
+      overlay: {
+        getSystemSnapshot: () => Promise<SystemSnapshot>;
+        getRecentScreenshots: () => Promise<ScreenshotInfo[]>;
+        getRecentCommits: () => Promise<CommitInfo[]>;
+        refreshCommits: () => Promise<CommitInfo[]>;
+        expandToDashboard: (route: string) => Promise<void>;
+        hide: () => Promise<void>;
+      };
       on: {
         repositoriesChanged: (callback: (repos: Repository[]) => void) => () => void;
         processOutput: (callback: (data: ProcessOutputData) => void) => () => void;
@@ -588,6 +619,9 @@ declare global {
         agentError: (callback: (data: { sessionId: string; error: string }) => void) => () => void;
         searchStatusChanged: (callback: (status: IndexStatus) => void) => () => void;
         searchModelProgress: (callback: (progress: ModelProgress) => void) => () => void;
+        systemSnapshot: (callback: (data: SystemSnapshot) => void) => () => void;
+        screenshotAdded: (callback: (info: ScreenshotInfo) => void) => () => void;
+        dashboardNavigate: (callback: (route: string) => void) => () => void;
       };
     };
   }

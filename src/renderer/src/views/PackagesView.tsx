@@ -288,7 +288,7 @@ function CloneActions({ pkg }: { pkg: PackageDetail }) {
   );
 }
 
-function ReadmeContent({ readme }: { readme: string }) {
+function ReadmeContent({ readme, baseUrl }: { readme: string; baseUrl?: string }) {
   const [mode, setMode] = useState<'preview' | 'source'>('preview');
 
   if (!readme || readme.trim() === '') {
@@ -344,7 +344,7 @@ function ReadmeContent({ readme }: { readme: string }) {
               ))}
             </code>
           </div>
-        : <MarkdownRenderer>{readme}</MarkdownRenderer>}
+        : <MarkdownRenderer baseUrl={baseUrl}>{readme}</MarkdownRenderer>}
       </div>
     </div>
   );
@@ -865,7 +865,7 @@ function PackageDetailPanel({
       {tab === 'preview' ?
         <div className='min-h-0 flex-1 overflow-y-auto px-8 py-4'>
           {pkg.readme && pkg.readme.trim() !== '' ?
-            <MarkdownRenderer>{pkg.readme}</MarkdownRenderer>
+            <MarkdownRenderer baseUrl={pkg.links.repository}>{pkg.readme}</MarkdownRenderer>
           : <div className='text-muted-foreground py-8 text-center text-sm'>
               No README available for this package.
             </div>
@@ -1112,7 +1112,7 @@ function TrendingRepoDetailPanel({ repo }: { repo: TrendingRepo }) {
               <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
             </div>
           : readme !== null ?
-            <ReadmeContent readme={readme} />
+            <ReadmeContent readme={readme} baseUrl={`https://github.com/${repo.fullName}`} />
           : null}
         </div>
       </div>

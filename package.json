@@ -31,6 +31,7 @@
     "electron-store": "^11.0.2",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.563.0",
+    "node-os-utils": "^2.0.3",
     "node-pty": "^1.1.0",
     "onnxruntime-node": "^1.24.1",
     "radix-ui": "^1.4.3",
@@ -59,13 +60,16 @@
     "mac": {
       "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools",
-      "target": "dir"
+      "target": "dir",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "files": [
       "out/**/*"
     ],
     "asarUnpack": [
-      "node_modules/onnxruntime-node/**"
+      "node_modules/onnxruntime-node/**",
+      "node_modules/node-pty/**"
     ],
     "extraResources": [
       {
@@ -74,12 +78,6 @@
       }
     ],
     "npmRebuild": true
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "node-pty",
-      "onnxruntime-node"
-    ]
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
